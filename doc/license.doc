@@ -1,0 +1,42 @@
+/*
+  SillyMUD Distribution V1.1b             (c) 1993 SillyMUD Developement
+ 
+  All Rights Reserved                       SillyMUD is based on DIKUMUD
+*/
+ 
+ 
+ 
+                             SillyMud License
+ 
+Rules:
+ 
+     SillyMUD is not public domain, it is copywritten source with the
+copywrite ownership being retained by both the DIKU university and
+the University of Florida, as well as the authors of SillyMUD (see credits).
+You may distribute the source freely, but the copyright must remain intact,
+as well as this user license.  You may not sell the source or gain any money
+from it's distribution, not even for a charge-per-ftp service.
+SillyMUD can only legally be run if you keep the name SillyMUD and the
+name DikuMUD in the login sequence.  Also, the base version must stay in
+the world command.  Note, to run this legally, you MUST keep the credits
+file intact!
+ 
+ 
+Notes:
+ 
+SillyMUD is based on DikuMUD.  Although most of the diku code was removed,
+we still acknowlege their work on the concept.  (we can't say all is removed,
+because nobody has gone through lately to find any last little bits).
+ 
+ 
+ 
+                    Original DikuMUD Concept created by
+ 
+ 
+Sebastian Hammer
+Michael Seifert
+Hans Henrik St{rfeldt
+Tom Madsen
+Katja Nyboe
+ 
+ 
