@@ -42,7 +42,7 @@ typedef char byte;
 #define EVENT_WEEK        16
 #define EVENT_GOBLIN_RAID 17
 #define EVENT_END_GOB_RAID 18
-
+#define EVENT_DEATHROOM    19
 #define DWARVES_STRIKE 1
 #define FAMINE         2
 
@@ -76,7 +76,26 @@ struct QuestItem {
   char *where;
 };
 
-#define VERSION "1.1b"
+
+/* Race Choice Stuff */
+
+struct RaceChoices {
+  int race_num;
+  char *what;
+};
+
+#define RACE_LIST_SIZE 40
+
+/* brewing stuff */
+
+#define MAX_POTIONS 18 /* Make this equal the number you have in constants.c */
+
+struct BrewMeister {
+  char *keyword;
+  int object[6];
+};
+
+#define VERSION "69.69b"
 /*
   tailoring stuff
 */
@@ -84,10 +103,19 @@ struct QuestItem {
   PLAYER_AUTH is defined in comm.h
 */
 
-#define LIMITED_ITEMS 1
+#define LIMITED_ITEMS 0
 #define SITELOCK      0
 #define NODUPLICATES  1
 #define EGO           1
+
+/* Mortal prompt things */
+#define PROMPT_H 1
+#define PROMPT_M 2
+#define PROMPT_V 4
+/* Immortal prompt things */
+#define PROMPT_R 1
+#define PROMPT_F 2
+#define PROMPT_S 4
 
 /*
  efficiency stuff
@@ -182,8 +210,9 @@ struct QuestItem {
 #define GREATER_GOD  57
 #define SILLYLORD    58
 #define IMPLEMENTOR  59
-#define LOKI         60
-#define MAX_IMMORT   60
+#define ADMIN        60
+#define LOKI         61
+#define MAX_IMMORT   61
 
 #define IMM_FIRE        1
 #define IMM_COLD        2
@@ -311,6 +340,7 @@ typedef struct {
 #define ITEM_BOARD     24
 #define ITEM_TREE      25
 #define ITEM_ROCK      26
+#define ITEM_WARPSTONE 27
 
 /* Bitvector For 'wear_flags' */
 
@@ -357,6 +387,8 @@ typedef struct {
 #define ITEM_ANTI_MEN    524288  /* men can't wield */
 #define ITEM_ANTI_WOMEN  1048576 /* women can't wield */
 #define ITEM_ANTI_SUN    2097152 /* item is sensitive to being in the sun */
+#define ITEM_INSET       4194304 /* item has been inset w/another item */
+#define ITEM_FIGURINE    8388608 /* Item is a figurine */
 
 /* Some different kind of liquids */
 #define LIQ_WATER      0
@@ -443,6 +475,7 @@ struct obj_data
 	struct obj_data *contains;     /* Contains objects               */
 	struct obj_data *next_content; /* For 'contains' lists           */
 	struct obj_data *next;         /* For the object list            */
+        struct char_data *link;        /* Actual char linked for figurine*/
 };
 /* ======================================================================*/
 
@@ -594,7 +627,7 @@ struct room_data
 #define MAX_TOUNGE  3     /* Used in CHAR_FILE_U *DO*NOT*CHANGE* */
 
 
-#define MAX_SKILLS  200   /* Used in CHAR_FILE_U *DO*NOT*CHANGE* */
+#define MAX_SKILLS  400   /* Used in CHAR_FILE_U *DO*NOT*CHANGE* */
 #define MAX_WEAR    18
 #define MAX_AFFECT  25    /* Used in CHAR_FILE_U *DO*NOT*CHANGE* */
 
@@ -640,9 +673,13 @@ struct room_data
 
 /* affects 2 */
 
-#define AFF2_ANIMAL_INVIS     0x00000001
-#define AFF2_HEAT_STUFF       0x00000002
-#define AFF2_LOG_ME           0x00000004
+#define AFF2_ANIMAL_INVIS     0x00000001 /* the spell */
+#define AFF2_HEAT_STUFF       0x00000002 /* the spell */
+#define AFF2_LOG_ME           0x00000004 /* am I logged? */
+#define AFF2_ONE_LIFER        0x00000008 /* am I stupid? */
+#define AFF2_SUN_BLIND        0x00000010 /* do I not see well in daylight? */
+#define AFF2_FEEDING          0x00000020 /* am I feeding (vampires) */
+#define AFF2_BERSERK           0x00000040 /* ogres go ape! */
 
 /* modifiers to char's abilities */
 
@@ -652,8 +689,8 @@ struct room_data
 #define APPLY_INT               3
 #define APPLY_WIS               4
 #define APPLY_CON               5
-#define APPLY_SEX               6
-#define APPLY_CLASS             7
+#define APPLY_CHR               6
+#define APPLY_SEX               7
 #define APPLY_LEVEL             8
 #define APPLY_AGE               9
 #define APPLY_CHAR_WEIGHT      10
@@ -697,7 +734,13 @@ struct room_data
 #define APPLY_RIDE             47
 #define APPLY_RACE_SLAYER      48
 #define APPLY_ALIGN_SLAYER     49
-
+#define APPLY_MANA_REGEN       50
+#define APPLY_HIT_REGEN        51
+#define APPLY_MOVE_REGEN       52
+#define APPLY_MOVE_BONUS       53
+#define APPLY_INTRINSIC        54 /* This is somewhat of a hack, does nada */
+				/* just a marker that I check for in  */
+				/* CastIntrinsic() in spell_parser.c -Rip */
 /* 'class' for PC's */
 #define CLASS_MAGIC_USER  1
 #define CLASS_CLERIC      2
@@ -705,6 +748,14 @@ struct room_data
 #define CLASS_THIEF       8
 #define CLASS_DRUID      16
 #define CLASS_MONK       32
+#define CLASS_ALL        63
+
+/* index values for classes having skills that require a minimum level  */
+/* attained to learn                                                    */
+#define MIN_LEVEL_MAGIC  0
+#define MIN_LEVEL_CLERIC 1
+#define MIN_LEVEL_DRUID  2
+#define MIN_LEVEL_NUM    3  /* number of such indexes required         */
 
 /* sex */
 #define SEX_NEUTRAL   0
@@ -749,6 +800,10 @@ struct room_data
 #define ACT_HUGE      (1<<18)  /* MOB is too large to go indoors          */
 #define ACT_SCRIPT    (1<<19)  /* MOB has a script assigned to it DO NOT SET */
 #define ACT_GREET     (1<<20)  /* MOB greets people */
+#define ACT_FIGURINE  (1<<21)  /* MOB is a figurine */
+#define ACT_BRIEF     (1<<22)  /* MOB is in brief mode (polys) */
+#define ACT_SHOWEXITS (1<<23)  /* MOB (poly) will see exits when looking */
+
 /* For players : specials.act */
 #define PLR_BRIEF     (1<<0)
 
@@ -760,6 +815,7 @@ struct room_data
 #define PLR_HUNTING   (1<<7) /* the player is hunting someone, do a track each look */
 #define PLR_DEAF      (1<<8) /* The player does not hear shouts */
 #define PLR_ECHO      (1<<9) /* Messages (tells, shout,etc) echo back */
+#define PLR_SHOWEXITS (1<<10) /* show exits when looking at rooms */
 #define PLR_NOSHOUT   (1<<14)/* the player is not allowed to shout */
 #define PLR_NOBEEP    (1<<20)/* ignore all beeps */
 
@@ -834,17 +890,17 @@ struct char_point_data
 {
   sh_int mana;         
   sh_int max_mana;
-  ubyte  mana_gain;
+  byte  mana_gain;
 
 
   sh_int hit;   
   sh_int max_hit;      /* Max hit for NPC                         */
-  ubyte  hit_gain;
+  byte  hit_gain;
 
   sh_int move;  
   sh_int max_move;     /* Max move for NPC                        */
-  ubyte  move_gain;
-  
+  byte  move_gain;
+
   sh_int armor;        /* Internal -100..100, external -10..10 AC */
   int gold;            /* Money carried                           */
   int bankgold;        /* gold in the bank.                       */
@@ -869,20 +925,39 @@ struct char_special_data
   byte damsizedice;         /* The size of the damage dice's       */
   byte last_direction;      /* The last direction the monster went */
   char sev;                  /* log severety level for gods */
+  byte   move_cost;    /* bonus or subtraction from movement cost */
+  
  
   int start_room;  /* so people can be set to start certain places */
-  int edit;                /* edit state */
-  sbyte conditions[3];      /* Drunk full etc.                     */
-  int permissions;
-  int zone;   /* zone that an NPC lives in */
-  int carry_weight;        /* Carried weight                       */
-  int timer;               /* Timer for update                     */
-  int was_in_room;      /* storage of location for linkdead people */
-  int attack_type;          /* The Attack Type Bitvector for NPC's */
-  int alignment;            /* +-1000 for alignments               */
-  
+  int edit;               /* edit state */
+  sbyte conditions[3];    /* Drunk full etc.                     */
+  int prompt;		  /* And what kinda prompt will you be having? */
+  int permissions;	  /* What zone are they allowed to edit? */
+  int zone;               /* zone that an NPC lives in */
+  int carry_weight;       /* Carried weight                       */
+  int timer;              /* Timer for update                     */
+  int was_in_room;        /* storage of location for linkdead people */
+  int attack_type;        /* The Attack Type Bitvector for NPC's */
+  int alignment;          /* +-1000 for alignments               */
+  int pct;                /* For storing Wimpyness Percentage */
+  int flee;               /* How many rooms do you want to run? */
+  int quest;		  /* which quest have we assigned this fool */
+  bool loot;              /* Autoloot */
+  bool split;             /* Autosplit */
+  bool bitten;			/* vamp feeding on them? */
   char *poofin;
   char *poofout;
+
+#if GROUP_NAMES
+  char *gname;  /* name of the group that the player is in.
+		   only the master of the group will have this
+		   set.  The master can change the group names
+		   at will.  There must be at least 2 pcs for something
+		   to be a group
+		   gwho?  who group?  to see what the groups are, and
+		   who are in them. (Pcs).
+		   */
+#endif
  
   Alias   *A_list;
   struct char_data *misc;  
@@ -895,6 +970,10 @@ struct char_special_data
   
   long affected_by;  /* Bitvector for spells/skills affected by    */
   long affected_by2; /* Other special things                       */
+
+  long intrinsics;		/* certain things have permanent  */
+				/* unalienable abilities (infra etc) */
+  /*   long intrinsics2; -> affected_by2 has no intrinsics in it, yet */
 
   unsigned long act;      /* flags for NPC behavior               */
 
@@ -992,6 +1071,7 @@ struct char_data
 	struct char_data *master;             /* Who is char following?  */
 	int	invis_level;		      /* visibility of gods */
 
+        struct obj_data *link;               /* Link for figurines */
 };
 
 
@@ -1090,6 +1170,37 @@ struct obj_cost { /* used in act.other.c:do_save as
 };
 
 #define MAX_OBJ_SAVE 200 /* Used in OBJ_FILE_U *DO*NOT*CHANGE* */
+
+struct equip_fill {  
+        sh_int finger[3];
+        int fingerego;
+        sh_int neck[3];
+        int neckego;
+        sh_int body[2];
+        int bodyego;
+        sh_int head[2];
+        int headego;
+        sh_int legs[2];
+        int legsego;
+        sh_int feet[2];
+        int feetego;
+        sh_int arms[2];
+        int armsego;
+        sh_int hands[2];
+        int handsego;
+        sh_int shield[2];
+        int shieldego;
+        sh_int about[2];
+        int aboutego;
+        sh_int waist[2];
+        int waistego;
+        sh_int wrist[3];
+        int wristego;
+        sh_int wield[2];
+        int wieldego;
+        sh_int misfit[MAX_OBJ_SAVE];
+        int misfitego[MAX_OBJ_SAVE];
+};
 
 struct obj_file_elem 
 {
@@ -1198,8 +1309,10 @@ struct txt_q
 #define CON_QDELETE     20
 #define CON_QDELETE2    21
 #define CON_STAT_LISTV  22
-#define CON_WMOTD         23
+#define CON_WMOTD       23
 #define CON_EDITING     24
+#define CON_LEVEL_LIM   25
+#define CON_ALIGN       26
 
 struct snoop_data
 {
@@ -1313,3 +1426,46 @@ struct breather {
   int	cost;
   funcp	*breaths;
 };
+
+struct figurine_data {
+  int mob;
+  int obj;
+};
+
+#define MAX_RACE_DENY 3
+#define MAX_RACE_INTRINSIC 3
+
+struct skill_data {
+  void (*spell_pointer)
+    (byte level, struct char_data *ch, char *arg, int type,
+     struct char_data *tar_ch, struct obj_data *tar_obj);
+
+  byte minimum_position;	/* Position for usage                  */
+  ubyte min_usesmana;		/* Amount of mana used by a spell      */
+  byte beats;			/* Heartbeats until ready for next     */
+
+  byte min_level[MIN_LEVEL_NUM];/* minimum usage level (spells) */
+  sh_int targets;		/* See below for use with TAR_XXX      */
+  sh_int spellfail;		/* modifier for spell failure          */
+  int taught_by;                /* #defined beneath                    */
+  int class_use;                /* what classes can use it             */
+  int percent;                  /* added by Kiku                       */
+
+  ubyte race_deny[MAX_RACE_DENY]; /* races that can't use this skill */
+
+  /* races having this skill intrinsically */
+  ubyte race_intrinsic[MAX_RACE_INTRINSIC]; 
+
+};
+
+#define TAUGHT_BY_MAGE       1
+#define TAUGHT_BY_CLERIC     2
+#define TAUGHT_BY_THIEF      4
+#define TAUGHT_BY_WARRIOR    8
+#define TAUGHT_BY_DRUID     16
+#define TAUGHT_BY_MONK      32
+#define TAUGHT_BY_NINJA     64
+#define TAUGHT_BY_SAILOR   128
+#define TAUGHT_BY_LORE     256
+#define TAUGHT_BY_HUNTER   512
+#define TAUGHT_BY_ETTIN    1024	/* beserk */

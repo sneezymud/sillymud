@@ -175,7 +175,6 @@ int RawMove(struct char_data *ch, int dir)
     return(TRUE);
   }
 
-
   if (IS_AFFECTED(ch,AFF_FLYING)) {
     need_movement = 1;
     if (IS_SET(to_here->room_flags, INDOORS))
@@ -187,54 +186,17 @@ int RawMove(struct char_data *ch, int dir)
     need_movement = (movement_loss[from_here->sector_type]+
 		     movement_loss[to_here->sector_type]) / 2;
   }
-
-#if 0
-  /*  
-   **   Movement in water_swim
-   */
-  
-  if ((from_here->sector_type == SECT_WATER_SWIM) || 
-      (to_here->sector_type == SECT_WATER_SWIM)) {
-    if (!IS_AFFECTED(ch,AFF_FLYING)) {
-      if (MOUNTED(ch)) {
-	if (!IS_AFFECTED(MOUNTED(ch), AFF_WATERBREATH) &&
-	    !IS_AFFECTED(MOUNTED(ch), AFF_FLYING)) {
-	  send_to_char("Your mount would have to fly or swim to go there\n\r", ch);
-	  return(FALSE);
-	}
-      } else {
-	has_boat = FALSE;
-	/* See if char is carrying a boat */
-	for (obj=ch->carrying; obj; obj=obj->next_content)
-	  if (obj->obj_flags.type_flag == ITEM_BOAT)
-	    has_boat = TRUE;
-	if(IS_IMMORTAL(ch)) has_boat = TRUE;
-
-	if (!has_boat && !IS_AFFECTED(ch, AFF_WATERBREATH)) {
-	  if (ch->skills) {
-    if (ch->skills[SKILL_SWIM].learned < 30) {
-	      send_to_char("You need a boat, or know how to swim to go there.\n\r", ch);
-	      return(FALSE);
-	    }
-	  } else {
-	    send_to_char("You need a boat, or know how to swim to go there.\n\r", ch);
-	    return(FALSE);
-	  }
-	}
-	if (has_boat)
-	  need_movement = 1;
-      }
-    }
-  }
-#endif
   
   /*  
    **   Movement in water_nowswim
    */
   
   if ((from_here->sector_type == SECT_WATER_NOSWIM) || 
-      (to_here->sector_type == 
-       SECT_WATER_NOSWIM)) {
+      (to_here->sector_type == SECT_WATER_NOSWIM)) {
+    if(GET_RACE(ch) == RACE_VAMPIRE) {
+      send_to_char("You cringe at the thought of crossing the water.\n\r", ch);
+      return(FALSE);
+    }
     if (!IS_AFFECTED(ch,AFF_FLYING)) {
       if (MOUNTED(ch)) {
 	if (!IS_AFFECTED(MOUNTED(ch), AFF_WATERBREATH) &&
@@ -248,8 +210,6 @@ int RawMove(struct char_data *ch, int dir)
 	for (obj=ch->carrying; obj; obj=obj->next_content)
 	  if (obj->obj_flags.type_flag == ITEM_BOAT)
 	    has_boat = TRUE;
-	if(IS_IMMORTAL(ch) && IS_SET(ch->specials.act, PLR_NOHASSLE))
-	  has_boat = TRUE;
 	if (!has_boat && !IS_AFFECTED(ch, AFF_WATERBREATH)) {
 	  send_to_char("You need a boat to go there.\n\r", ch);
 	  return(FALSE);
@@ -263,7 +223,7 @@ int RawMove(struct char_data *ch, int dir)
   /*
     Movement in SECT_AIR
     */
-  if ((from_here->sector_type == SECT_AIR) || 
+   if ((from_here->sector_type == SECT_AIR) || 
       (to_here->sector_type == 
        SECT_AIR)) {
     if (!IS_AFFECTED(ch,AFF_FLYING)) {
@@ -280,6 +240,10 @@ int RawMove(struct char_data *ch, int dir)
   if ((from_here->sector_type == SECT_UNDERWATER) || 
       (to_here->sector_type == 
        SECT_UNDERWATER)) {
+    if(GET_RACE(ch) == RACE_VAMPIRE) {
+      send_to_char("You cringe at the thought of crossing the water.\n\r", ch);
+      return(FALSE);
+    }
     if (!IS_AFFECTED(ch,AFF_WATERBREATH)) {
       send_to_char("You would need gills to go there!\n\r",ch);
       return(FALSE);
@@ -307,6 +271,10 @@ int RawMove(struct char_data *ch, int dir)
     }    
   }
   
+
+  need_movement += ch->specials.move_cost;
+  if (need_movement < 1)
+    need_movement = 1;
 
   if (!MOUNTED(ch)) {
     if (GET_MOVE(ch)<need_movement) {
@@ -352,15 +320,18 @@ int RawMove(struct char_data *ch, int dir)
     char_from_room(ch);
     char_to_room(ch, new_r);
   }
+  
   do_look(ch, "\0",15);
   
   if (IS_SET(to_here->room_flags, DEATH) && 
       !IS_IMMORTAL(ch)) {
 
-      if (MOUNTED(ch))
-	NailThisSucker(MOUNTED(ch));
-      NailThisSucker(ch);
-
+    new_r = ch->in_room;
+    if (MOUNTED(ch))
+      NailThisSucker(MOUNTED(ch));
+    NailThisSucker(ch);
+    DeathRoom(new_r);		/* sends junk about the mud :) */
+    
     return(FALSE);
   }
 
@@ -376,7 +347,7 @@ int RawMove(struct char_data *ch, int dir)
   } else {
     if (ch->specials.hunting) {
       if (IS_SET(ch->specials.act, PLR_HUNTING)) {
-	send_to_char("You search for a trail\n\r", ch);
+	send_to_char("You search for a trail.\n\r", ch);
 	WAIT_STATE(ch, PULSE_VIOLENCE);
       }
     }
@@ -480,9 +451,16 @@ void do_move(struct char_data *ch, char *argument, int cmd)
    */
   
   if (ch->attackers > 1) {
-    send_to_char("There's too many people around, no place to flee!\n\r", ch);
+    send_to_char("There's too many things trying to hit you, no place to flee!\n\r",
+		 ch);
     return;
   }
+  
+  if (ch->specials.fighting) {
+    send_to_char("Hey, maybe you should try fleeing during combat situations!\n\r",ch);
+    return;
+  }
+
   
   if (!ch->followers && !ch->master) {
     MoveOne(ch,cmd);
@@ -507,8 +485,10 @@ void do_move(struct char_data *ch, char *argument, int cmd)
 int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 {
   struct char_data *tmp_ch;
-  char tmp[256];
-  
+  char tmp[256], *how;
+
+  how = MovementType(ch, FALSE);
+
   for (tmp_ch = real_roomp(was_in)->people; tmp_ch; 
        tmp_ch= tmp_ch->next_in_room) {
     if ((!IS_AFFECTED(ch, AFF_SNEAK)) || (IS_IMMORTAL(tmp_ch))) {
@@ -516,10 +496,10 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 	if (!IS_AFFECTED(ch, AFF_SILENCE) || number(0,2)) {
 	  if (total > 1) {
 	    if (IS_NPC(ch)) {
-	      sprintf(tmp,"%s leaves %s. [%d]\n\r",ch->player.short_descr,
+	      sprintf(tmp,"%s %s %s. [%d]\n\r",ch->player.short_descr,how,
 		      dirs[dir], total);
 	    } else {
-	      sprintf(tmp,"%s leaves %s. [%d]\n\r",GET_NAME(ch),dirs[dir],
+	      sprintf(tmp,"%s %s %s. [%d]\n\r",GET_NAME(ch),how,dirs[dir],
 		      total);
 	    }
 	  } else {
@@ -527,14 +507,14 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 	      if (MOUNTED(ch)) {
 		sprintf(tmp,"%s leaves %s, riding on %s\n\r",ch->player.short_descr, dirs[dir], MOUNTED(ch)->player.short_descr);
 	      } else {
-		sprintf(tmp,"%s leaves %s.\n\r",ch->player.short_descr,
+		sprintf(tmp,"%s %s %s.\n\r",ch->player.short_descr,how,
 			dirs[dir]);
 	      }
 	    } else {
 	      if (MOUNTED(ch)) {
 		sprintf(tmp,"%s leaves %s, riding on %s\n\r",GET_NAME(ch), dirs[dir], MOUNTED(ch)->player.short_descr);
 	      } else {
-		sprintf(tmp,"%s leaves %s\n\r",GET_NAME(ch),dirs[dir]);
+		sprintf(tmp,"%s %s %s.\n\r",GET_NAME(ch),how,dirs[dir]);
 	      }
 	    }
 	  }
@@ -544,6 +524,8 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
     }
   }
   
+  how = MovementType(ch, TRUE);
+  
   for (tmp_ch = real_roomp(ch->in_room)->people; tmp_ch; 
        tmp_ch = tmp_ch->next_in_room) {
     if (((!IS_AFFECTED(ch, AFF_SNEAK)) || (IS_IMMORTAL(tmp_ch))) &&
@@ -552,16 +534,16 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 	if (dir < 4) {
 	  if (total == 1) {
 	    if (MOUNTED(ch)) {
-	      sprintf(tmp, "%s has arrived from the %s, riding on %s", 
+	      sprintf(tmp, "%s from the %s, riding on %s", 
 		      PERS(ch, tmp_ch),dirs[rev_dir[dir]], 
 		      PERS(MOUNTED(ch), tmp_ch));
 	    } else {
-	      sprintf(tmp, "%s has arrived from the %s.", 
-		      PERS(ch, tmp_ch),dirs[rev_dir[dir]]);
+	      sprintf(tmp, "%s %s from the %s.", 
+		      PERS(ch, tmp_ch),how,dirs[rev_dir[dir]]);
 	    }
 	  } else {
-	      sprintf(tmp, "%s has arrived from the %s.", 
-		      PERS(ch, tmp_ch),dirs[rev_dir[dir]]);
+	      sprintf(tmp, "%s %s from the %s.", 
+		      PERS(ch, tmp_ch),how,dirs[rev_dir[dir]]);
 	  }
 	} else if (dir == 4) {
 	  if (total == 1) {
@@ -570,12 +552,12 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 		      PERS(ch, tmp_ch), 
 		      PERS(MOUNTED(ch), tmp_ch));
 	    } else {
-	      sprintf(tmp, "%s has arrived from below.", 
-		      PERS(ch, tmp_ch));
+	      sprintf(tmp, "%s %s from below.", 
+		      PERS(ch, tmp_ch),how);
 	    }
 	  } else {
-	    sprintf(tmp, "%s has arrived from below.", 
-		    PERS(ch, tmp_ch));
+	    sprintf(tmp, "%s %s from below.", 
+		    PERS(ch, tmp_ch),how);
 	  }
 	} else if (dir == 5) {
 	  if (total == 1) {
@@ -584,12 +566,12 @@ int DisplayMove( struct char_data *ch, int dir, int was_in, int total)
 		      PERS(ch, tmp_ch), 
 		      PERS(MOUNTED(ch), tmp_ch));
 	    } else {
-	      sprintf(tmp, "%s has arrived from above", 
-		      PERS(ch, tmp_ch));
+	      sprintf(tmp, "%s %s from above", 
+		      PERS(ch, tmp_ch),how);
 	    }
 	  } else {
-	    sprintf(tmp, "%s has arrived from above.", 
-		    PERS(ch, tmp_ch));
+	    sprintf(tmp, "%s %s from above.", 
+		    PERS(ch, tmp_ch),how);
 	  }
 	} else {
 	  if (total == 1) {
@@ -1087,17 +1069,12 @@ void do_pick(struct char_data *ch, char *argument, int cmd)
     return;
   }
 
-  if (!HasClass(ch, CLASS_THIEF) && !HasClass(ch, CLASS_MONK)) {
+  if (!HasClass(ch, CLASS_THIEF) && !HasClass(ch, CLASS_MONK) && 
+      !IsIntrinsic(ch, SKILL_PICK_LOCK)) {
     send_to_char("You're no thief!\n\r", ch);
     return;
   }
   
-  if (percent > (ch->skills[SKILL_PICK_LOCK].learned)) {
-    send_to_char("You failed to pick the lock.\n\r", ch);
-    LearnFromMistake(ch, SKILL_PICK_LOCK, 0, 90);
-    WAIT_STATE(ch, PULSE_VIOLENCE*4);
-    return;
-  }
   
   if (!*type) {
     send_to_char("Pick what?\n\r", ch);
@@ -1118,6 +1095,14 @@ void do_pick(struct char_data *ch, char *argument, int cmd)
       send_to_char("It resists your attempts at picking it.\n\r", ch);
     else
       {
+
+	if (percent > (ch->skills[SKILL_PICK_LOCK].learned)) {
+	  send_to_char("You failed to pick the lock.\n\r", ch);
+	  LearnFromMistake(ch, SKILL_PICK_LOCK, 0, 90);
+	  WAIT_STATE(ch, PULSE_VIOLENCE*4);
+	  return;
+	}
+
 	REMOVE_BIT(obj->obj_flags.value[1], CONT_LOCKED);
 	send_to_char("*Click*\n\r", ch);
 	act("$n fiddles with $p.", FALSE, ch, obj, 0, TO_ROOM);
@@ -1135,6 +1120,14 @@ void do_pick(struct char_data *ch, char *argument, int cmd)
     else if (IS_SET(exitp->exit_info, EX_PICKPROOF))
       send_to_char("You seem to be unable to pick this lock.\n\r", ch);
     else {
+
+      if (percent > (ch->skills[SKILL_PICK_LOCK].learned)) {
+	send_to_char("You failed to pick the lock.\n\r", ch);
+	LearnFromMistake(ch, SKILL_PICK_LOCK, 0, 90);
+	WAIT_STATE(ch, PULSE_VIOLENCE*4);
+	return;
+      }
+
       if (exitp->keyword)
 	act("$n skillfully picks the lock of the $F.", 0, ch, 0,
 	    exitp->keyword, TO_ROOM);
@@ -1437,5 +1430,34 @@ void do_follow(struct char_data *ch, char *argument, int cmd)
         REMOVE_BIT(ch->specials.affected_by, AFF_GROUP);      
       add_follower(ch, leader);
     }
+  }
+}
+
+void do_walk(struct char_data *ch, char *argument, int cmd)
+{
+  /* These yokos can walk/fly anytime they damn well please. */
+  if(IS_INTRINSIC(ch,AFF_FLYING) || affected_by_spell(ch, SPELL_FLY)) {
+    REMOVE_BIT(ch->specials.affected_by,AFF_FLYING);
+    send_to_char("You descend and begin walking.\n\r",ch);
+  } else if(IS_AFFECTED(ch, AFF_FLYING)) {
+    send_to_char("You must remove the item that is causing you to fly.\n\r", 
+		 ch);
+  } else {
+    send_to_char("Hey bub, you ARE walking!\n\r", ch);
+  }
+}
+
+
+
+void do_fly(struct char_data *ch, char *argument, int cmd)
+{
+  if( (IS_INTRINSIC(ch,AFF_FLYING) || affected_by_spell(ch, SPELL_FLY)) &&
+     !IS_AFFECTED(ch, AFF_FLYING) ) {
+    SET_BIT(ch->specials.affected_by,AFF_FLYING);
+    send_to_char("You take to the skies.\n\r", ch);
+  } else if(!IS_AFFECTED(ch, AFF_FLYING)) {
+    send_to_char("I'm sorry, but someone has clipped your wings.\n\r",ch);
+  } else {
+    send_to_char("You fly even higher!\n\r", ch);
   }
 }

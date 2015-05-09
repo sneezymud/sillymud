@@ -46,15 +46,15 @@ void signal_setup()
 
 int checkpointing()
 {
-	extern int tics;
+  extern int tics;
 	
-	if (!tics)
-	{
-		log("CHECKPOINT shutdown: tics not updated");
-		abort();
-	}
-	else
-		tics = 0;
+  if (!tics)
+    {
+      log("CHECKPOINT shutdown: tics not updated");
+      abort();
+    }
+  else
+    tics = 0;
 }
 
 
@@ -72,13 +72,17 @@ int shutdown_request()
 /* kick out players etc */
 int hupsig()
 {
-	extern int mudshutdown, reboot;
+  int i;
+  extern int mudshutdown, reboot;
 
-	log("Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
+  log("Received SIGHUP, SIGINT, or SIGTERM. Shutting down");
 
-	raw_force_all("return");
-	raw_force_all("save");
-	mudshutdown = reboot = 1;
+  raw_force_all("return");
+  raw_force_all("save");
+  for (i=0;i<30;i++) {
+    SaveTheWorld();
+  }
+  mudshutdown = reboot = 1;
 }
 
 int logsig()

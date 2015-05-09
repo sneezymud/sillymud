@@ -36,6 +36,7 @@
 #define VT_MARGSET    "\033[%d;%dr"
 #define VT_CURSAVE    "\0337"
 #define VT_CURREST    "\0338"
+#define ANSI_BLINK    "\033[5m"             /* blinking text */
  
  
 /* Infobar stuffage added for SillyMUD */
@@ -44,3 +45,4 @@
 #define INFO_MOVE          4
 #define INFO_EXP           8
 #define INFO_GOLD          16
+

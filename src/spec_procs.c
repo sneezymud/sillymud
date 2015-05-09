@@ -34,9 +34,8 @@ extern struct weather_data weather_info;
 	extern int top_of_world;
 	extern struct int_app_type int_app[26];
 extern int RacialMax[][MAX_CLASS];
-
 extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
-extern struct spell_info_type spell_info[];
+extern struct skill_data skill_info[];
 extern char *dirs[]; 
 
 
@@ -47,11 +46,6 @@ struct social_type {
   char *cmd;
   int next_line;
 };
-
-/*
-  Brian:  I moved all your stuff to spec_procs2.c
-
-*/
 
 
 
@@ -136,140 +130,75 @@ struct char_data *FindMobInRoomWithFunction(int room, int (*func)())
        if (IS_MOB(temp_char))
          if (mob_index[temp_char->nr].func == func)
 	   targ = temp_char;
-
   } else {
     return(0);
   }
-
   return(targ);
-
 }
 
-int MageGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) 
+/* New consolidated guildmaster code contributed by Kiku, 9/26/93 */
+
+int MageGuildMaster(struct char_data *ch, int cmd, char *arg,
+		    struct char_data *mob, int type) 
 {
-  int number, i, percent;
-  char buf[MAX_INPUT_LENGTH];
-  struct char_data *guildmaster;
-  extern char *spells[];
-  extern struct spell_info_type spell_info[MAX_SPL_LIST];
+  return(Guildmaster(ch, cmd, arg, mob, type, CLASS_MAGIC_USER));
+}
 
-  if (!ch->skills) return(FALSE);
+int ClericGuildMaster(struct char_data *ch, int cmd, char *arg, 
+		      struct char_data *mob, int type) 
+{
+ return(Guildmaster(ch, cmd, arg, mob, type, CLASS_CLERIC));
+}
 
-  if (IS_IMMORTAL(ch))
-    return(FALSE);
+int ThiefGuildMaster(struct char_data *ch, int cmd, char *arg, 
+		     struct char_data *mob, int type) 
+{
+  return(Guildmaster(ch, cmd, arg, mob, type, CLASS_THIEF));
+}
 
-  if (check_soundproof(ch)) return(FALSE);  
-  if(type == PULSE_COMMAND)
-     guildmaster = mob;
+
+int WarriorGuildMaster(struct char_data *ch, int cmd, char *arg, 
+		       struct char_data *mob, int type) 
+{
+  return(Guildmaster(ch, cmd, arg, mob, type, CLASS_WARRIOR));
+}
+
+int monk_master(struct char_data *ch, int cmd, char *arg, 
+		struct char_data *mob, int type)
+{
+  if (!HasClass(ch, CLASS_MONK))
+    return(Teacher(ch, cmd, arg, mob, type, TAUGHT_BY_MONK, 
+		   "monk guildmaster"));
   else
-     guildmaster = ch;
-
-/*  guildmaster = FindMobInRoomWithFunction(ch->in_room, MageGuildMaster); */
-
-  if (!guildmaster) return(FALSE);
-
-  if ((cmd != 164) && (cmd != 170) && (cmd != 243) && (cmd != 72))
-      return(FALSE);
-
-  if (IS_NPC(ch)) {
-    act("$N tells you 'What do i look like, an animal trainer?'", FALSE,
-	ch, 0, guildmaster, TO_CHAR);
-    return(FALSE);
-  }
-
-  for (;*arg == ' '; arg++);
-
-  if (HasClass(ch, CLASS_MAGIC_USER)) {
-     if (cmd == 243 || cmd == 72) {  /* gain or give */
-       if (GET_LEVEL(ch,MAGE_LEVEL_IND) < GetMaxLevel(guildmaster)-10) { 
-	 MakeQuest(ch, guildmaster, MAGE_LEVEL_IND, arg, cmd);
-	} else {
-	  send_to_char("I cannot train you.. You must find another.\n\r",ch);
-	}
-        return(TRUE); 
-     }
-
-     if (!*arg) {
-      sprintf(buf,"You have got %d practice sessions left.\n\r", 
-	      ch->specials.spells_to_learn);
-      send_to_char(buf, ch);
-      send_to_char("You can practise any of these spells:\n\r", ch);
-      for(i=0; *spells[i] != '\n'; i++)
-	if (spell_info[i+1].spell_pointer &&
-	    (spell_info[i+1].min_level_magic<=
-	     GET_LEVEL(ch,MAGE_LEVEL_IND)) &&
-	    (spell_info[i+1].min_level_magic <=
-	     GetMaxLevel(guildmaster)-10)) {
-
-	    sprintf(buf,"[%d] %s %s \n\r",
-		    spell_info[i+1].min_level_magic,
-		    spells[i],how_good(ch->skills[i+1].learned));
-	  send_to_char(buf, ch);
-	}
-
-      return(TRUE);
-
-    }
-    for (;isspace(*arg);arg++);
-    number = old_search_block(arg,0,strlen(arg),spells,FALSE);
-    if(number == -1) {
-      send_to_char("You do not know of this spell...\n\r", ch);
-      return(TRUE);
-    }
-    if (GET_LEVEL(ch,MAGE_LEVEL_IND) < spell_info[number].min_level_magic) {
-      send_to_char("You do not know of this spell...\n\r", ch);
-      return(TRUE);
-    }
-    if (GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_magic) {
-      do_say(guildmaster, "I don't know of this spell.", 0);
-      return(TRUE);
-    }
-    if (ch->specials.spells_to_learn <= 0) {
-      send_to_char("You do not seem to be able to practice now.\n\r", ch);
-      return(TRUE);
-    }
-    
-    if (ch->skills[number].learned >= 60) {
-      send_to_char("You must use this skill to get any better.  I cannot train you further.\n\r", ch);
-      return(TRUE);
-    }
-    
-    send_to_char("You Practice for a while...\n\r", ch);
-    ch->specials.spells_to_learn--;
-    
-    SET_BIT(ch->skills[number].flags, SKILL_KNOWN);
-    percent = ch->skills[number].learned+int_app[GET_RINT(ch)].learn;
-    ch->skills[number].learned = MIN(95, percent);
-    
-    if (ch->skills[number].learned >= 95) {
-      send_to_char("You are now learned in this area.\n\r", ch);
-      return(TRUE);
-
-    }
-  } else {
-    send_to_char("Oh.. i bet you think you're a magic user?\n\r", ch);
-    return(FALSE);
-  }
-
+    return(Guildmaster(ch, cmd, arg, mob, type, CLASS_MONK));
 }
 
-int ClericGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) 
+int DruidGuildMaster(struct char_data *ch, int cmd, char *arg, 
+		     struct char_data *mob, int type)
 {
+  return(Guildmaster(ch, cmd, arg, mob, type, CLASS_DRUID));
+}
 
-  int number, i, percent;
+int Guildmaster(struct char_data *ch, int cmd, char *arg, 
+		struct char_data *mob, int type, int class)
+{
+  int number, i, percent, class_level_ind, level_num, teacher;
   char buf[MAX_INPUT_LENGTH];
   struct char_data *guildmaster;
   extern char *spells[];
-  extern struct spell_info_type spell_info[MAX_SPL_LIST];
-
+  extern struct skill_data skill_info[MAX_SPL_LIST];
+  
   if (!ch->skills) return(FALSE);
-
-  if (check_soundproof(ch)) return(FALSE);
-
+  
   if (IS_IMMORTAL(ch))
     return(FALSE);
 
-  guildmaster = FindMobInRoomWithFunction(ch->in_room, ClericGuildMaster);
+  if (check_soundproof(ch)) return(FALSE);
+
+  if(type == PULSE_COMMAND)
+    guildmaster = mob;
+  else
+    guildmaster = ch;
 
   if (!guildmaster) return(FALSE);
 
@@ -278,264 +207,181 @@ int ClericGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data
 
   if (IS_NPC(ch)) {
     act("$N tells you 'What do i look like, an animal trainer?'", FALSE,
-	ch, 0, guildmaster, TO_CHAR);
+        ch, 0, guildmaster, TO_CHAR);
     return(FALSE);
   }
 
+  switch(class) {
+  case CLASS_MAGIC_USER:
+      class_level_ind = MAGE_LEVEL_IND;
+      level_num = MIN_LEVEL_MAGIC;
+      break;
+    case CLASS_CLERIC:
+      class_level_ind = CLERIC_LEVEL_IND;
+      level_num = MIN_LEVEL_CLERIC;
+      break;
+    case CLASS_WARRIOR:
+      class_level_ind = WARRIOR_LEVEL_IND;
+      teacher = TAUGHT_BY_WARRIOR;
+      break;
+    case CLASS_THIEF:
+      class_level_ind = THIEF_LEVEL_IND;
+      teacher = TAUGHT_BY_THIEF;
+      break;
+    case CLASS_DRUID:
+      class_level_ind = DRUID_LEVEL_IND;
+      level_num = MIN_LEVEL_DRUID;
+      break;
+    case CLASS_MONK:
+      class_level_ind = MONK_LEVEL_IND;
+      teacher = TAUGHT_BY_MONK;
+      break;
+    default:
+      class_level_ind = -1;
+    }
+
   for (;*arg == ' '; arg++);
 
-  if (HasClass(ch, CLASS_CLERIC)) {
-     if (cmd == 243 || cmd == 72) {  /* gain or give */
-       if (GET_LEVEL(ch,CLERIC_LEVEL_IND) < GetMaxLevel(guildmaster)-10) { 
-	 MakeQuest(ch, guildmaster, CLERIC_LEVEL_IND, arg, cmd);
-	} else {
-	  send_to_char("I cannot train you.. You must find another.\n\r",ch);
-	}
-        return(TRUE); 
-     }
-
-
-    if (!*arg) {
-      sprintf(buf,"You have got %d practice sessions left.\n\r", 
-	      ch->specials.spells_to_learn);
-      send_to_char(buf, ch);
-      send_to_char("You can practise any of these spells:\n\r", ch);
-      for(i=0; *spells[i] != '\n'; i++)
-	if (spell_info[i+1].spell_pointer &&
-	   (spell_info[i+1].min_level_cleric <= 
-	    GET_LEVEL(ch,CLERIC_LEVEL_IND)) &&
-	    (spell_info[i+1].min_level_cleric <=
-	     GetMaxLevel(guildmaster)-10)) {
-	  sprintf(buf,"[%d] %s %s \n\r",
-		  spell_info[i+1].min_level_cleric,spells[i],
-		  how_good(ch->skills[i+1].learned));
-	  send_to_char(buf, ch);  
-	}
-      return(TRUE);
+  if (HasClass(ch, class)) {
+    if (cmd == 243 || cmd == 72) {  /* gain or give */
+      switch(class) {
+      case CLASS_MAGIC_USER:
+      case CLASS_CLERIC:
+      case CLASS_WARRIOR:
+      case CLASS_THIEF:
+        if (GET_LEVEL(ch,class_level_ind) < GetMaxLevel(guildmaster)-10) {
+          MakeQuest(ch, guildmaster, class_level_ind, arg, cmd);
+        } else {
+          send_to_char("You have learned all that I can teach you.\n\r",ch);
+        }
+        return(TRUE);
+      case CLASS_DRUID:
+      case CLASS_MONK:
+        if (cmd == 243) {
+          if (GET_LEVEL(ch, class_level_ind) <= 9) {
+            GainLevel(ch, class_level_ind);
+          } else {
+            if (class==CLASS_DRUID) {
+              send_to_char("You must fight another druid for this title.\n\r",
+                           ch);
+            } else {
+              send_to_char("You must fight another monk for this title.\n\r",
+                           ch);
+            }
+          }
+        }
+        return(TRUE);
+      default:
+        sprintf(buf, "Strangeness in guildmaster, class %d passed in by %s.",
+		class, GET_NAME(ch));
+        log(buf);
+        send_to_char(" 'Ack! I feel faint!'\n\r", ch);
+        return(TRUE);
+      }
     }
+    if (!*arg) {
+      sprintf(buf,"You have got %d practice sessions left.\n\r",
+              ch->specials.spells_to_learn);
+      send_to_char(buf, ch);
+      switch(class) {
+      case CLASS_MAGIC_USER:
+      case CLASS_CLERIC:
+      case CLASS_DRUID:
+        send_to_char("You can practice any of these spells:\n\r", ch);
+        for(i=0; *spells[i] != '\n'; i++) {
+          if (skill_info[i+1].spell_pointer &&
+              (skill_info[i+1].min_level[level_num]<=
+               GET_LEVEL(ch, class_level_ind)) &&
+              (skill_info[i+1].min_level[level_num] <=
+               GetMaxLevel(guildmaster)-10)) {
+
+            sprintf(buf,"[%-2d] %-30s %s \n\r",
+                    skill_info[i+1].min_level[level_num],
+                    spells[i],how_good(ch->skills[i+1].learned));
+            send_to_char(buf, ch);
+          }
+        }
+
+        return(TRUE);
+      case CLASS_WARRIOR:
+      case CLASS_THIEF:
+      case CLASS_MONK:
+        send_to_char("You can practice any of the following skills:\n\r", ch);
+        for(i=0; *spells[i] != '\n'; i++) {
+          if (skill_info[i+1].taught_by & teacher) {
+            sprintf(buf, "%-30s %s\n\r", spells[i],
+                    how_good(ch->skills[i+1].learned));
+            send_to_char(buf, ch);
+          }
+        }
+        return(TRUE);
+      default:
+        sprintf(buf, "Strangeness in guildmaster for class %d.\n\r",class);
+        log(buf);
+        send_to_char("Ack, I feel faint!\n\r", ch);
+      } /* switch */
+      return(TRUE);
+    } /* if !arg */
+
     for (;isspace(*arg);arg++);
     number = old_search_block(arg,0,strlen(arg),spells,FALSE);
-    if(number == -1) {
-      send_to_char("You do not know of this spell...\n\r", ch);
-      return(TRUE);
-    }
-    if (GET_LEVEL(ch,CLERIC_LEVEL_IND) < spell_info[number].min_level_cleric) {
-      send_to_char("You do not know of this spell...\n\r", ch);
-      return(TRUE);
-    }
-    if (GetMaxLevel(guildmaster)-10 < spell_info[number].min_level_cleric) {
-      do_say(guildmaster, "I don't know of this spell.", 0);
-      return(TRUE);
-    }
-    if (ch->specials.spells_to_learn <= 0) {
-      send_to_char("You do not seem to be able to practice now.\n\r", ch);
-      return(TRUE);
-    }
-    if (ch->skills[number].learned >= 45) {
-      send_to_char("You must use this spell to get any better.  I cannot train you further.\n\r", ch);
-      return(TRUE);
-    }
-    send_to_char("You Practice for a while...\n\r", ch);
-    ch->specials.spells_to_learn--;
-    
-    SET_BIT(ch->skills[number].flags, SKILL_KNOWN);
-    percent = ch->skills[number].learned+int_app[GET_RINT(ch)].learn;
-    ch->skills[number].learned = MIN(95, percent);
-    
-    if (ch->skills[number].learned >= 95) {
-      send_to_char("You are now learned in this area.\n\r", ch);
-      return(TRUE);
-    }
-  } else {
-    send_to_char("What do you think you are, a cleric??\n\r", ch);
-    return(FALSE);
-  }
-
-}
-
-int ThiefGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) 
-{
-
-  int number, i, percent;
-  char buf[MAX_INPUT_LENGTH];
-  struct char_data *guildmaster;
-
-  static char *t_skills[] = {
-    "sneak",   /* No. 45 */
-    "hide",
-    "steal",
-    "backstab",
-    "pick",
-    "\n"
-  };
-
-  if (!ch->skills) return(FALSE);
-
-  if (IS_IMMORTAL(ch))
-    return(FALSE);
-
-  if (check_soundproof(ch)) return(FALSE);
-
-  guildmaster = FindMobInRoomWithFunction(ch->in_room, ThiefGuildMaster);
-
-  if (!guildmaster) return(FALSE);
-
-  if ((cmd != 164) && (cmd != 170) && (cmd != 243) && (cmd != 72))
-      return(FALSE);
-
-  if (IS_NPC(ch)) {
-    act("$N tells you 'What do i look like, an animal trainer?'", FALSE,
-	ch, 0, guildmaster, TO_CHAR);
-    return(FALSE);
-  }
-
-  for (;*arg == ' '; arg++);
-
-  if (HasClass(ch, CLASS_THIEF)) {
-     if (cmd == 243 || cmd == 72) {  /* gain or give */
-       if (GET_LEVEL(ch,THIEF_LEVEL_IND) < GetMaxLevel(guildmaster)-10) { 
-	 MakeQuest(ch, guildmaster, THIEF_LEVEL_IND, arg, cmd);
-	} else {
-	  send_to_char("I cannot train you.. You must find another.\n\r",ch);
-	}
-        return(TRUE); 
-     }
-
-
-
-    if (!*arg) {
-      sprintf(buf,"You have got %d practice sessions left.\n\r", 
-	      ch->specials.spells_to_learn);
-      send_to_char(buf, ch);
-      send_to_char("You can practise any of these skills:\n\r", ch);
-      for(i=0; *t_skills[i] != '\n';i++) {
-	send_to_char(t_skills[i], ch);
-	send_to_char(how_good(ch->skills[i+45].learned), ch);
-	send_to_char("\n\r", ch);
-      }
-      return(TRUE);
-    }
-    for (;isspace(*arg);arg++);
-    number = search_block(arg,t_skills,FALSE);
     if(number == -1) {
       send_to_char("You do not know of this skill...\n\r", ch);
       return(TRUE);
     }
+
+    if(!(skill_info[number].taught_by & teacher) && 
+       !(skill_info[number].spell_pointer)) {
+      do_say(guildmaster, "I do not know of what thou art speaking.", 0);
+      return(TRUE);
+    }
+
+    if (class==CLASS_MAGIC_USER || class==CLASS_CLERIC || class==CLASS_DRUID) {
+      if (GET_LEVEL(ch,class_level_ind) < 
+	  skill_info[number].min_level[level_num]) {
+        send_to_char("You do not know of this spell...\n\r", ch);
+        return(TRUE);
+      }
+      if (GetMaxLevel(guildmaster)-10 < 
+	  skill_info[number].min_level[level_num]) {
+        do_say(guildmaster, "I don't know of this spell.", 0);
+	        return(TRUE);
+      }
+    }
     if (ch->specials.spells_to_learn <= 0) {
       send_to_char("You do not seem to be able to practice now.\n\r", ch);
       return(TRUE);
     }
-    if (ch->skills[number+SKILL_SNEAK].learned >= 45) {
-      send_to_char("I have taught you all that I can.  You must use your skills now.\n\r", ch);
-      return(TRUE);
-    }
-    send_to_char("You Practice for a while...\n\r", ch);
-    ch->specials.spells_to_learn--;
-    
-    SET_BIT(ch->skills[number+SKILL_SNEAK].flags, SKILL_KNOWN);
-    percent = ch->skills[number+SKILL_SNEAK].learned +
-      int_app[GET_RINT(ch)].learn;
-    ch->skills[number+SKILL_SNEAK].learned = MIN(90, percent);
-    
-    if (ch->skills[number+SKILL_SNEAK].learned >= 90) {
-      send_to_char("You are now learned in this area.\n\r", ch);
+
+    if ((number == SKILL_QUIV_PALM) && (GET_LEVEL(ch, class_level_ind) < 30)) {
+      send_to_char("You must be at least level 30 to learn this skill.\n\r", 
+		   ch);
       return(TRUE);
     }
 
-  } else {
-    send_to_char("What do you think you are, a thief??\n\r", ch);
-    return(FALSE);
-  }
-}
-
-
-int WarriorGuildMaster(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type) 
-{
-
-  int number, i, percent;
-  char buf[MAX_INPUT_LENGTH];
-  struct char_data *guildmaster;
-
-  static char *w_skills[] = {
-    "kick",  /* No. 50 */
-    "bash",
-    "rescue",
-    "\n"
-    };
-
-  if (!ch->skills) return(FALSE);
-
-
-  if (IS_IMMORTAL(ch))
-    return(FALSE);
-
-  if (check_soundproof(ch)) return(FALSE);
-
-  guildmaster = FindMobInRoomWithFunction(ch->in_room, WarriorGuildMaster);
-
-  if (!guildmaster) return(FALSE);
-
-  if ((cmd != 164) && (cmd != 170) && (cmd != 243) && (cmd != 72))
-      return(FALSE);
-
-  if (IS_NPC(ch)) {
-    act("$N tells you 'What do i look like, an animal trainer?'", FALSE,
-	ch, 0, guildmaster, TO_CHAR);
-    return(FALSE);
-  }
-
-  for (;*arg == ' '; arg++);
-
-  if (HasClass(ch, CLASS_WARRIOR)) {
-     if (cmd == 243 || cmd == 72) {  /* gain or give */
-       if (GET_LEVEL(ch,WARRIOR_LEVEL_IND) < GetMaxLevel(guildmaster)-10) { 
-	 MakeQuest(ch, guildmaster, WARRIOR_LEVEL_IND, arg, cmd);
-	} else {
-	  send_to_char("I cannot train you.. You must find another.\n\r",ch);
-	}
-        return(TRUE); 
-     }
-
-    if (!*arg) {
-      sprintf(buf,"You have got %d practice sessions left.\n\r", 
-	      ch->specials.spells_to_learn);
-      send_to_char(buf, ch);
-      send_to_char("You can practise any of these skills:\n\r", ch);
-      for(i=0; *w_skills[i] != '\n';i++) {
-	send_to_char(w_skills[i], ch);
-	send_to_char(how_good(ch->skills[i+SKILL_KICK].learned), ch);
-	send_to_char("\n\r", ch);
+    if (ch->skills[number].learned >= skill_info[number].percent) {
+      if (ch->skills[number].learned < 95) {
+        send_to_char("You must use this skill to get any better.  I cannot train you further.\n\r", ch);
+      } else {
+        send_to_char("You are learned in this skill.\n\r", ch);
       }
       return(TRUE);
     }
-    for (;isspace(*arg);arg++);
-    number = search_block(arg, w_skills, FALSE);
-    if(number == -1) {
-      send_to_char("You do not have ability to practise this skill!\n\r", ch);
-      return(TRUE);
-    }
-    if (ch->specials.spells_to_learn <= 0) {
-      send_to_char("You do not seem to be able to practice now.\n\r", ch);
-      return(TRUE);
-    }
-    if (ch->skills[number+SKILL_KICK].learned >= 45) {
-      send_to_char("I have taught you all that I can.  Now you must use your skills.\n\r", ch);
-      return(TRUE);
-    }
-    send_to_char("You Practice for a while...\n\r", ch);
-    ch->specials.spells_to_learn--;
-    
-    SET_BIT(ch->skills[number+SKILL_KICK].flags, SKILL_KNOWN);
-    percent = ch->skills[number+SKILL_KICK].learned +
-      int_app[GET_RINT(ch)].learn;
-    ch->skills[number+SKILL_KICK].learned = MIN(90, percent);
-    
-    if (ch->skills[number+SKILL_KICK].learned >= 90) {
-      send_to_char("You are now learned in this area.\n\r", ch);
+
+     send_to_char("You practice for a while...\n\r", ch);
+     ch->specials.spells_to_learn--;
+
+     SET_BIT(ch->skills[number].flags, SKILL_KNOWN);
+     percent = ch->skills[number].learned+int_app[GET_RINT(ch)].learn;
+     ch->skills[number].learned = MIN(95, percent);
+
+    if (ch->skills[number].learned >= 95) {
+      send_to_char("You are now a master of this art.\n\r", ch);
+      ch->skills[number].learned = 95;
       return(TRUE);
     }
   } else {
-    send_to_char("Oh.. i bet you think you're a fighter??\n\r", ch);
+    send_to_char("The Guildmaster says 'Hey, I'm not your guildmaster.  Get lost!'\n\r", ch);
     return(FALSE);
   }
 }
@@ -548,7 +394,6 @@ int dump(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int typ
   struct char_data *tmp_char;
   int value=0;
   
-  void do_drop(struct char_data *ch, char *argument, int cmd);
   char *fname(char *namelist);
   
   for(k = real_roomp(ch->in_room)->contents; k ; k = real_roomp(ch->in_room)->contents)    {
@@ -568,7 +413,7 @@ int dump(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int typ
   
   for(k = real_roomp(ch->in_room)->contents; k ; 
       k = real_roomp(ch->in_room)->contents)    {
-      sprintf(buf, "The %s vanish in a puff of smoke.\n\r",fname(k->name));
+      sprintf(buf, "The %s vanishes in a puff of smoke.\n\r",fname(k->name));
       for(tmp_char = real_roomp(ch->in_room)->people; tmp_char;
 	  tmp_char = tmp_char->next_in_room)
 	if (CAN_SEE_OBJ(tmp_char, k))
@@ -1072,7 +917,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	  do_lock(eric, "front",0);
 	}
 	dir = choose_exit_global(eric->in_room, Erics_Lair, -100);
-	if (dir<0)
+	if(dir<0)
 	  {
 	    if (eric->in_room == DanjerPorch) {
 	      do_unlock(eric, "front",0);
@@ -1081,7 +926,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	    }
 	    dir = choose_exit_global(eric->in_room, DanjerPorch, -100);
 	  }
-	if (dir<0) {
+	if (dir < 0) {
 	  if (dice(1,2)==1)
 	    act("$n says 'Shit, I'm totally lost.", FALSE, eric, 0,0,TO_ROOM);
 	  else
@@ -1135,7 +980,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
       if (eric->in_room != DanjerKitchen) {
 	int	dir;
 	dir = choose_exit_global(eric->in_room, DanjerKitchen, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  if (dice(1,3)!=1)
 	    act("$n says 'Dammit, where's the beer?",
 		FALSE, eric, 0,0,TO_ROOM);
@@ -1206,7 +1051,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	    return TRUE; /* this takes one turn */
 	    }
 	  dir = choose_exit_global(eric->in_room, andy->in_room, -100);
-	  if (dir<0) {
+	  if(dir<0) {
 	    dir = choose_exit_global(eric->in_room, DanjerLiving, -100);
 	  }
 	  if (dir<0) {
@@ -1248,7 +1093,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	  do_lock(eric, "front",0);
 	}
 	dir = choose_exit_global(eric->in_room, DanjerKitchen, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  if (eric->in_room == DanjerPorch) {
 	    do_unlock(eric, "front",0);
 	    do_open(eric, "front",0);
@@ -1256,7 +1101,7 @@ int eric_johnson(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	  }
 	  dir = choose_exit_global(eric->in_room, DanjerPorch, -100);
 	}
-	if (dir<0) {
+	if(dir<0) {
 	  if (dice(1,3)!=1)
 	    act("$n says 'Dammit, where's the fridge?",
 		FALSE, eric, 0,0,TO_ROOM);
@@ -2034,6 +1879,13 @@ int puff(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int ty
     return(TRUE);
   }
 
+  if(type == EVENT_DEATHROOM) {
+    if(number(0,1))
+      do_shout(ch,"Oh boy, cosmic forces reveal a spontaneous influx of items!",0);
+    else
+      do_shout(ch,"Wake up, now's the time for treasure hunting!",0);
+    return(TRUE);
+  }
   if (cmd)
     return(0);
 
@@ -3326,6 +3178,7 @@ int Fountain(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int
   int bits, water;
   char buf[MAX_INPUT_LENGTH];
   struct char_data *tmp_char;
+  char container[20];           /* so we can be flexible */
   struct obj_data *obj;
 
   extern int drink_aff[][3];
@@ -3371,14 +3224,37 @@ int Fountain(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int
 
   } else if (cmd==11) { /* drink */
 
+    switch(ch->in_room) {
+    case 13518:
+    case 11014:
+    case 5234:
+    case 3141:
+    case 13406:
+      strncpy(container,"fountain",20);
+      break;
+    case 22642:
+    case 22644:
+    case 22646:
+    case 22648:
+      strncpy(container,"brook",20);
+      break;
+    default:
+      strncpy(container,"fountain",20);
+    };
+
+
     only_argument(arg,buf);
 
-    if (str_cmp(buf, "fountain") && str_cmp(buf, "water")) {
+    if (str_cmp(buf, container) && str_cmp(buf, "water")) {
       return(FALSE);
     }
     
-    send_to_char("You drink from the fountain\n\r", ch);
-    act("$n drinks from the fountain", FALSE, ch, 0, 0, TO_ROOM);
+    sprintf(buf,"You drink from the %s.\n\r",container);
+    send_to_char(buf, ch);
+
+    sprintf(buf,"$n drinks from the %s.",container);
+    act(buf, FALSE, ch, 0, 0, TO_ROOM);
+
 
     GET_COND(ch,THIRST) = 24;
 
@@ -3486,11 +3362,40 @@ int pray_for_items(struct char_data *ch, int cmd, char *arg, struct room_data *r
   bool found;
   struct obj_data *tmp_obj, *obj;
   struct extra_descr_data *ext;
-  
+
   if (cmd != 176) /* You must pray to get the stuff */
     return FALSE;
   
   key_room = 1+ch->in_room;
+
+  for (;*arg==' ';arg++);
+
+  if (!strcmp(arg, "one life")) {
+    if(GetMaxLevel(ch) >= LOW_IMMORTAL) {
+      GET_SEX(ch) = 0;
+      send_to_char("Odin neuters you.\n\r",ch);
+      GET_RACE(ch) = RACE_SLIME;
+      send_to_char("Odin turns you into a slime.\n\r",ch);
+      send_to_char("Odin screams, 'you loser! Get back to work on your area!'\nr", ch);
+      return(TRUE);
+    } else if(IS_SET(ch->specials.affected_by2, AFF2_ONE_LIFER)) {
+      if(GET_SEX(ch)) {
+	GET_SEX(ch) = 0;
+	send_to_char("Odin neuters you.\n\r",ch);
+	send_to_char("Don't try that again!\n\r", ch);
+      } else {
+	GET_RACE(ch) = RACE_SLIME;
+	send_to_char("Odin turns you into a slime.\n\r",ch);
+	send_to_char("Odin screams, 'Take that! You hoser!\n\r", ch);
+      }
+    } else {
+      send_to_char("Odin grants you his blessing.\n\r", ch);
+      send_to_char("Odin tells you 'Go out there and kick some butt!'\n\r",ch);
+      ImprovePreferedStat(ch, 3, TRUE);
+      SET_BIT(ch->specials.affected_by2, AFF2_ONE_LIFER);
+      return(TRUE);
+    }
+  }
   
   strcpy(buf, "item_for_");
   strcat(buf, GET_NAME(ch));
@@ -3641,6 +3546,12 @@ int Donation(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int
   if ((cmd != 10) && (cmd != 167)) {
     return(FALSE);
   }
+  
+  if(GetMaxLevel(ch) > 20)
+    if(number(0,3)) {
+      send_to_char("Hey you, go get your own damn stuff!\n\r",ch);
+      return(TRUE);
+    }
 
   one_argument(arg, check);
 
@@ -3656,7 +3567,7 @@ int Donation(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int
 /*
   house routine for saved items.
 */
-
+#if 0
 int House(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int type) 
 {
   char buf[100];
@@ -3693,12 +3604,7 @@ int House(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int ty
       return(FALSE);
     }
 
-    if (count > 18) {
-      send_to_char("I'm sorry, but you have more than 18 \n\r", ch);
-      send_to_char("limited items.  Due to the item-hoarding problem\n\r", ch);
-      send_to_char("I have been forced to restrict the houses\n\r", ch);
-      return(FALSE);
-    }
+    cost.total_cost = 0;
 
     sprintf(buf, "It will cost you %d coins per day\n\r", cost.total_cost);
     send_to_char(buf, ch);
@@ -3715,7 +3621,7 @@ int House(struct char_data *ch, int cmd, char *arg, struct room_data *rp, int ty
 
   }  
 }
-
+#endif
 /***********************************************************************
 
 			   CHESSBOARD PROCS
@@ -4001,7 +3907,7 @@ int delivery_elf(struct char_data *ch, int cmd, char *arg, struct char_data *mob
       if (ch->in_room != Bakery) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, Bakery, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = ELF_INIT;
 	  return(FALSE);
 	} else {
@@ -4020,7 +3926,7 @@ int delivery_elf(struct char_data *ch, int cmd, char *arg, struct char_data *mob
       if (ch->in_room != Dump)   {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, Dump, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = ELF_INIT;
 	  return(FALSE);
 	} else {
@@ -4038,7 +3944,7 @@ int delivery_elf(struct char_data *ch, int cmd, char *arg, struct char_data *mob
       if (ch->in_room != Ivory_Gate)   {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, Ivory_Gate, -200);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = ELF_INIT;
 	  return(FALSE);
 	} else {
@@ -4054,7 +3960,7 @@ int delivery_elf(struct char_data *ch, int cmd, char *arg, struct char_data *mob
     if (ch->in_room != Elf_Home)   {
       int	dir;
       dir = choose_exit_global(ch->in_room, Elf_Home, -200);
-      if (dir<0) {
+      if(dir<0) {
 	ch->generic = ELF_INIT;
 	return(FALSE);
       } else {
@@ -4258,7 +4164,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMNGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMNGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4279,7 +4185,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMEGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMEGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4299,7 +4205,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMSGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMSGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4319,7 +4225,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMWGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMWGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4339,7 +4245,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMOFFICE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMOFFICE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4358,7 +4264,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMNGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMNGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4378,7 +4284,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMEGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMEGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4398,7 +4304,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMSGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMSGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4418,7 +4324,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
       if (ch->in_room != NTMWGATE) {
 	int	dir;
 	dir = choose_exit_global(ch->in_room, NTMWGATE, -100);
-	if (dir<0) {
+	if(dir<0) {
 	  ch->generic = NTM_FIX;
 	  return(FALSE);
 	} else {
@@ -4438,7 +4344,7 @@ int NewThalosMayor(struct char_data *ch, int cmd, char *arg, struct char_data *m
 	if (ch->in_room != NTMOFFICE) {
 	  int	dir;
 	  dir = choose_exit_global(ch->in_room, NTMOFFICE, -100);
-	  if (dir<0) {
+	  if(dir<0) {
 	    ch->generic = NTM_FIX;
 	    return(FALSE);
 	  } else {
@@ -4719,6 +4625,78 @@ int CaravanGuildGuard(struct char_data *ch, int cmd, char *arg, struct char_data
   return(FALSE);
 }
 
+
+/* Gecko Palmreader */
+/*   added warrior strength and charisma dropped price to 200 */
+
+int StatTeller(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
+{
+  int choice;
+  char buf[200];
+
+  if (cmd) {
+    if (cmd == 56) { /* buy */
+
+  /*
+  ** randomly tells a player 3 of his/her stats.. for a price
+  */
+      if (GET_GOLD(ch)< 200) {
+	send_to_char("You do not have the money to pay me.\n\r", ch);
+	return(TRUE);
+      } else {
+	GET_GOLD(ch)-=200;
+      }
+
+      choice = number(0,3);
+      switch(choice) {
+      case 0:
+	if (HasClass(ch, CLASS_WARRIOR) && GET_STR(ch) == 18)
+	  sprintf(buf, "STR: %d/%d, WIS: %d, DEX: %d\n\r", GET_STR(ch), GET_ADD(ch), GET_WIS(ch), GET_DEX(ch));
+	else
+	  sprintf(buf, "STR: %d, WIS: %d, DEX: %d\n\r", GET_STR(ch), GET_WIS(ch), GET_DEX(ch));
+	send_to_char(buf, ch);
+	break;
+      case 1:
+	sprintf(buf, "INT: %d, DEX:  %d, CON: %d \n\r", GET_INT(ch), GET_DEX(ch), GET_CON(ch));
+	send_to_char(buf, ch);
+	break;
+      case 2:
+	sprintf(buf, "CON: %d, INT: %d , WIS: %d \n\r", GET_CON(ch), GET_INT(ch), GET_WIS(ch));
+	send_to_char(buf, ch);
+	break;
+      case 3:
+	sprintf(buf, "DEX: %d, INT: %d, CHR: %d \n\r", GET_DEX(ch), GET_INT(ch), GET_CHR(ch));
+	send_to_char(buf, ch);
+	break;
+      default:
+	send_to_char("We are experiencing Technical difficulties\n\r", ch);
+	return(TRUE);
+      }
+
+    } else {
+      return(FALSE);
+    }
+  }else {    
+
+  /*
+  **  in combat, issues a more potent curse.
+  */
+
+    if (ch->specials.fighting) {
+      act("$n gives you the evil eye!  You feel your hitpoints ebbing away", 
+	  FALSE, ch, 0, ch->specials.fighting, TO_VICT);
+      act("$n gives $N the evil eye!  $N seems weaker!", 
+	  FALSE, ch, 0, ch->specials.fighting, TO_NOTVICT);
+      ch->specials.fighting->points.max_hit -= 10;
+      ch->specials.fighting->points.hit -= 10;
+      return(FALSE);
+    }
+
+  }
+  return(FALSE);
+}
+
+#if 0
 int StatTeller(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
   int choice;
@@ -4778,6 +4756,7 @@ int StatTeller(struct char_data *ch, int cmd, char *arg, struct char_data *mob, 
   }
   return(FALSE);
 }
+#endif
 
 void ThrowChar(struct char_data *ch, struct char_data *v, int dir)
 {
@@ -4944,7 +4923,7 @@ int Tyrannosaurus_swallower(struct char_data *ch, int cmd, char *arg, struct cha
 		  */
 		for (i=1; i<4; i++)
 		  if (o->obj_flags.value[i] >= 1)
-		    ((*spell_info[o->obj_flags.value[i]].spell_pointer)
+		    ((*skill_info[o->obj_flags.value[i]].spell_pointer)
 		     ((byte) o->obj_flags.value[0], ch, "", 
 		      SPELL_TYPE_POTION, ch, o));
 		extract_obj(o);

@@ -59,6 +59,7 @@ void mobile_wander(struct char_data *ch)
   struct room_direction_data	*exitp;
   struct room_data	*rp;
   char buf[100];
+  extern int rev_dir[];
 
   if (GET_POS(ch) != POSITION_STANDING)
     return;
@@ -70,8 +71,9 @@ void mobile_wander(struct char_data *ch)
     door = number(0,8);
     if (door > 5) return;
 
-    if (door = ch->specials.last_direction)
-      continue;
+    if (door == ch->specials.last_direction) {
+      ch->specials.last_direction = -1;
+    }
 
     exitp = EXIT(ch, door);
 
@@ -95,7 +97,7 @@ void mobile_wander(struct char_data *ch)
     if (IsHumanoid(ch) ? CAN_GO_HUMAN(ch, door) : CAN_GO(ch, door)) {
       if (!IS_SET(ch->specials.act, ACT_STAY_ZONE) ||
 	  (rp->zone == real_roomp(ch->in_room)->zone)) {
-	ch->specials.last_direction = door;
+	ch->specials.last_direction = rev_dir[door];
 	go_direction(ch, door);
 	if (ch->in_room == 0) {
 	  if (or != 0) {
@@ -152,7 +154,7 @@ void MobHunt(struct char_data *ch)
     for (k=1;k<=1 && ch->specials.hunting; k++) {
       ch->persist -= 1;
       res = dir_track(ch, ch->specials.hunting);
-      if (res!= -1) {
+      if (res > -1) {
 	go_direction(ch, res);
       } else {
 	ch->persist = 0;
@@ -409,6 +411,7 @@ void mobile_activity(struct char_data *ch)
       vict = FindVictim(ch);
       /* switch to a new target */
       if (vict && vict != ch->specials.fighting) {
+
 	stop_fighting(ch);
 	set_fighting(ch, vict);
       }
@@ -451,7 +454,7 @@ int AssistFriend( struct char_data *ch)
   assert(ch->in_room >= 0); 
 #else
   if (ch->in_room < 0) {
-    sprintf(buf, "Mob %sin negative room", ch->player.name);
+    sprintf(buf, "Mob %s in negative room", ch->player.name);
     log(buf);
     ch->in_room = 0;
     extract_char(ch);

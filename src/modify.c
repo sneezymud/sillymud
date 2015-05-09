@@ -434,11 +434,12 @@ void do_edit(struct char_data *ch, char *arg, int cmd)
     return;      /* the ch->desc->str field will cause problems... */
 
 
-  if((GetMaxLevel(ch) < 56) && (rp->zone != GET_ZONE(ch))) {
+#ifndef TEST_SERVER
+  if((GetMaxLevel(ch) < 55) && (rp->zone != GET_ZONE(ch))) {
      send_to_char("Sorry, you are not authorized to edit this zone.\n\r", ch);
      return;
   }
-  
+#endif
   bisect_arg(arg, &field, string);
   
   if (!field)	{
@@ -484,7 +485,7 @@ void do_edit(struct char_data *ch, char *arg, int cmd)
     }
     
     if (rp->dir_option[dir]) {
-      send_to_char("modifying exit\n\r",ch);
+      send_to_char("modifying exit.\n\r",ch);
       switch(dflags) {
       case 1: rp->dir_option[dir]->exit_info = EX_ISDOOR;
               break;
@@ -495,7 +496,7 @@ void do_edit(struct char_data *ch, char *arg, int cmd)
       case 4: rp->dir_option[dir]->exit_info = EX_CLIMB | EX_ISDOOR;
               break;
       case 5: rp->dir_option[dir]->exit_info = EX_CLIMB | EX_ISDOOR | EX_PICKPROOF;
-              break;
+	break;
       default: rp->dir_option[dir]->exit_info = 0;
       }
 

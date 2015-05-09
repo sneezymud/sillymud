@@ -14,7 +14,7 @@ struct wiznode {
 };
 
 struct wizlistgen {
-   int number[10];
-   struct wiznode lookup[10];
+   int number[11];
+   struct wiznode lookup[11];
 };
 

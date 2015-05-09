@@ -14,7 +14,6 @@
 
 extern struct room_data *world;
 extern struct char_data *character_list;
-extern struct spell_info_type spell_info[MAX_SPL_LIST];
 extern struct obj_data  *object_list;
 extern int rev_dir[];
 extern char *dirs[]; 
@@ -22,7 +21,7 @@ extern int movement_loss[];
 extern struct weather_data weather_info;
 extern struct time_info_data time_info;
 extern struct index_data *obj_index;
-
+struct PolyType DruidList[17];
 /* Extern procedures */
 
 void die(struct char_data *ch);
@@ -37,8 +36,8 @@ void raw_unlock_door( struct char_data *ch, struct room_direction_data *exitp,
 		     int door);
 int NoSummon(struct char_data *ch);
 
-struct PolyType PolyList[47] = {
-  {"goblin",      4, 201},
+struct PolyType PolyList[45] = {
+  {"goblin",      4, 201},	/* 1 */
   {"parrot",      4, 9001},
   {"frog",        4, 215},
   {"orc",         5, 4005},
@@ -48,7 +47,7 @@ struct PolyType PolyList[47] = {
   {"lizard",      6, 224},
   {"ogre",        8, 4113},
   {"parrot",      8, 9011},
-  {"wolf",        8, 3094},
+  {"wolf",        8, 3094},	/* 10 */
   {"spider",      9, 227},
   {"beast",       9, 242},
   {"minotaur",    9, 247},
@@ -58,7 +57,7 @@ struct PolyType PolyList[47] = {
   {"rat",         11, 7002},
   {"sapling",     12, 1421},
   {"ogre-maji",   12, 257},
-  {"black",       12, 230},
+  {"black",       12, 230},	/* 20 */
   {"troll",       14, 4101},
   {"crocodile",   14, 5310},
   {"mindflayer",  14, 7202},
@@ -68,7 +67,7 @@ struct PolyType PolyList[47] = {
   {"enfan",       18, 21001},
   {"lamia",       18, 5201},
   {"drider",      18, 5011},
-  {"wererat",     19, 7203},
+  {"wererat",     19, 7203},	/* 30 */
   {"wyvern",      20, 3415},
   {"mindflayer",  20, 7201},
   {"spider",      20, 20010},
@@ -76,40 +75,16 @@ struct PolyType PolyList[47] = {
   {"roc",         22, 3724},
   {"mud",         23, 7000},
   {"enfan",       23, 21004},
-  {"giant",       24, 9406},
   {"white",       26, 243},
   {"master",      28, 7200},
-  {"red",         30, 7040},
+  {"red",         30, 7040},	/* 40 */
   {"roo",         35, 27411},
   {"brontosaurus",35, 21802},
-  {"mulichort",   40, 15830},
-  {"beholder",    45, 5200},
-  {"ds;hsat",     48, 3066}
+  {"mulichort",   40, 15830},	/* 43 */
+  {"beholder",    45, 5200}	/* 44 */
 };
 
-#define LAST_POLY_MOB 46
-
-struct PolyType DruidList[17] = {
-  {"bear",        10, 9024},
-  {"spider",     10, 20010},
-  {"lamia",      10, 3648},
-  {"lizard",     10, 6822},
-  {"bear",       12, 9056},
-  {"gator",      12, 9054},
-  {"basilisk",   13, 7043},
-  {"snog",       14, 27008},
-  {"snake",      15, 6517},
-  {"spider",     15, 6113},
-  {"lizard",     16, 6505},
-  {"allosaurus", 18, 21801},
-  {"tiger",      28, 9027},
-  {"mulichort",  30, 15830},
-  {"tiger",      35, 9055},
-  {"lion",       35, 13718},
-  {"salamander", 35, 25506}  
-};
-
-#define LAST_DRUID_MOB 16
+#define LAST_POLY_MOB 44
 
 void cast_resurrection( byte level, struct char_data *ch, char *arg, int type,
 		struct char_data *tar_ch, struct obj_data *tar_obj )
@@ -232,9 +207,6 @@ void cast_armor( byte level, struct char_data *ch, char *arg, int type,
       send_to_char("Nothing seems to happen.\n\r", ch);
       return;
     }
-    if (ch != tar_ch)
-      act("$N is protected.", FALSE, ch, 0, tar_ch, TO_CHAR);
-    
     spell_armor(level,ch,tar_ch,0);
     break;
   case SPELL_TYPE_POTION:
@@ -1318,19 +1290,17 @@ void cast_enchant_armor( byte level, struct char_data *ch, char *arg, int type,
   struct char_data *tar_ch, struct obj_data *tar_obj )
 {
   switch (type) {
-    case SPELL_TYPE_SPELL:
-/*			spell_enchant_armor(level, ch, 0,tar_obj);
-			break;
-*/
-    case SPELL_TYPE_SCROLL:
-/*			if(!tar_obj) return;
-			spell_enchant_armor(level, ch, 0,tar_obj);
-			break;
-*/
+  case SPELL_TYPE_SPELL:
+    spell_enchant_armor(level, ch, 0,tar_obj);
+    break;
+  case SPELL_TYPE_SCROLL:
+    if(!tar_obj) return;
+    spell_enchant_armor(level, ch, 0,tar_obj);
+    break;
     default : 
       log("Serious screw-up in enchant armor!");
-      break;
-	}
+    break;
+  }
 }
 
 
@@ -2349,7 +2319,7 @@ void cast_poly_self( byte level, struct char_data *ch, char *arg, int type,
 
 #define LONG_SWORD   3022
 #define SHIELD       3042     
-#define RAFT         3060
+#define CANOE         3061
 #define BAG          3032
 #define WATER_BARREL 6013
 #define BREAD        3010
@@ -2367,8 +2337,8 @@ void cast_minor_creation(byte level, struct char_data *ch, char *arg, int type,
     obj = LONG_SWORD;
   } else if (!str_cmp(buffer, "shield")) {
     obj=SHIELD;
-  } else if (!str_cmp(buffer, "raft")) {
-    obj=RAFT;
+  } else if (!str_cmp(buffer, "canoe")) {
+    obj=CANOE;
   } else if (!str_cmp(buffer, "bag")) {
     obj=BAG;
   } else if (!str_cmp(buffer, "barrel")) {
@@ -2973,28 +2943,13 @@ void cast_holyword( byte level, struct char_data *ch, char *arg,
   switch(type) {
   case SPELL_TYPE_SPELL:
   case SPELL_TYPE_SCROLL:
-      spell_holyword(level, ch, 0, 0);
+      spell_holy_word(level, ch, 0, 0);
       break;
   default:
       log("serious screw-up in holy word.");
       break;
   }
 }
-void cast_unholyword( byte level, struct char_data *ch, char *arg, 
-     int type, struct char_data *tar_ch, struct obj_data *tar_obj )
-{
-
-  switch(type) {
-  case SPELL_TYPE_SPELL:
-  case SPELL_TYPE_SCROLL:
-      spell_holyword(-level, ch, 0, 0);
-      break;
-  default:
-      log("serious screw-up in unholy word.");
-      break;
-  }
-}
-
 
 void cast_golem( byte level, struct char_data *ch, char *arg, 
      int type, struct char_data *tar_ch, struct obj_data *tar_obj )
@@ -3059,7 +3014,7 @@ void cast_command( byte level, struct char_data *ch, char *arg,
     return;
 
 }
-
+#if 0
 void cast_change_form( byte level, struct char_data *ch, char *arg, 
 int type, struct char_data *tar_ch, struct obj_data *tar_obj )
 {
@@ -3127,6 +3082,7 @@ int type, struct char_data *tar_ch, struct obj_data *tar_obj )
   }
 
 }
+#endif
 
 void cast_shillelagh( byte level, struct char_data *ch, char *arg,
      int type, struct char_data *tar_ch, struct obj_data *tar_obj )
@@ -3876,3 +3832,180 @@ void cast_teleport_wo_error( byte level, struct char_data *ch, char *arg,
 }
 
 
+#define THORN 1111
+
+void cast_thorn_spray( byte level, struct char_data *ch, char *arg, int type, struct char_data *victim, struct obj_data *tar_obj )
+{
+
+  struct obj_data *component;
+
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    
+    if(!ch->equipment[HOLD]) {
+      send_to_char("You must be holding a thorn.\n\r",ch);
+      return;
+    }
+    
+    component = unequip_char(ch,HOLD);
+
+    if(component) {
+      obj_to_char(component,ch);
+      if(ObjVnum(component) != THORN) {
+        send_to_char("You aint holdin no thorn!\n\r",ch);
+        return;
+      } else {			/* they must have a thorn */
+	spell_thorn_spray(level,ch,victim,component);
+      }
+    } else {
+      send_to_char("You must hold the correct item to cast the spell.\n\r",ch);
+    }
+    break;
+  default:
+    log("Serious screw-up in thorn spray!");
+    break;
+  }
+}
+
+void cast_resist_hold( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_hold(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_hold!");
+    break;
+  }
+}
+
+void cast_resist_electricity( byte level, struct char_data *ch, char *arg,
+        int type, struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_electricity(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_electricity!");
+    break;
+  }
+}
+
+void cast_resist_cold( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_cold(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_cold!");
+    break;
+  }
+}
+
+void cast_resist_drain( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_drain(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_drain!");
+    break;
+  }
+}
+
+void cast_resist_poison( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_poison(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_poison!");
+    break;
+  }
+}
+
+void cast_resist_acid( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_acid(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_acid!");
+    break;
+  }
+}
+
+void cast_resist_fire( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_fire(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_fire!");
+    break;
+  }
+}
+
+void cast_resist_energy( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_energy(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_energy!");
+    break;
+  }
+}
+
+void cast_resist_pierce( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_pierce(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_pierce!");
+    break;
+  }
+}
+
+void cast_resist_slash( byte level, struct char_data *ch, char *arg, int type,
+		       struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_slash(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_slash!");
+    break;
+  }
+}
+
+void cast_resist_blunt( byte level, struct char_data *ch, char *arg, int type,
+                   struct char_data *tar_ch, struct obj_data *tar_obj )
+{
+  switch (type) {
+  case SPELL_TYPE_SPELL:
+    spell_resist_blunt(level,ch,ch,0);
+    break;
+    default :
+    log("Serious screw-up in resist_blunt!");
+    break;
+  }
+}

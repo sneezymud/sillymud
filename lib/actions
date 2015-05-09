@@ -599,6 +599,100 @@ Who?
 That seems a little silly to me..
 #
 
+185 0 0
+You happily hop around.
+$n hops around happily.
+#
+
+185 1 0
+wink wink, nudge nudge, say no more!
+$n nudges you.
+You nudge $M.
+$n nudges $N.
+$n nudges you, what the hell does $e want?
+Who?
+That seems a little silly to me...
+#
+
+186 1 0
+You peer around
+$n peers around, looking for something.
+You peer at $N.
+$n peers at $N.
+$n peers at you suspiciously.
+who?
+You peer at yourself
+$n studies $mself intently
+
+187 1 0
+You point in random directions, confusing everyone around you.
+$n points at Someone.
+You point at $M, how impolite.
+$n points at $N.
+$n points at you, uh oh, the gig is up!
+You point at empty space, and feel foolish.
+You point at yourself.
+$n points at $mself
+
+188 1 0
+You ponder your problems.
+$n ponders.
+You ponder $M.
+$n studies $N intently.
+$n studies you intently.
+You ponder their lack of existance.
+You think, therefore you are.
+$n ponders $s own existence.
+
+189 1 0
+You shadowbox dextrously.
+$n shadowboxes.
+You punch $M.
+$n punches $N.
+$n punches you, Ow, That Really HURT!
+Who?
+You knock yourself upside the head.
+$n knocks $mself upside the head.
+
+190 1 0
+You snarl angrily.
+$n snarls angrily.
+You snarl at $M.
+$n snarls at $N.
+$n snarls at you, what did you do this time?
+Who?
+You snarl at yourself.
+$n snarls at $mself.
+
+191 1 0
+Who?
+#
+You spank $M, what a naughty person!
+$n spanks $N.
+$n spanks you.. OW!
+Who?
+You bend over and swat yourself on the rear.
+$n bends over and gives $mself a good spanking.
+
+192 0 0
+You feel steam rising from your collar.
+Steam rises from $n's collar.
+You steam at $M.
+$n is really steamed at $N.
+Steam rises from $n's collar as $e looks at you.
+The rug? the carpet? what?
+You steam yourself, and iron out the wrinkles.
+$n steams $mself, and is now wrinkle free.
+
+193 1 0
+You produce a bait and tackle out of nowhere.
+$n produces a bait and tackle from somewhere.
+You try to tackle $M, but miss.
+$n tries to tackle $N, but misses.
+$n tries to tackle you, but you dodge out of the way.
+who?
+silly person.
+#
 
 194 0 6
 Taunt who?
@@ -609,6 +703,11 @@ $n is taunting you.
 Taunt WHO?
 You taunt yourself... woo woo!
 $n attempts to taunt $mself.
+
+196 0 0
+You whine piteously.
+$n whines, shivers run up and down your spine.
+#
 
 197 1 0
 You perform your daily worship ritual.
@@ -631,8 +730,13 @@ $n bonks $mself on the head.
 
 259 1 0
 You mosh madly around in a circle.
-$n moshes across the floor, dancing madly
-#
+$n moshes across the floor, dancing madly.
+You mosh wildly with $N.
+$n moshes with $N.
+$n moshes madly across the floor with you.
+You mosh madly around by yourself, cause they aren't around.
+You mosh madly around by yourself.
+$n moshes around madly.
 
 289 0 0
 Bite who?

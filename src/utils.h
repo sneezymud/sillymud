@@ -49,6 +49,7 @@ int CAN_SEE(struct char_data *s, struct char_data *o);
 
 #define IS_AFFECTED(ch,skill)  (IS_SET((ch)->specials.affected_by, (skill)))
 #define IS_AFFECTED2(ch,skill) (IS_SET((ch)->specials.affected_by2,(skill)))
+#define IS_INTRINSIC(ch,skill) (IS_SET((ch)->specials.intrinsics,(skill)))
 
 #if 0
 #define IS_DARK(room)  (real_roomp(room)->light<=0 && \
@@ -143,7 +144,7 @@ int CAN_SEE(struct char_data *s, struct char_data *o);
 
 #define GET_RCON(ch)     ((ch)->abilities.con)
 
-#define GET_RCHR(ch)     ((ch)->abilities.chr);
+#define GET_RCHR(ch)     ((ch)->abilities.chr)
 
 #define STRENGTH_APPLY_INDEX(ch) \
         ( ((GET_ADD(ch)==0) || (GET_STR(ch) != 18)) ? GET_STR(ch) :\
@@ -193,17 +194,11 @@ int CAN_SEE(struct char_data *s, struct char_data *o);
 #if 1
 #define WAIT_STATE(ch, cycle)  (((ch)->desc) ? (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : 0)
 #endif
-
-
+#if 0
+#define WAIT_STATE2(ch, cycle)  ((ch)->specials->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : (ch)->specials->wait)
+#endif
 
 /* Object And Carry related macros */
-
-#define CAN_SEE_OBJ(sub, obj)                                           \
-	(   ( (!IS_NPC(sub)) && (GetMaxLevel(sub)>LOW_IMMORTAL))       ||   \
-        ( (( !IS_SET((obj)->obj_flags.extra_flags, ITEM_INVISIBLE) ||   \
-	     IS_AFFECTED((sub),AFF_DETECT_INVISIBLE) ) &&               \
-	     !IS_AFFECTED((sub),AFF_BLIND)) &&                          \
-             (IS_LIGHT(sub->in_room))))
 
 #define GET_ITEM_TYPE(obj) ((obj)->obj_flags.type_flag)
 
@@ -244,7 +239,9 @@ int CAN_SEE(struct char_data *s, struct char_data *o);
 #define OBJN(obj, vict) (CAN_SEE_OBJ((vict), (obj)) ? \
 	fname((obj)->name) : "something")
 
-#define OUTSIDE(ch) (!IS_SET(real_roomp((ch)->in_room)->room_flags,INDOORS))
+#define OUTSIDE(ch) (!IS_SET(real_roomp((ch)->in_room)->room_flags,INDOORS) &&\
+                     (real_roomp(ch->in_room)->sector_type != SECT_INSIDE) && \
+                     (real_roomp(ch->in_room)->sector_type != SECT_UNDERWATER))
 
 #define IS_IMMORTAL(ch) (!IS_NPC(ch)&&(GetMaxLevel(ch)>=LOW_IMMORTAL))
 
@@ -289,3 +286,10 @@ int exit_ok(struct room_direction_data *, struct room_data **);
 #if 0
 #define isdigit(ch) (ch >= '0' && ch <= '9')
 #endif
+
+#define GET_VALUE(obj) ((obj)->obj_flags.cost)
+#define GET_RENT(obj) ((obj)->obj_flags.cost_per_day)
+
+#define SUNPROBLEM(ch) (GET_RACE(ch) == RACE_DROW || GET_RACE(ch) == \
+			RACE_MFLAYER)
+

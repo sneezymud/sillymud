@@ -534,3 +534,43 @@ void DeleteFears(struct char_data *ch)
   }
 
 }
+
+void KillTheOrcs(struct char_data *ch)
+{
+  
+  struct char_data *tmp_victim;
+  
+  if(GET_RACE(ch) != RACE_DWARF) 
+    return;
+  if(GetMaxLevel(ch) < 10)
+    return;
+  
+  for ( tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
+       tmp_victim = tmp_victim->next_in_room) {
+    if(GET_RACE(tmp_victim) == RACE_ORC  && CAN_SEE(ch,tmp_victim) &&
+       !ch->specials.fighting) {
+      send_to_char("My god, there's a stinking orc!!\n\r",ch);
+      if( (GET_HIT(ch) / GET_MAX_HIT(ch)  > 0.25 ) &&
+	 (GET_MOVE(ch) / GET_MAX_MOVE(ch)) > 0.25 )  {
+	if ( !saves_spell(ch, SAVING_SPELL) ) {
+	  send_to_char("Your vision turns red as bloodlust overcomes you.!\n\r", ch);
+	  send_to_char("ALL ORCS HAVE TO DIE!!!!!\n\r",ch);
+	  act("$n spits in $N's face!",TRUE,ch, 0, tmp_victim, TO_NOTVICT);
+	  act("$n spits in your face!",TRUE,ch, 0, tmp_victim, TO_VICT);
+	  act("$n roars and attacks $N!",TRUE,ch,0,tmp_victim, TO_NOTVICT);
+	  set_fighting(ch,tmp_victim);
+	} else {
+	  send_to_char("You manage to supress the urge to smash this puny orc to pieces.\n\r",ch);
+	}
+      } else {
+	send_to_char("But you are too tired to kill it right now.\n\r",ch);
+      }
+      break;			/* break outta for loop */
+    }
+  }
+}
+
+
+
+
+

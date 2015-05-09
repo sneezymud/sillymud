@@ -13,3 +13,5 @@ struct PolyType {
   int  level;
   int  number;
 };
+
+#define LAST_DRUID_MOB 16

@@ -171,11 +171,11 @@ M
 $N makes a strange sound but is suddenly very silent, as you place $p in $S back~
 Suddenly $n stabs you in the back, RIP...~
 $n place $p in the back of $N, resulting in some strange noises, a lot of blood and a corpse~
-$N quickly avoids your backstab, and you nearly cuts your finger~
-$n tried to backstab you, but you avoid $s~
-$n tried to backstab $N, but nearly cut $s own finger~
+$N quickly avoids your backstab, and you nearly cut off your hand~
+$n tried to backstab you, but you avoid $s fiendish attack~
+$n tried to backstab $N, but nearly slices off $s hand~
 $N makes a strange sound, as you place $p in $S back~
-Suddenly $n stabs you in the back~
+You feel exquisite pain as $n stabs you in the back~
 $n place $p in the back of $N, resulting in some strange noises and some blood~
 $N sends you a look, that makes you forget all about backstabbing~
 $n tries to backstab you, but changes $s mind~
@@ -405,7 +405,7 @@ You fail to harm $N~
 $n fails to harm you~
 $n fails to harm $N~
 M
- 201
+ 401
 $N is killed by your fiery breath.~
 You are burned to ash, as $n breathes on you.~
 $n turns $N into a small pile ashes.~
@@ -419,7 +419,7 @@ $N is immortal, and ignores your fire breath.~
 $n warms you.~
 $n warms $N.~
 M
- 202
+ 402
 $N is killed by your gas breath.~
 You die from the gas $n breathes on you.~
 $n kills $N with a gas breath.~
@@ -433,7 +433,7 @@ $N is immortal and ignores your fire breath.~
 $n want's to gas you, but can't.~
 $n tries to gas $N, but can't.~
 M
- 203
+ 403
 $N is frozen to death by your frost breath.~
 You are frozen to ice, as $n breathes on you.~
 $n turns $N into a large icicle.~
@@ -447,7 +447,7 @@ $N is immortal and ignores your attack.~
 $n supplies you with airconditioning.~
 $n supplies $N with airconditioning.~
 M
- 204
+ 404
 $N melts into a pile of stick ooze before your eyes.~
 You are corroded to nothing, as $n breathes on you.~
 $n corrodes $N to nothing.~
@@ -461,7 +461,7 @@ $N is immortal, and ignores your acid.~
 $n helps you clean your hands with a little acid.~
 $n helps $N cleaning.~
 M
- 205
+ 405
 $N is killed by your lightning breath.~
 You are killed by $n lightning breath.~
 $n killes $N with a lightning breath.~
@@ -475,7 +475,7 @@ $N is immortal, and ignores your breath.~
 $n tries to breath lightning upon you.~
 $n tries to breath lightning upon $N.~
 M
- 206
+ 406
 You punch $N's head with a blow, that crushes $S skull.~
 $n punches your head with a blow, that crushes your skull.~
 $n punches $N's head so hard, that $S skull cracks open.~
@@ -489,7 +489,7 @@ Your fist flops as your body denies to fight the mighty $N~
 $n seem to have trouble getting $s body to fight you !!~
 $n's body rebels against $m when $e tries to punch $N~
 M
- 206
+ 406
 You punch $N in $S kidneys resulting in $S immediate death~
 You recieve a punch in your kidneys which ends your worldly misery~
 $n punches $N in the kidneys causing immediate death~
@@ -503,7 +503,7 @@ Instead of letting you punch $M, $N forces you to play Punch and Judy !!!~
 You convince $n of playing Punch and Judy instead of punching you~
 $N convinces $n that no punching is necessary~
 M
- 207
+ 407
 You bludgeon $N to death~
 You are bludgeoned to death by $n~
 $n ruthlessly bludgeons $N to death~
@@ -517,7 +517,7 @@ Your attempt to bludgeon $N fails, luckily for you $N has a good sense of humour
 Your patience is tried when $n tries to clobber you~
 $N strains $Mself from zapping $n when $e attempts to bludgeon the mighty one~
 M
- 208
+ 408
 You succesfully pierce $N . The dead body falls to the ground~
 $n pierces you. You are no longer a living member of this world~
 $n pierces $N whose body falls lifeless to the ground~
@@ -531,7 +531,7 @@ The mighty $N begins to think you a nuisance !!!~
 Your patience is almost gone when you stare back at $n~
 The air is loaded when $N angrily wards off a piercing attack from $n~
 M
- 208
+ 408
 You pierce $N's heart, you heartbreaker you~
 $n breaks your heart, goodbye cruel world...~
 $n pierces the heart of $N who falls to the ground clutching at the wound~
@@ -545,7 +545,7 @@ The great $N sends you a piercing look, OUPS !!~
 You return $n's pierce with a piercing look, hmmmm~
 $N returns $n's pierce with a piercing look.~
 M
- 209
+ 409
 You beautifully slash $N into two parts - both dead~
 Your upper body is disconnected from your legs as $n slashes at you - RIP~
 $N is slashed into two by a masterly stroke performed by $n~
@@ -559,7 +559,7 @@ Your cunning slash at $N is fruitless~
 You nimbly stop a slash from $n~
 $N stops a cunning slash from $n who looks disappointed~
 M
- 209
+ 409
 Your slash at $N results in blood spurting all over, and $S immediate death~
 Blood spurts all over as $n slashes at you. You die ...~
 $N colours everything red with blood from $S lethal wound and dies...~
@@ -573,7 +573,7 @@ Come on, why do you think you can slash at a GOD ?!~
 You barely register the puny creature before you~
 The great $N seems to ignore $n's slashes~
 M
- 215
+ 415
 ~
 You feel wounded - too wounded - you die~
 $N lies suffering on the ground, and bleeds to death~
@@ -587,7 +587,7 @@ $N lies helplessly on the ground, suffering~
 Suffer god victim..~
 Suffer god room..~
 M
- 215
+ 415
 ~
 You can only lie still as the last heartbeat ebbs...~
 $N suffers from bloodlack, and the lack of a beating heart...~

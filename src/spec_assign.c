@@ -217,6 +217,9 @@ void assign_mobiles()
 **   shire
 */
     { 1000, magic_user },
+    { 1035, fighter},
+    { 1012, fighter},
+    { 1026, fighter}, 
     { 1010, fighter},
     { 1011, fighter},
     { 1012, fighter},
@@ -247,6 +250,12 @@ void assign_mobiles()
     { 1716, monk},
     { 1717, monk},
     { 1718, monk},
+
+    /* Thand's thief area */
+    { 1105, thief},
+    { 1108, thief},
+    { 1115, fido},
+    /* end of Thand's thief area */
 
     { 6001, real_rabbit},
     { 6005, real_fox},
@@ -386,6 +395,10 @@ void assign_mobiles()
     { 2730, astral_portal },
     { 2731, astral_portal },
     { 2732, astral_portal },
+    { 2733, astral_portal },
+    { 2734, astral_portal },
+    { 2735, astral_portal },
+    { 2736, astral_portal },
 
 
 /*
@@ -791,6 +804,7 @@ void assign_mobiles()
 
     { 3000, magic_user }, 
     { 3060, MidgaardCityguard }, 
+    { 3080, fighter},
     { 3067, MidgaardCityguard }, 
     { 3061, janitor },
     { 3062, fido }, 
@@ -865,9 +879,11 @@ void assign_mobiles()
     { 7042, magic_user },	/* naga       */
     { 7040, BreathWeapon },     /* Red    */
     { 7041, magic_user },	/* sea hag    */
+    { 7045, ettin },		/* berserk teacher */
     { 7200, magic_user },	/* mindflayer */ 
     { 7201, magic_user },	/* senior     */
     { 7202, magic_user },	/* junior     */
+    
 
 /* 
 ** FOREST 
@@ -959,7 +975,7 @@ void assign_mobiles()
     { 20009, magic_user }, /* quasit         */
     { 20014, magic_user }, /* Arachnos        */
     { 20015, magic_user }, /* Ki Rin          */
-
+    { 20011, OldHag },		/* hermit (hey, DM wrote it!) */
     { 20002, BreathWeapon }, /* Yevaud */
     { 20017, BreathWeapon }, /* Elder  */
     { 20016, BreathWeapon }, /* Baby   */
@@ -972,24 +988,19 @@ void assign_mobiles()
     { 21700, fighter },		/* Captain Saltmere */
     { 21701, fighter },		/* First Mate */
     { 21702, thief },		/* Stowaway */
-    { 21705, cleric },		/* Elven Priestss */
+    { 21705, magic_user },		/* Elven Priestss */
     { 21706, fighter },		/* Jedadia */
     { 21712, fighter },		/* Crew Memeber */
     { 21714, snake },		/* Zatagaster */
+    { 21716, magic_user },
 
-/*
-**  Scratch's Sesame Street area (ack, puke)
-*/
-
-    { 22202, vampire }, 	/* The Count */
-    { 22206, fighter },		/* Super Grover, geesh */
-    { 22200, fighter },		/* Big Bird */
-    { 22201, Tyrannosaurus_swallower},		/* Cookie Monster, geesh */
 /*
 **  Sunsor's elf area
 */
 
-    { 22605, sisyphus },         /* timnus */
+    { 22605, timnus },         /* timnus */
+    { 22604, baby_bear},	/* mother bear */
+    { 22624, baby_bear},	/* baby bears. */
 
 #if 0
 /*
@@ -1047,6 +1058,16 @@ void assign_mobiles()
     { 27429, AGGRESSIVE },
     { 27430, AGGRESSIVE },
 
+    { 7526, winger},
+    { 7522, magic_user},
+    { 7531, magic_user},
+    {7510, fighter},
+    {7514, fighter},
+    {7515, fighter},
+    {7516, fighter},
+    {7527, fighter},
+    {7528, fighter},
+    {7530, fighter},
 
     { -1, NULL },
   };
@@ -1075,6 +1096,7 @@ void assign_mobiles()
 void assign_objects()
 {
         obj_index[real_object(15)].func = SlotMachine;
+	obj_index[real_object(29)].func = warpstone;
         obj_index[real_object(30)].func = scraps;
 	obj_index[real_object(23)].func = jive_box;
 	obj_index[real_object(31)].func = portal;
@@ -1089,6 +1111,7 @@ void assign_objects()
 	obj_index[real_object(25102)].func = board;
 	obj_index[real_object(21122)].func = nodrop;
 	obj_index[real_object(21130)].func = soap;
+	obj_index[real_object(22698)].func = YouthPotion;
 #if EGO
 	obj_index[real_object(40000)].func = BitterBlade;
 #endif
@@ -1100,7 +1123,6 @@ void assign_objects()
 /* assign special procedures to rooms */
 void assign_rooms()
 {
-
   static struct special_proc_entry specials[] = {
 
     {   99,  Donation},
@@ -1120,72 +1142,28 @@ void assign_rooms()
     { 5234,  Fountain},
     { 3141,  Fountain},
     { 13406,  Fountain},
+    { 22642,  Fountain},
+    { 22644,  Fountain},
+    { 22646,  Fountain},
+    { 22648,  Fountain},
     { 13530, pet_shops },
+
+    { 2500, entering_turbo_lift },
+    { 2639, turbo_lift },
 
     { 2000,  bank },
     { 13521, bank },
-    { 250,   House },
-    { 715,   House },
-    { 716,   House },
-    { 718,   House },
-    { 3099,  House },  /* Franz's house   */
-    { 3143,  House },  /* justine's house */
-    { 3144,  House },  /* zip's house     */
-    { 3145,  House },  /* crimson's house */
-    { 3146,  House },  /* hugh's house    */
-    { 3147,  House },  /* crimson's house */
-    { 3148,  House },  /* hugh's house    */
-    { 3152,  House },  /* Kojiro's house    */
-    { 3154,  House },  /* Magnus's house    */
-    { 3155,  House },  /* Rincewinds's house    */
-    { 3156,  House },  /* Comptons's house    */
-    { 3158,  House },
-    { 3159,  House },
-    { 3160,  House },
-    { 3161,  House }, /* rodgrim  */
-    { 3162,  House }, /* riffraff */
-    { 3163,  House }, /* fanchon  */
-    { 13495,  House }, /* conner */
-    { 13496,  House }, /* conner */
-    { 13497,  House }, /* conner */
-    { 13498,  House }, /* conner */
-    { 3827,  House },
-    { 5198,  House }, /*  Rambozo */
-    { 5199,  House }, /*  shadowspawns */
-    { 5700,  House }, /*  Dalamar */
-    { 5896,  House }, /*  Dalamar */
-    { 6697,  House },
-    { 6698,  House },
-    { 6699,  House },
-    { 7697,  House },
-    { 7698,  House },
-    { 9260,  House },
-    { 9261,  House },
-    { 9262,  House },
-    { 9265,  House },
-    { 9266,  House },
-    { 13100, House },  /* SEDUCTIoN */
-    { 13729, House },
-    { 13730, House },
-    { 13799, House },  /* Glopglyph's house   */
-    { 17995, House },
-    { 17998, House },
-    { 17990, House },  /* Turnip */
-    { 10100, House },  /* Darrel's house      */
-    { 20200, House },  /* Bag's house         */
-    { 21336, House }, /* House for Blah */
-    { 21337, House },  /* House for Insane */
-    { 24000, House },  /* Pat's House         */
-    { 27081, House },
     { -1, NULL},
   };
   int i;
   struct room_data *rp;
+  char buf[80];
   
   for (i=0; specials[i].vnum>=0; i++) {
     rp = real_roomp(specials[i].vnum);
     if (rp==NULL) {
-      log("assign_rooms: unknown room");
+      sprintf(buf,"assign_rooms: room %d unknown",specials[i].vnum);
+      log(buf);
     } else
       rp->funct = specials[i].proc;
   }

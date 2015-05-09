@@ -450,19 +450,22 @@ int board_display_msg(struct char_data *ch, char *arg, int bnum)
 
   curr_msg = &curr_board->msg[tmessage];
 
-  sprintf(buf, "$n reads message %d titled : %s.",tmessage, curr_msg->title);
-  act(buf, TRUE, ch, 0, 0, TO_ROOM);
   sprintf(buffer, "Message %2d (%s): %-15s -- %s", tmessage, curr_msg->date, curr_msg->author, curr_msg->title );
   sprintf(buffer + strlen(buffer), "\n\r----------\n\r%s", (curr_msg->text?curr_msg->text:"(null)"));
   page_string(ch->desc, buffer, 1);
   return(1);
+
+/*
+  sprintf(buf, "$n reads message %d titled : %s.",tmessage, curr_msg->title);
+  act(buf, TRUE, ch, 0, 0, TO_ROOM);
+*/
 }
 		
 int board_show_board(struct char_data *ch, char *arg, int bnum)
 {
   int i;
-  char buf[MAX_STRING_LENGTH], tmp[MAX_INPUT_LENGTH];
-
+  char buf[MAX_STRING_LENGTH+50], tmp[MAX_INPUT_LENGTH];
+                          /* ^ had a few bus errors, *shrug* */
   one_argument(arg, tmp);
 
   if (!*tmp || !isname(tmp, "board bulletin"))

@@ -25,27 +25,38 @@ extern int top_of_p_table;
 * Routines used for the "Offer"                                           *
 ************************************************************************* */
 
-void add_obj_cost(struct char_data *ch, struct char_data *re,
-                  struct obj_data *obj, struct obj_cost *cost)
+int add_obj_cost(struct char_data *ch, struct char_data *re,
+                  struct obj_data *obj, struct obj_cost *cost, int hoarder)
 {
   char buf[MAX_INPUT_LENGTH];
   int  temp;
-  
-  /* Add cost for an item and it's contents, and next->contents */
-  
+  struct obj_data *hobj;
+
+  if((cost->total_cost == 100) && (cost->no_carried == 0)) {
+    hobj = obj;
+      /* Add cost for an item and it's contents, and next->contents */
+  }
+
   if (obj) {
-    if ((obj->item_number > -1) && (cost->ok)) {
+    if ((obj->item_number > -1) && (cost->ok) && ItemEgoClash(ch,obj,0) >-5 ) {
       temp = MAX(0, obj->obj_flags.cost_per_day);
       cost->total_cost += temp;
       if (re) {
+#if  0
 	sprintf(buf, "%30s : %d coins/day\n\r", obj->short_description, temp);
 	send_to_char(buf, ch);
+#endif	
       }
       cost->no_carried++;
-      add_obj_cost(ch, re, obj->contains, cost);
-      add_obj_cost(ch, re, obj->next_content, cost);
-    } else
-      if (cost->ok) {
+      hoarder = add_obj_cost(ch, re, obj->contains, cost, hoarder);
+      hoarder = add_obj_cost(ch, re, obj->next_content, cost, hoarder);
+    } else {
+      if(ItemEgoClash(ch,obj,0) < 0 && obj->obj_flags.cost_per_day > 0) { 
+	if (re) 
+	  act("$p refuses to be rented with a wimp like you!",
+	      TRUE,ch,obj,0,TO_CHAR);
+	cost->ok = FALSE;
+      }	else if (cost->ok) {
 	if (re) {
 	  act("$n tells you 'I refuse storing $p'",FALSE,re,obj,ch,TO_VICT);
 	  cost->ok = FALSE;
@@ -58,7 +69,11 @@ void add_obj_cost(struct char_data *ch, struct char_data *re,
 
 	}
       }
+    }
   }
+
+return(hoarder);
+  
 }
 
 
@@ -67,18 +82,27 @@ bool recep_offer(struct char_data *ch,	struct char_data *receptionist,
 {
   int i;
   char buf[MAX_INPUT_LENGTH];
+  int hoarder = 0;
   
-  cost->total_cost = 100; /* Minimum cost */
+  cost->total_cost = 0; /* Minimum cost */
   cost->no_carried = 0;
   cost->ok = TRUE; /* Use if any "-1" objects */
   
-  add_obj_cost(ch, receptionist, ch->carrying, cost);
+  hoarder = add_obj_cost(ch, receptionist, ch->carrying, cost, hoarder);
   
   for(i = 0; i<MAX_WEAR; i++)
-    add_obj_cost(ch, receptionist, ch->equipment[i], cost);
+    hoarder = add_obj_cost(ch, receptionist, ch->equipment[i], cost, hoarder);
   
   if (!cost->ok)
     return(FALSE);
+
+#if NEW_RENT
+  cost->total_cost = 0;
+#endif
+
+  if(hoarder) {
+    cost->total_cost += (int) (ch->points.gold + ch->points.bankgold)/10;
+  }
   
   if (cost->no_carried == 0) {
     if (receptionist)
@@ -94,7 +118,7 @@ bool recep_offer(struct char_data *ch,	struct char_data *receptionist,
     }
     return(FALSE);
   }
-
+  
   if (HasClass(ch, CLASS_MONK)) {
     if (cost->no_carried > 20) {
       send_to_char("Your vows forbid you to carry more than 20 items\n\r", ch);
@@ -103,12 +127,6 @@ bool recep_offer(struct char_data *ch,	struct char_data *receptionist,
   }
   
   if (receptionist) {
-
-#if NEW_RENT
-    /* RENTAL COST ADJUSTMENT */
-    cost->total_cost = 100;
-#else
-#endif
 
     sprintf(buf, "$n tells you 'It will cost you %d coins per day'",
 	    cost->total_cost);
@@ -147,12 +165,15 @@ void update_file(struct char_data *ch, struct obj_file_u *st)
 
     */
   write_char_extra(ch);
-
   sprintf(buf, "rent/%s", lower(ch->player.name));
-
+#if 0
+  for(p=buf;*p && *p != ' ';p++);
+  *p = '\0';
+  log("buf");
+#endif
   if (!(fl = fopen(buf, "w")))  {
-       perror("saving PC's objects");
-       assert(0);  
+    perror("saving PC's objects");
+    assert(0);  
   }
   
   rewind(fl);
@@ -190,9 +211,9 @@ void obj_store_to_char(struct char_data *ch, struct obj_file_u *st)
       obj->obj_flags.timer       = st->objects[i].timer;
       obj->obj_flags.bitvector   = st->objects[i].bitvector;
 
-/*  new, saving names and descrips stuff */
+/*  new, saving names and descrips stuff o_s_t_c*/
       if (obj->name)
-         free(obj->name);
+	free(obj->name);
       if (obj->short_description)
          free(obj->short_description);
       if (obj->description)
@@ -276,9 +297,13 @@ void load_char_objs(struct char_data *ch)
       char	buf[MAX_STRING_LENGTH];
       if (ch->in_room == NOWHERE)
 	log("Char reconnecting after autorent");
+#if NEW_RENT
+      timegold = (int) ((100*((float)time(0) - st.last_update)) / 
+			(SECS_PER_REAL_DAY));
+#else
       timegold = (int) ((st.total_cost*((float)time(0) - st.last_update)) / 
 			(SECS_PER_REAL_DAY));
-
+#endif
       sprintf(buf, "Char ran up charges of %g gold in rent", timegold);
       log(buf);
       sprintf(buf, "You ran up charges of %g gold in rent.\n\r", timegold);
@@ -449,16 +474,16 @@ void save_obj(struct char_data *ch, struct obj_cost *cost, int delete)
   for(i=0; i<MAX_WEAR; i++)
     if (ch->equipment[i]) {
       if (delete) {
-	 obj_to_store(unequip_char(ch, i), &st, ch, delete);
+	obj_to_store(unequip_char(ch, i), &st, ch, delete);
       } else {
-         obj_to_store(ch->equipment[i], &st, ch, delete);
+	obj_to_store(ch->equipment[i], &st, ch, delete);
       }
     }
   
   obj_to_store(ch->carrying, &st, ch, delete);
   if (delete)
-     ch->carrying = 0;
-
+    ch->carrying = 0;
+  
   update_file(ch, &st);
   
 }
@@ -515,15 +540,17 @@ void update_obj_file()
 	    log(buf);
 
 #if LIMITED_ITEMS
+	    fprintf(stderr, "Counting limited items\n");
 	    CountLimitedItems(&st);
+	    fprintf(stderr, "Done\n");
 #endif
             fseek(char_file, (long) (player_table[i].nr *
 					 sizeof(struct char_file_u)), 0);
 	    fwrite(&ch_st, sizeof(struct char_file_u), 1, char_file);
-
+#if 0
 	    rewind(fl);
 	    WriteObjs(fl, &st);
-
+#endif
 	    fclose(fl);
 	  } else {
  
@@ -549,8 +576,10 @@ void update_obj_file()
 		log(buf);
 		st.gold_left  -= (st.total_cost*days_passed);
 		st.last_update = time(0)-secs_lost;
+#if 0
 		rewind(fl);
 		WriteObjs(fl, &st);
+#endif
 		fclose(fl);
 #if LIMITED_ITEMS
 		CountLimitedItems(&st);
@@ -564,8 +593,10 @@ void update_obj_file()
 #endif
 	      sprintf(buf, "  same day update on %s", st.owner);
 	      log(buf);
+#if 0
 	      rewind(fl);
 	      WriteObjs(fl, &st);
+#endif
 	      fclose(fl);
 	    }
 	  }
@@ -601,7 +632,6 @@ void CountLimitedItems(struct obj_file_u *st)
 	    if (cost_per_day > LIM_ITEM_COST_MIN) {
 	      obj_index[obj->item_number].number++;  
 	    } else {
-#if NEW_RENT
 	      if (IS_OBJ_STAT(obj, ITEM_MAGIC) ||
 		  IS_OBJ_STAT(obj, ITEM_GLOW) ||
 		  IS_OBJ_STAT(obj, ITEM_HUM) ||
@@ -609,9 +639,7 @@ void CountLimitedItems(struct obj_file_u *st)
 		  IS_OBJ_STAT(obj, ITEM_BLESS)) {
 		obj_index[obj->item_number].number++;  
 	      }
-#endif
 	    }
-	    extract_obj(obj);
 	}
     }
 }
@@ -632,11 +660,11 @@ void PrintLimitedItems()
 }
 
 
+
 /* ************************************************************************
 * Routine Receptionist                                                    *
 ************************************************************************* */
-
-
+#define DONATION_ROOM 99
 
 int receptionist(struct char_data *ch, int cmd, char *arg, struct char_data *mob, int type)
 {
@@ -673,8 +701,47 @@ int receptionist(struct char_data *ch, int cmd, char *arg, struct char_data *mob
     assert(0);
   }
   
-  if (IS_NPC(ch))
-    return(FALSE);
+  if(!number(0,2))
+    
+    for (temp_char = real_roomp(ch->in_room)->people; (temp_char);
+	 temp_char = temp_char->next_in_room)
+      if(temp_char != recep)
+	if (IS_MOB(temp_char)) {
+	  
+	  struct room_direction_data    *exitp;
+	  int   going_to,door;
+	  struct room_data      *rp;
+	  
+	  act("$n pushes a button on $s desk.  A trap door opens!",TRUE,recep,
+	      0,0,TO_ROOM);
+	  send_to_char("You fall through!\n\r\n\r",temp_char);
+	  act("$N falls through the trap door!",TRUE,recep,0,temp_char,TO_NOTVICT);
+	  act("$n mutters something about not liking monsters in $s inn.",TRUE,
+	      recep,0,0,TO_ROOM);
+	  
+	  door = 5;			/* down */
+	  exitp = EXIT(temp_char, door);
+	  if(exit_ok(exitp, &rp)) {	
+	    going_to = exitp->to_room;
+	    
+	    char_from_room(temp_char);
+	    char_to_room(temp_char,going_to);
+	    do_look(temp_char,"",0);
+	  } else {			/* must be some other direction */
+	    int k;
+	    for(k=0;k<5;k++) {
+	      exitp = EXIT(temp_char, k);
+	      if(exit_ok(exitp, &rp)) {
+		going_to = exitp->to_room;
+		
+		char_from_room(temp_char);
+		char_to_room(temp_char,going_to);
+		do_look(temp_char,"",0);
+	      }
+	    }
+	  }
+	  return(FALSE);
+	}
   
   if ((cmd != 92) && (cmd != 93)) {
     if (!cmd) {
@@ -682,6 +749,22 @@ int receptionist(struct char_data *ch, int cmd, char *arg, struct char_data *mob
 	return(citizen(recep,0,"",mob,type));
       }
     }
+
+    if(!number(0,2)) {
+      struct obj_data *i;
+      for (i = real_roomp(ch->in_room)->contents; i; i = i->next_content) {
+	if (IS_SET(i->obj_flags.wear_flags, ITEM_TAKE)) {
+	  act("$n sweeps some trash into the donation room.",TRUE,recep,0,0,
+	      TO_ROOM);
+	  obj_from_room(i);
+	  obj_to_room(i,DONATION_ROOM);
+	  break;
+	} 
+      }
+    }
+
+    
+
     if (!number(0, 30))
       do_action(recep, "", action_tabel[number(0,8)]);
     return(FALSE);
@@ -861,7 +944,17 @@ void load_char_extra(struct char_data *ch)
 	  do_bamfin(ch, s, 0);
 	} else if (!strcmp(p, "zone")) { /* set zone permisions */
           GET_ZONE(ch) = atoi(s);
-	} else{
+	} else if (!strcmp(p, "loot")) {
+	  ch->specials.loot = atoi(s);
+	} else if (!strcmp(p, "split")) {
+	  ch->specials.split = atoi(s);
+	} else if (!strcmp(p,"sev")) {
+	  ch->specials.sev = atoi(s);
+	} else if (!strcmp(p, "flee")) {
+	  ch->specials.flee = atoi(s);
+	} else if (!strcmp(p, "prompt")) {
+	  ch->specials.prompt = atoi(s);
+	} else {
 	  if (s) {
 	    s[strlen(s)]= '\0';
 	    n = atoi(p);
@@ -909,7 +1002,13 @@ void write_char_extra( struct char_data *ch)
       fprintf(fp, "out: %s\n", ch->specials.poofout);
     }
     fprintf(fp, "zone: %d\n", GET_ZONE(ch));
+    fprintf(fp, "sev: %d\n", ch->specials.sev);
   }
+
+  fprintf(fp, "loot: %d\n", ch->specials.loot);
+  fprintf(fp, "split: %d\n",ch->specials.split);
+  fprintf(fp, "flee: %d\n", ch->specials.flee);
+  fprintf(fp, "prompt: %d\n",ch->specials.prompt);
 
   if (ch->specials.A_list) {
     for (i=0;i<10;i++) {
@@ -941,13 +1040,13 @@ void obj_store_to_room(int room, struct obj_file_u *st)
       obj->obj_flags.timer       = st->objects[i].timer;
       obj->obj_flags.bitvector   = st->objects[i].bitvector;
 
-/*  new, saving names and descrips stuff */
+/*  new, saving names and descrips stuff o_s_t_r */
       if (obj->name)
-         free(obj->name);
+	free(obj->name);
       if (obj->short_description)
-         free(obj->short_description);
+	free(obj->short_description);
       if (obj->description)
-         free(obj->description);
+	free(obj->description);
 
       obj->name = (char *)malloc(strlen(st->objects[i].name)+1);
       obj->short_description = (char *)malloc(strlen(st->objects[i].sd)+1);
@@ -964,8 +1063,10 @@ void obj_store_to_room(int room, struct obj_file_u *st)
       obj_to_room2(obj, room);
     }
   }
+  /* bug report -  this is a static array, shouldn't be freed */
+#if 0
   free(st->objects);
-
+#endif
 }
 
 void load_room_objs(int room)

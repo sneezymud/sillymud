@@ -263,12 +263,17 @@ void StartLevels(struct char_data *ch)
   if (IS_SET(ch->player.class, CLASS_MONK)) {
     advance_level(ch, MONK_LEVEL_IND);
   }
+  
+  if(GET_RACE(ch) == RACE_OGRE)
+    ch->specials.spells_to_learn = 2;
+  else
+    ch->specials.spells_to_learn = 4; /* we are generous. */
+
 }
 
 
 int BestClass(struct char_data *ch)
 {
-
   int max=0, class=0, i;
 
   for (i=0; i< MAX_CLASS; i++)
@@ -276,6 +281,8 @@ int BestClass(struct char_data *ch)
       max = GET_LEVEL(ch, i);
       class = i;
     }
+
+  class = 1 << class;  /* perhaps this will work properly */
 
   assert(max > 0);
   return(class);

@@ -135,7 +135,7 @@
 #define SPELL_FAMILIAR              110
 #define SPELL_CHANGESTAFF           111
 #define SPELL_HOLY_WORD             112
-#define SPELL_UNHOLY_WORD           113
+#define SPELL_ENCHANT_ARMOR         113
 #define SPELL_PWORD_KILL            114
 #define SPELL_PWORD_BLIND           115
 
@@ -145,7 +145,7 @@
 #define SPELL_COMMAND               119
 
 /* druid */
-#define SPELL_CHANGE_FORM           120
+#define SKILL_CHANGE_FORM           120 /* changed. */
 #define SPELL_FEEBLEMIND            121
 
 /* druid... */
@@ -201,9 +201,7 @@
 #define SPELL_PORTAL                164
 #define SPELL_DRAGON_RIDE           165
 #define SPELL_MOUNT                 166
-
-#define MAX_EXIST_SPELL             166   /* move this and change it */
-
+#define SPELL_THORN_SPRAY           167
 
 /* room spell like deal */
 
@@ -211,6 +209,8 @@
 
 /* maybe */
 #define SPELL_SUMMON_OBJ            
+
+#define SKILL_DUAL_WIELD             169  /* */
 
 #define SKILL_FIRST_AID              170
 #define SKILL_SIGN                   171
@@ -223,7 +223,7 @@
 #define SKILL_SAFE_FALL              178
 #define SKILL_FEIGN_DEATH            179
 #define SKILL_HUNT                   180
-#define SKILL_FIND_TRAP              181
+#define SKILL_LOCATE_TRAP            181
 #define SKILL_SPRING_LEAP            182
 #define SKILL_DISARM                 183
 #define SKILL_READ_MAGIC             184
@@ -241,43 +241,66 @@
 #define SKILL_CONS_OTHER             196
 #define SKILL_DISGUISE               197
 #define SKILL_CLIMB                  198
+#define SKILL_INSET                  199  /* skill at insetting stones */
 
-#define FIRST_BREATH_WEAPON	     200
-#define SPELL_GEYSER                 200
-#define SPELL_FIRE_BREATH            201
-#define SPELL_GAS_BREATH             202
-#define SPELL_FROST_BREATH           203
-#define SPELL_ACID_BREATH            204
-#define SPELL_LIGHTNING_BREATH       205
-#define LAST_BREATH_WEAPON	     205
+/* breaths occupy 200 to 205 in spello, so for consistency.. 206 is next */
+
+#define SPELL_RESIST_HOLD            206
+#define SPELL_RESIST_ELECTRICITY     207
+#define SPELL_RESIST_COLD            208
+#define SPELL_RESIST_DRAIN           209
+#define SPELL_RESIST_POISON          210
+#define SPELL_RESIST_ACID            211
+#define SPELL_RESIST_FIRE            212
+#define SPELL_RESIST_ENERGY          213
+#define SPELL_RESIST_PIERCE          214
+#define SPELL_RESIST_SLASH           215
+#define SPELL_RESIST_BLUNT           216
+#define SKILL_BREWING                217
+#define SPELL_SUN_BLIND              218 /* just to keep handler.c happy */
+#define SKILL_BERSERK                219
+#define SKILL_PALM                   220
+#define SKILL_PEEK                   221
+#define SKILL_CONS_INSECT            222
+#define SKILL_CONS_AVIAN             223
+
+#define MAX_EXIST_SPELL              223   /* move this and change it */
+
+#define FIRST_BREATH_WEAPON	     400
+#define SPELL_GEYSER                 400
+#define SPELL_FIRE_BREATH            401
+#define SPELL_GAS_BREATH             402
+#define SPELL_FROST_BREATH           403
+#define SPELL_ACID_BREATH            404
+#define SPELL_LIGHTNING_BREATH       405
+#define LAST_BREATH_WEAPON	     405
 
 /* NOTE!!!!!!!!!!!!!!!
    all spells MUST be before these types.   Otherwise, certain aspects of
    fireshield, sanct, etc, will not work!
    */
 
-#define TYPE_HIT                     206
-#define TYPE_BLUDGEON                207
+#define TYPE_HIT                     406
+#define TYPE_BLUDGEON                407
+#define TYPE_PIERCE                  408
+#define TYPE_SLASH                   409
+#define TYPE_WHIP                    410   
+#define TYPE_CLAW                    411  
+#define TYPE_BITE                    412  
+#define TYPE_STING                   413  
+#define TYPE_CRUSH                   414  
+#define TYPE_CLEAVE                  415
+#define TYPE_STAB                    416
+#define TYPE_SMASH                   417
+#define TYPE_SMITE                   418
+#define TYPE_BLAST                   419
 
-#define TYPE_PIERCE                  208
-#define TYPE_SLASH                   209
-#define TYPE_WHIP                    210 /* EXAMPLE */
-#define TYPE_CLAW                    211  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_BITE                    212  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_STING                   213  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_CRUSH                   214  /* NO MESSAGES WRITTEN YET! */
-#define TYPE_CLEAVE                  215
-#define TYPE_STAB                    216
-#define TYPE_SMASH                   217
-#define TYPE_SMITE                   218
-#define TYPE_BLAST                   219
-
-#define TYPE_SUFFERING               220
+#define TYPE_SUFFERING               420
 
 /* More anything but spells and weapontypes can be insterted here! */
 
 
-#define SPELL_GREEN_SLIME            221
+#define SPELL_GREEN_SLIME            421
 
 
 
@@ -291,7 +314,7 @@
 #define SAVING_SPELL  4
 
 
-#define MAX_SPL_LIST	215
+#define MAX_SPL_LIST	410
 
 
 #define TAR_IGNORE	 (1<< 0)
@@ -318,9 +341,8 @@ struct spell_info_type
 	ubyte min_usesmana;     /* Amount of mana used by a spell	 */
 	byte beats;             /* Heartbeats until ready for next */
 
-	byte min_level_cleric;  /* Level required for cleric       */
-	byte min_level_magic;   /* Level required for magic user   */
-	byte min_level_druid;   /* Level required for druids       */
+        byte min_level[MIN_LEVEL_NUM]; /* Each entry will hold min level */
+
 	sh_int targets;         /* See below for use with TAR_XXX  */
         sh_int spellfail;       /* modifier for spell failure      */
 };

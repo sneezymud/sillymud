@@ -40,6 +40,8 @@ long mob_count=0;
 long obj_count=0;
 long total_mbc=0;
 long total_obc=0;
+struct figurine_data figurine[255];
+int fig_count = 0;
 
 /*
 **  distributed monster stuff
@@ -73,6 +75,9 @@ struct weather_data weather_info;	/* the infomation about the weather */
 int saved_rooms[29000];
 int number_of_saved_rooms = 0;
 extern struct descriptor_data *descriptor_list;
+
+/* internal function */
+int VerifyMob(struct char_data *ch);
 
 
 /*************************************************************************
@@ -122,6 +127,9 @@ void boot_db()
 	else 
 	  help_index = build_help_index(help_fl, &top_of_helpt);
 
+        log("Booting Figurine Table.");
+        BootFigurines();
+
 	log("Loading zone table.");
 	boot_zones();
 
@@ -135,7 +143,10 @@ void boot_db()
 			
 	log("Renumbering zone table.");
 	renum_zone_table();
-
+#if 0 
+	log("Cleaning up player file.");
+	clean_playerfile();
+#endif
 	log("Generating player index.");
 	build_player_index();
 
@@ -162,6 +173,8 @@ void boot_db()
 	assign_command_pointers();
 	log("   Spells.");
 	assign_spell_pointers();
+	log("   Skills.");
+        assign_skills();
 
 	log("Updating characters with saved items:");
 	update_obj_file();
@@ -334,7 +347,7 @@ void build_player_index()
   int number_level[9];
 
 
-  for(j = 0; j <= 10; j++)
+  for(j = 0; j <= 11; j++)
      list_wiz.number[j] = 0;
 
   for (i = 0; i <= 9; i++) number_level[i] = 0;
@@ -380,8 +393,6 @@ void build_player_index()
 	   if (dummy.level[j] > max) {
 	     max = dummy.level[j];	
 	    }    
-	 
-
         list_wiz.lookup[max - 51].stuff[list_wiz.number[max - 51]].name = 
 	  (char *)strdup(dummy.name);
         list_wiz.lookup[max - 51].stuff[list_wiz.number[max - 51]].title = 
@@ -403,7 +414,7 @@ void build_player_index()
   log("Began Wizlist Generation.");
 
   sprintf(wizlist, "\033[2J\033[0;0H\n\r\n\r");
-  sprintf(buf, "-* Creator and Supreme Being [%d/1] *-\n\r",list_wiz.number[9]);
+  sprintf(buf, "-* Creator and Supreme Being [%d/1] *-\n\r",list_wiz.number[10]);
 
   
   center = (38 - (int) (str_len(buf)/2));
@@ -414,9 +425,9 @@ void build_player_index()
   strcat(wizlist, buf);
 
 
-  for(i = 0; i < list_wiz.number[9]; i++) {
-     sprintf(buf, "%s %s\n\r", list_wiz.lookup[9].stuff[i].name,
-             list_wiz.lookup[9].stuff[i].title);
+  for(i = 0; i < list_wiz.number[10]; i++) {
+     sprintf(buf, "%s %s\n\r", list_wiz.lookup[10].stuff[i].name,
+             list_wiz.lookup[10].stuff[i].title);
 
      center = 38 - (int) (str_len(buf)/2);
      for(j = 0; j <= center; j++)
@@ -427,7 +438,25 @@ void build_player_index()
   strcat(wizlist, "\n\r\n\r");
   log("Creator Generated.");
 
-  sprintf(buf, "-* Implementors [%d/4] *-\n\r", list_wiz.number[8]);
+  sprintf(buf, "-* Designers/Administrators [%d/2] *-\n\r", list_wiz.number[9]);
+  center = 38 - (int) (str_len(buf)/2);
+
+  for(i = 0; i <= center; i++)
+     strcat(wizlist, " ");
+  strcat(wizlist, buf);
+
+  for(i = 0; i < list_wiz.number[9]; i++) {
+     sprintf(buf, "%s %s\n\r", list_wiz.lookup[9].stuff[i].name,
+             list_wiz.lookup[9].stuff[i].title);
+     center = 38 - (int) (str_len(buf)/2);
+     for(j = 0; j <= center; j++)
+        strcat(wizlist, " ");
+     strcat(wizlist, buf);
+  }
+
+  strcat(wizlist, "\n\r\n\r");
+
+  sprintf(buf, "-* Implementors [%d/5] *-\n\r", list_wiz.number[8]);
   center = 38 - (int) (str_len(buf)/2);
 
   for(i = 0; i <= center; i++)
@@ -815,10 +844,11 @@ void load_one_room(FILE *fl, struct room_data *rp)
 #endif
       total_bc += bc;
       room_count++; 
-/*      if(IS_SET(rp->room_flags, SAVE_ROOM)) {
+#if 0
+      if(IS_SET(rp->room_flags, SAVE_ROOM)) {
          saved_rooms[number_of_saved_rooms] = rp->number;
          number_of_saved_rooms++;
-      } */
+      } 
       {
        FILE *fp;
        char buf[255];
@@ -831,6 +861,7 @@ void load_one_room(FILE *fl, struct room_data *rp)
           fclose(fp);
 	}
       }
+#endif
       return;
     default:
       sprintf(buf,"unknown auxiliary code `%s' in room load of #%d",
@@ -925,7 +956,7 @@ void setup_dir(FILE *fl, int room, int dir)
     fread_string(fl);
   rp->dir_option[dir]->keyword = fread_string(fl);
   
-  fscanf(fl, " %d ", &tmp);
+  fscanf(fl, "%d ", &tmp);
   switch(tmp) {
   case 1:
     rp->dir_option[dir]->exit_info = EX_ISDOOR;
@@ -1071,16 +1102,7 @@ void boot_zones()
   new code to allow the game to be 'static' i.e. all the mobs are saved
 in one big zone file, and restored later.
 */
-/*    if (zon == 0) { 
-      tmp_fl = fl;
 
-      fl = fopen("world/mobs","r");
-      if (!fl) {
-	log("No static mob file found.. continuing with normal boot");
-	fl = tmp_fl;
-      }
-    }
-  */  
     cmd_no = 0;
 
     if (zon == 0)
@@ -1178,6 +1200,8 @@ struct char_data *read_mobile(int nr, int type)
   CREATE(mob, struct char_data, 1);
   bc = sizeof(struct char_data);
   clear_char(mob);
+
+  mob->specials.last_direction = -1;  /* this is a fix for wander */
   
   /***** String data *** */
   
@@ -1218,16 +1242,17 @@ struct char_data *read_mobile(int nr, int type)
     
     fscanf(mob_f, "\n");
     
-    /* The new easy monsters */
-    mob->abilities.str   = 11;
-    mob->abilities.intel = 11; 
-    mob->abilities.wis   = 11;
-    mob->abilities.dex   = 11;
-    mob->abilities.con   = 11;
-    mob->abilities.chr   = 11;
-    
     fscanf(mob_f, " %D ", &tmp);
     GET_LEVEL(mob, WARRIOR_LEVEL_IND) = tmp;
+
+
+    mob->abilities.str   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.intel =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.wis   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.dex   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.con   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.chr   =  9+number(1,(MAX(1,tmp/5 - 1)));
+
 
     fscanf(mob_f, " %D ", &tmp);
     mob->points.hitroll = 20-tmp;
@@ -1263,6 +1288,10 @@ struct char_data *read_mobile(int nr, int type)
       GET_EXP(mob) = tmp;
       fscanf(mob_f, " %D \n", &tmp);
       GET_RACE(mob) = tmp;
+      if(IsGiant(mob))
+	mob->abilities.str += number(1,4);
+      if(IsSmall(mob))
+	mob->abilities.str -= 1;
     } else {
       mob->points.gold = tmp;
       fscanf(mob_f, " %D \n", &tmp);
@@ -1319,27 +1348,23 @@ struct char_data *read_mobile(int nr, int type)
       mob->mult_att = (float)tmp;
       /*
       **  read in types:
-      */
-      /*
-	for (i=0;i<mob->mult_att && i < 10; i++) {
-	   fscanf(mob_f, " %D ", &tmp);
-	   mob->att_type[i] = tmp;
-	}
-      */
-    }
+      */ 
+   }
     
     fscanf(mob_f, "\n");
     
-    /* The new easy monsters */
-    mob->abilities.str   = 11;
-    mob->abilities.intel = 11; 
-    mob->abilities.wis   = 11;
-    mob->abilities.dex   = 11;
-    mob->abilities.con   = 11;
-    mob->abilities.chr   = 11;
-    
     fscanf(mob_f, " %D ", &tmp);
     GET_LEVEL(mob, WARRIOR_LEVEL_IND) = tmp;
+
+
+    mob->abilities.str   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.intel =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.wis   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.dex   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.con   =  9+number(1,(MAX(1,tmp/5 - 1)));
+    mob->abilities.chr   =  9+number(1,(MAX(1,tmp/5 - 1)));
+
+
     
     fscanf(mob_f, " %D ", &tmp);
     mob->points.hitroll = 20-tmp;
@@ -1374,7 +1399,10 @@ struct char_data *read_mobile(int nr, int type)
 	GET_EXP(mob) = -tmp;
       fscanf(mob_f, " %D ", &tmp);
       GET_RACE(mob) = tmp;
-      
+      if(IsGiant(mob))
+	mob->abilities.str += number(1,4);
+      if(IsSmall(mob))
+	mob->abilities.str -= 1;
     } else {
       mob->points.gold = tmp;
       
@@ -1534,7 +1562,7 @@ struct char_data *read_mobile(int nr, int type)
     mob->specials.damnodice = 1;
     mob->specials.damsizedice = 6;
     
-    /* Calculate THAC0 as a formular of Level */
+    /* Calculate THAC0 as a formula of Level */
     mob->points.hitroll = MAX(1, GET_LEVEL(mob,WARRIOR_LEVEL_IND)-3);
   }
   
@@ -1560,19 +1588,21 @@ struct char_data *read_mobile(int nr, int type)
      REMOVE_BIT(mob->specials.act, ACT_SCRIPT);
 
   for(i = 0; i < top_of_scripts; i++) {
-
     if(script_data[i].virtual == mob_index[nr].virtual) {
-       SET_BIT(mob->specials.act, ACT_SCRIPT);
-/*       sprintf(buffer, "Setting SCRIPT bit for mobile %s, file %s.", GET_NAME(mob), script_data[i].filename);
-       log(buffer); */
-       mob->script = i;
-       break;
-  }
-}     
+      SET_BIT(mob->specials.act, ACT_SCRIPT);
+      /* sprintf(buffer, "Setting SCRIPT bit for mobile %s, file %s.", GET_NAME(mob), script_data[i].filename);
+	 log(buffer); */
+      mob->script = i;
+      break;
+    }
+  }     
+  
+  VerifyMob(mob);  /* check it for acceptability */
+  
   /* tell the spec_proc (if there is one) that we've been born */
-/*  if(mob_index[nr].func)
-    (*mob_index[nr].func)(mob, 0, "", mob, EVENT_BIRTH);
-*/  
+  /*  if(mob_index[nr].func)
+      (*mob_index[nr].func)(mob, 0, "", mob, EVENT_BIRTH);
+      */  
   /* insert in list */
   
   mob->next = character_list;
@@ -1593,8 +1623,10 @@ struct char_data *read_mobile(int nr, int type)
   }
 
   /* set up things that all members of the race have */
-  SetRacialStuff(mob);
-
+  mob->specials.intrinsics = 0;
+  SetRacialStuff(mob);           /* this sets intrinsics */
+  mob->specials.affected_by |= mob->specials.intrinsics;
+  
   /* change exp for wimpy mobs (lower) */
   if (IS_SET(mob->specials.act, ACT_WIMPY))
     GET_EXP(mob) -= GET_EXP(mob)/10;
@@ -1743,6 +1775,29 @@ struct obj_data *read_object(int nr, int type)
   
   obj_index[nr].number++;
 
+  if(IS_SET(obj->obj_flags.extra_flags, ITEM_FIGURINE)) {
+     int i, found = 0;
+
+     for(i = 0; i < fig_count; i++)
+         if(figurine[i].obj == obj_index[nr].virtual) {
+            found = 1;
+            break;
+	  }
+
+     if(found) {
+        obj->link = read_mobile(real_mobile(figurine[i].mob), REAL);
+        SET_BIT(obj->link->specials.act, ACT_FIGURINE);
+        obj->link->link = obj;
+        char_to_room(obj->link, 3);
+      }
+     else {
+        REMOVE_BIT(obj->obj_flags.extra_flags, ITEM_FIGURINE);
+        obj->link = NULL;
+      }
+   }
+
+   else
+      obj->link = NULL;
 
   obj_count++;  
 #if BYTE_COUNT
@@ -1837,216 +1892,34 @@ void zone_update()
 /* execute the reset command table of a given zone */
 void reset_zone(int zone)
 {
-  int cmd_no, last_cmd = 1, j;
+  int cmd_no, last_cmd = 1;
   char buf[256];
   struct char_data *mob;
   struct char_data *master;
   struct obj_data *obj, *obj_to;
   struct room_data	*rp;
-  FILE *fl;
+  /*   FILE *fl; */
   static int done = 0;
 
   mob = 0;
 
-
   if (zone == 0 && !done) {
-    int count = 0;
     done = 1;
-
-    fl = fopen("world/mobs", "r");
-    if(!fl) {
-      log("Unable to load scratch zone file for update.");
-       return;
-    }
-    while (1){
-      char c, buf[255];
-      int i, j, k, tmp;
-
-      count++;
-      /*fprintf(stderr, "%d ", count);*/
-      fscanf(fl, " "); /* skip blanks */
-      fscanf(fl, "%c", &c);
- 
-      
-      if (c == 'S' || c == EOF)
-	break;
-      
-      if (c == '*'){
-	fgets(buf, 80, fl); /* skip command */
-	continue;
+#if SAVE_WORLD
+    for (i=0;i<30000;i+=1000) {
+      sprintf(buf, "world/mobs.%d", i);
+      fl = fopen(buf, "r");
+      if(!fl) {
+	log("Unable to load scratch zone file for update.");
+	return;
       }
-      
-      fscanf(fl, " %d %d %d", &tmp, &i, &j);
-      if (c == 'M' || c == 'O' || c == 'C' || c == 'E' || c == 'P' || c == 'D')
-	fscanf(fl, " %d", &k);
-      
-      fgets(buf, 80, fl);/* read comment */
-      if(last_cmd || tmp <= 0)
-      switch(c) {
-      case 'M': /* read a mobile */
-	i = real_mobile(i);
-	if ((mob_index[i].number < j) && !CheckKillFile(mob_index[i].virtual)) {
-	    mob = read_mobile(i, REAL);
-	    char_to_room(mob, k);
- 
-	    last_cmd = 1;
-	    master = mob;
-	  } else
-	    last_cmd = 0;
-	break;
- 
-      case 'C': /* read a mobile.  Charm them to follow prev. */
-	i = real_mobile(i);
-	if ((mob_index[i].number < j) && !CheckKillFile(mob_index[i].virtual)){
-	  mob = read_mobile(i, REAL);
-	  if (master) {
-	    char_to_room(mob, master->in_room);
-	    /*
-	      add the charm bit to the dude.
-	      */
-	    add_follower(mob, master);
-	    SET_BIT(mob->specials.affected_by, AFF_CHARM);
-	    SET_BIT(mob->specials.act, k);
-	  } else {
-	    extract_char(mob);
-	    last_cmd = 0;
-	  }
-	  last_cmd = 1;
-	}
-	else
-	  last_cmd = 0;
-	break;
-
-      case 'Z':  /* set the last mobile to this zone */
-	if (mob) {
-	  mob->specials.zone =i;
-	  
-	  if (GET_RACE(mob)>RACE_GNOME)
-	    if (!strchr(zone_table[i].races, GET_RACE(mob))) {
-	      zone_table[i].races[strlen(zone_table[i].races)] = 
-		GET_RACE(mob);
-	    }
-	  last_cmd = 1;
-	} else {	  
-	  last_cmd = 0;
-	}
-        break;
-	
-      case 'O': /* read an object */
-	i = real_object(i);
-	if (obj_index[i].number < j) {
-	  if (j >= 0 && ((rp = real_roomp(j)) != NULL)) {
-	    if((tmp>0&&ObjRoomCount(i,rp)<tmp) ||
-	       (tmp<=0&&ObjRoomCount(i,rp)<(-tmp)+1)){
-	      if ((obj = read_object(i, REAL)) != NULL) {
-		obj_to_room(obj, k);
-		last_cmd = 1;
-	      } else {
-		last_cmd = 0;
-	      }
-	    } else {
-	      last_cmd = 0;
-	    }
-	  } else if (obj = read_object(i, VIRTUAL)) {
-	    sprintf(buf, "Error finding room #%d", k);
-	    log(buf);
-	    last_cmd = 1;
-	  }  else {
-	    last_cmd = 0;
-	  }
-	}
-	break;
-	
-      case 'P': /* object to object */
-	i = real_object(i);
-	if (obj_index[i].number < j)  {
-	  obj = read_object(i, VIRTUAL);
-	  obj_to = get_obj_num(k);
-	  if (obj_to && obj) {
-	    obj_to_obj(obj, obj_to);
-	    last_cmd = 1;
-	  } else {
-	    last_cmd = 0;
-	  }
-	} else
-	  last_cmd = 0;
-	break;
-	
-      case 'G': /* obj_to_char */
-	i = real_object(i);
-	if (obj_index[i].number < j &&
-	    (obj = read_object(i, REAL))) {
-	  obj_to_char(obj, mob);
-	  last_cmd = 1;
-#ifndef NEW_RENT
-	} else {
-	  last_cmd = 0;
+      ReadTextZone(fl);
+      fclose(fl);
+    }
 #endif
-	}
-	break;
-	
-      case 'H': /* hatred to char */
-	
-	if (AddHatred(mob, i, j))
-	    last_cmd = 1;
-	else 
-	    last_cmd = 0;
-	break;
-	
-      case 'F': /* fear to char */
-	
-	if (AddFears(mob, i, j))
-	    last_cmd = 1;
-	else 
-	    last_cmd = 0;
-	break;
-	
-      case 'E': /* object to equipment list */
-	i = real_object(i);
-	if (obj_index[i].number < j &&
-	    (obj = read_object(i, REAL))) {
-	  if (!mob->equipment[k]) {
-	    equip_char(mob, obj, k);
-	  } else {
-	    sprintf(buf,"eq error - zone %d, cmd %d, item %d, mob %d, loc %d", 
-		    zone, 1, obj_index[i].virtual, 
-		    mob_index[mob->nr].virtual, k);
-	    log_sev(buf, 6);
-	  }
-	  last_cmd = 1;
-	}    else
-	  last_cmd = 0;
-	break;
-	
-      case 'D': /* set state of door */
-	rp = real_roomp(i);
-	if (rp && rp->dir_option[j]) {
-	    switch (k) {
-	    case 0:
-	          REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-		      REMOVE_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-		      break;
-		case 1:
-		      SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-		      REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-		      break;
-		case 2:
-		      SET_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
-		      SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
-		      break;
-		}
-	      last_cmd = 1;
-	  } else {
-	      /* that exit doesn't exist anymore */
-	  }
-	break;
-      
-      default:
-	break;
-      }
-    }
-  return;
+    return;
   }
+
 
 
   if (zone_table[zone].start == 0) {
@@ -2212,14 +2085,17 @@ void reset_zone(int zone)
 	if (rp && rp->dir_option[ZCMD.arg2]) {
 	  switch (ZCMD.arg3) {
 	  case 0:
+	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_ISDOOR);
 	    REMOVE_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_LOCKED);
 	    REMOVE_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_CLOSED);
 	    break;
 	  case 1:
+	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_ISDOOR);
 	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_CLOSED);
 	    REMOVE_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_LOCKED);
 	    break;
 	  case 2:
+	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_ISDOOR);
 	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_LOCKED);
 	    SET_BIT(rp->dir_option[ZCMD.arg2]->exit_info, EX_CLOSED);
 	    break;
@@ -2231,8 +2107,8 @@ void reset_zone(int zone)
 	break;
 	
       default:
-	sprintf(buf, "Undefd cmd in reset table; zone %d cmd %d.\n\r",
-		zone, cmd_no);
+	sprintf(buf, "Undefd cmd [%c] in reset table; zone %d cmd %d.",
+		ZCMD.command,zone, cmd_no);
 	log(buf);
 	break;
       }
@@ -2240,11 +2116,12 @@ void reset_zone(int zone)
       last_cmd = 0;
     
   }
-
+#if 0
   for (j=0;zone_table[zone].races[j];j++) {
     fprintf(stderr, "%d ", (int)zone_table[zone].races[j]);
   }
   fprintf(stderr, "\n");  
+#endif
 
   zone_table[zone].age = 0;
   zone_table[zone].start = 1;
@@ -2351,17 +2228,23 @@ void store_to_char(struct char_file_u *st, struct char_data *ch)
   ch->player.height = st->height;
   
   ch->abilities = st->abilities;
+  
   ch->tmpabilities = st->abilities;
+
   ch->points = st->points;
   
   SpaceForSkills(ch);
 
-  if (HowManyClasses(ch) >= 3) {
-    max = 80;    
-  } else if (HowManyClasses(ch) == 2) {
-    max = 87;
+  if(GetMaxLevel(ch) >= LOW_IMMORTAL) {
+    max = 100; 
   } else {
-    max = 95;
+    if (HowManyClasses(ch) >= 3) {
+      max = 80;    
+    } else if (HowManyClasses(ch) == 2) {
+      max = 87;
+    } else {
+      max = 95;
+    }
   }
   
   for (i = 0; i <= MAX_SKILLS - 1; i++) {
@@ -2451,8 +2334,8 @@ void char_to_store(struct char_data *ch, struct char_file_u *st)
   
   
   
-  ch->tmpabilities = ch->abilities;
-  
+  ch->tmpabilities = ch->abilities; 
+
   st->birth      = ch->player.time.birth;
   st->played     = ch->player.time.played;
   st->played    += (long) (time(0) - ch->player.time.logon);
@@ -2471,14 +2354,16 @@ void char_to_store(struct char_data *ch, struct char_file_u *st)
   st->race     = GET_RACE(ch);
 
   st->abilities = ch->abilities;
-  st->points    = ch->points;
-  st->alignment       = ch->specials.alignment;
-  st->spells_to_learn = ch->specials.spells_to_learn;
-  st->act             = ch->specials.act;
-  st->affected_by      = ch->specials.affected_by;
-  st->affected_by2     = ch->specials.affected_by2;
-  st->startroom =     ch->specials.start_room;
-  st->extra_flags =   ch->player.extra_flags;
+
+  st->points            = ch->points;
+
+  st->alignment         = ch->specials.alignment;
+  st->spells_to_learn   = ch->specials.spells_to_learn;
+  st->act               = ch->specials.act;
+  st->affected_by       = ch->specials.affected_by;
+  st->affected_by2      = ch->specials.affected_by2;
+  st->startroom         = ch->specials.start_room;
+  st->extra_flags       = ch->player.extra_flags;
   
   st->points.armor   = 100;
   st->points.hitroll =  0;
@@ -2493,8 +2378,7 @@ void char_to_store(struct char_data *ch, struct char_file_u *st)
     strcpy(st->description, ch->player.description);
   else
     *st->description = '\0';
-  
-  
+    
   for (i = 0; i <= MAX_TOUNGE - 1; i++)
     st->talks[i] = ch->player.talks[i];
   
@@ -2595,8 +2479,8 @@ void save_char(struct char_data *ch, sh_int load_room)
   
   if (!tmp)
     char_to_store(ch, &st);
-	else
-	  char_to_store(tmp, &st);
+  else
+    char_to_store(tmp, &st);
   
   st.load_room = load_room;
   
@@ -2641,19 +2525,22 @@ char *fread_string(FILE *f1)
  buf[0] = '\0';
  
  while(i < MAX_STRING_LENGTH - 2) {
-     tmp = fgetc(f1);
-     if(!tmp) {
-        perror("Fread_string");
-        assert(0);
-      }
- 
-     if(tmp == '~')
-        break;
- 
-     buf[i++] = (char)tmp;
+   tmp = fgetc(f1);
+   if(!tmp) {
+     perror("Fread_string");
+     assert(0);
+   }
+   
+   if(tmp == '~') {
+     break;
    }
  
- if(i == MAX_STRING_LENGTH - 2) { /* We filled the buffer */
+   buf[i++] = (char)tmp;
+   if (buf[i-1] == '\n')
+     buf[i++] = '\r';
+ }
+
+ if(i == MAX_STRING_LENGTH - 3) { /* We filled the buffer */
     buf[i] = '\0';
     log("File too long (fread_string).");
     while(tmp = fgetc(f1))
@@ -2832,6 +2719,8 @@ void reset_char(struct char_data *ch)
   ch->followers = 0;
   ch->master = 0;
   ch->carrying = 0;
+  ch->specials.affected_by =0;
+  ch->specials.affected_by2=0;
   ch->next = 0;
   
   ch->immune = 0;
@@ -2865,8 +2754,12 @@ void reset_char(struct char_data *ch)
   GET_AC(ch) = 100;
 
   GET_HITROLL(ch)=0;
-  GET_DAMROLL(ch)=0;
-  
+
+  if(GET_RACE(ch) == RACE_OGRE)	
+    GET_DAMROLL(ch)=1;
+  else
+    GET_DAMROLL(ch) = 0;
+
   ch->next_fighting = 0;
   ch->next_in_room = 0;
   ch->specials.fighting = 0;
@@ -2909,18 +2802,38 @@ void reset_char(struct char_data *ch)
   if (HasClass(ch, CLASS_MONK)) {
     GET_AC(ch) -= MIN(150, (GET_LEVEL(ch, MONK_LEVEL_IND)*5));
     ch->points.max_move += GET_LEVEL(ch, MONK_LEVEL_IND);
+  } else if(GET_RACE(ch) == RACE_OGRE)
+    GET_AC(ch) -= 15;
+
+  if (HasClass(ch, CLASS_MAGIC_USER) ||
+      HasClass(ch, CLASS_CLERIC) ||
+      HasClass(ch, CLASS_DRUID))  {
+    ch->specials.prompt = 7;	/* these are bit types */
+  } else if (HasClass(ch,CLASS_THIEF) ||
+	     HasClass(ch,CLASS_WARRIOR) ||
+	     HasClass(ch, CLASS_MONK)) {
+    ch->specials.prompt = 3;
+  } else {
+    ch->specials.prompt = 1;
   }
 
   /*
     racial stuff
     */
-  SetRacialStuff(ch);
+  ch->specials.intrinsics = 0;
+  SetRacialStuff(ch);		/* this sets intrinsics */
+  ch->specials.affected_by |= ch->specials.intrinsics;
 
 /*
   update the affects on the character.
 */
 
   ch->specials.sev = 5;
+  ch->specials.pct = 20;  /* Make default wimpy percent be 20% (original) */
+  ch->specials.flee = 1;  /* Make default flee rooms = 1 (original) */
+  ch->specials.loot = FALSE;  /* Make default autoloot OFF */
+  ch->specials.split = FALSE; /* Make default autosplit OFF */
+  ch->specials.bitten = FALSE;	/* Nope, sorry, no one is bitten, at first */
 
   for(af = ch->affected; af; af=af->next)
     affect_modify(ch, af->location, (int)af->modifier, af->bitvector, 
@@ -2975,7 +2888,7 @@ void init_char(struct char_data *ch)
   /* *** if this is our first player --- he be God *** */
   
   if (top_of_p_table < 0)	{
-    GET_EXP(ch) = 24000000;
+    GET_EXP(ch) = 69;
     GET_LEVEL(ch,0) = IMPLEMENTOR;
     ch->points.max_hit = 1000;
   }
@@ -3049,6 +2962,10 @@ void init_char(struct char_data *ch)
   ch->points.mana = GET_MAX_MANA(ch);
   ch->points.hit = GET_MAX_HIT(ch);
   ch->points.move = GET_MAX_MOVE(ch);
+
+  ch->points.move_gain = 0;
+  ch->points.hit_gain = 0;
+  ch->points.mana_gain = 0;
   
   ch->points.armor = 100;
   
@@ -3066,6 +2983,7 @@ void init_char(struct char_data *ch)
   }
   
   ch->specials.affected_by = 0;
+  ch->specials.affected_by2 = 0;
   ch->specials.spells_to_learn = 0;
 
   for (i = 0; i < 5; i++)
@@ -3178,8 +3096,9 @@ int workhours()
 void reboot_text(struct char_data *ch, char *arg, int cmd)
 {
   char buffer[100];
-  struct char_data *p;
+  /*   struct char_data *p;
   int i;
+  */
 
  if(IS_NPC(ch))
     return;
@@ -3190,13 +3109,37 @@ void reboot_text(struct char_data *ch, char *arg, int cmd)
  file_to_string(CREDITS_FILE, credits);
  file_to_string(MOTD_FILE, motd);
  file_to_string("wizmotd", wmotd);
- log("Initializing Scripts.");
- InitScripts();
 
+ fclose(mob_f);
+ fclose(obj_f);
+ top_of_mobt = 0;
+ top_of_objt = 0;
+ free(mob_index);
+ free(obj_index);
+
+  log("Opening mobile, object and help files.");
+  if (!(mob_f = fopen(MOB_FILE, "r")))	{
+    perror("boot");
+    assert(0);
+  }
+  
+  if (!(obj_f = fopen(OBJ_FILE, "r")))	{
+    perror("boot");
+    assert(0);
+  }
+  
+  
+  log("Generating index tables for mobile and object files.");
+  mob_index = generate_indices(mob_f, &top_of_mobt);
+  obj_index = generate_indices(obj_f, &top_of_objt);
+  
+/* log("Initializing Scripts.");
+ InitScripts();
+*/
 /* jdb -- you don't appear to re-install the scripts after you
    reset the script db
    */
-
+/*
   for (p = character_list;p;p=p->next) {
     for(i = 0; i < top_of_scripts; i++) {
       if(script_data[i].virtual == mob_index[p->nr].virtual) {
@@ -3208,6 +3151,7 @@ void reboot_text(struct char_data *ch, char *arg, int cmd)
       }
     }
   }
+*/
  return;
 }
 
@@ -3257,6 +3201,11 @@ void InitScripts()
     if(buf[strlen(buf) - 1] == '\n')
        buf[strlen(buf) - 1] = '\0';
 
+    if(strlen(buf) < 4)	{	/* no way we can get a valid thing in less */
+      sprintf(buf,"%s read in, garbage.");
+      log(buf);
+    }
+
     sscanf(buf, "%s %d", buf2, &i);
 
     sprintf(buf, "scripts/%s", buf2);
@@ -3276,7 +3225,14 @@ void InitScripts()
               buf[strlen(buf) - 1] = '\0';
 /* you really don't want to do a lot of reallocs all at once
 */   
-           script_data[top_of_scripts].script = (struct foo_data *) realloc(script_data[top_of_scripts].script, sizeof(struct foo_data) * (count + 1));
+	   if (count==0) {
+	     script_data[top_of_scripts].script = (struct foo_data *) malloc(script_data[top_of_scripts].script, sizeof(struct foo_data));
+	   } else  {
+	     script_data[top_of_scripts].script = (struct foo_data *) realloc(script_data[top_of_scripts].script, sizeof(struct foo_data) * (count + 1));
+	   }
+	   fprintf(stderr,"top_of_scripts %d\n", top_of_scripts);
+	   fprintf(stderr,"count %d\n",count);
+	   fprintf(stderr,"buf2: %s\n",buf2);
            script_data[top_of_scripts].script[count].line = (char *) malloc(sizeof(char) * (strlen(buf) + 1));
 
            strcpy(script_data[top_of_scripts].script[count].line, buf);
@@ -3337,45 +3293,27 @@ void ReloadRooms()
 
 void SaveTheWorld()
 {
-  static int ctl=29001;  /* this integer is used to save 1/4th the world
-			    at a time (when i write the save code */
+#if SAVE_WORLD
+  static int ctl=0;
   char cmd, buf[80];
   int i, j, arg1, arg2, arg3;
   struct char_data *p;
   struct obj_data *o;
   struct room_data *room;
   FILE *fp;
-  
-  
-  
-  fp = (FILE *)fopen("world/mobs", "r+");  /* append */
+
+  if (ctl == 30000) ctl = 0;
+    
+  sprintf(buf, "world/mobs.%d", ctl);
+  fp = (FILE *)fopen(buf, "w");  /* append */
   
   if (!fp) {
     log("Unable to open zone writing file.");
     return;
   }
 
-#if 1
-  if (ctl = 30000) {
-    ctl = 0;    
-  }
-
   i = ctl;
-  if (ctl == 0) {
-    ctl = 5000;
-  } else if (ctl == 5000) {
-    ctl = 12000;
-    fseek(fp, 0, 2);  /* seek to the end.. start writing at the end */
-  } else if (ctl == 12000) {
-    ctl = 20000;
-    fseek(fp, 0, 2);
-  } else if (ctl == 20000) {
-    ctl = 30000;
-    fseek(fp, 0, 2);
-  }
-#else
-  i = 0;
-#endif
+  ctl += 1000;
   
   for (; i< ctl; i++) {
     room = real_roomp(i);
@@ -3450,6 +3388,336 @@ void SaveTheWorld()
   }
   fprintf(fp, "S\n");
   fclose(fp);
-
+#endif
 }
 
+int ReadTextZone( FILE *fl)
+{
+  while (1){
+    char c, buf[255], count=0, last_cmd=1;
+    int i, j, k, tmp, zone=0;
+    struct char_data *mob, *master;
+    struct room_data *rp;
+    struct obj_data *obj, *obj_to;
+
+    count++;
+    fscanf(fl, " "); /* skip blanks */
+    fscanf(fl, "%c", &c);
+    
+    
+    if (c == 'S' || c == EOF)
+      break;
+    
+    if (c == '*'){
+      fgets(buf, 80, fl); /* skip command */
+      continue;
+    }
+    
+    fscanf(fl, " %d %d %d", &tmp, &i, &j);
+    if (c == 'M' || c == 'O' || c == 'C' || c == 'E' || c == 'P' || c == 'D')
+      fscanf(fl, " %d", &k);
+    
+    fgets(buf, 80, fl);/* read comment */
+    if(last_cmd || tmp <= 0)
+      switch(c) {
+      case 'M': /* read a mobile */
+	i = real_mobile(i);
+	if ((mob_index[i].number < j) && !CheckKillFile(mob_index[i].virtual)) {
+	  mob = read_mobile(i, REAL);
+	  char_to_room(mob, k);
+	  
+	  last_cmd = 1;
+	  master = mob;
+	} else
+	  last_cmd = 0;
+	break;
+	
+      case 'C': /* read a mobile.  Charm them to follow prev. */
+	i = real_mobile(i);
+	if ((mob_index[i].number < j) && !CheckKillFile(mob_index[i].virtual)){
+	  mob = read_mobile(i, REAL);
+	  if (master) {
+	    char_to_room(mob, master->in_room);
+	    /*
+	      add the charm bit to the dude.
+	      */
+	    add_follower(mob, master);
+	    SET_BIT(mob->specials.affected_by, AFF_CHARM);
+	    SET_BIT(mob->specials.act, k);
+	  } else {
+	    extract_char(mob);
+	    last_cmd = 0;
+	  }
+	  last_cmd = 1;
+	}
+	else
+	  last_cmd = 0;
+	break;
+	
+      case 'Z':  /* set the last mobile to this zone */
+	if (mob) {
+	  mob->specials.zone =i;
+	  
+	  if (GET_RACE(mob)>RACE_GNOME)
+	    if (!strchr(zone_table[i].races, GET_RACE(mob))) {
+	      zone_table[i].races[strlen(zone_table[i].races)] = 
+		GET_RACE(mob);
+	    }
+	  last_cmd = 1;
+	} else {	  
+	  last_cmd = 0;
+	}
+        break;
+	
+      case 'O': /* read an object */
+	i = real_object(i);
+	if (obj_index[i].number < j) {
+	  if (j >= 0 && ((rp = real_roomp(j)) != NULL)) {
+	    if((tmp>0&&ObjRoomCount(i,rp)<tmp) ||
+	       (tmp<=0&&ObjRoomCount(i,rp)<(-tmp)+1)){
+	      if ((obj = read_object(i, REAL)) != NULL) {
+		obj_to_room(obj, k);
+		last_cmd = 1;
+	      } else {
+		last_cmd = 0;
+	      }
+	    } else {
+	      last_cmd = 0;
+	    }
+	  } else if (obj = read_object(i, VIRTUAL)) {
+	    sprintf(buf, "Error finding room #%d", k);
+	    log(buf);
+	    last_cmd = 1;
+	  }  else {
+	    last_cmd = 0;
+	  }
+	}
+	break;
+	
+      case 'P': /* object to object */
+	i = real_object(i);
+	if (obj_index[i].number < j)  {
+	  obj = read_object(i, VIRTUAL);
+	  obj_to = get_obj_num(k);
+	  if (obj_to && obj) {
+	    obj_to_obj(obj, obj_to);
+	    last_cmd = 1;
+	  } else {
+	    last_cmd = 0;
+	  }
+	} else
+	  last_cmd = 0;
+	break;
+	
+      case 'G': /* obj_to_char */
+	i = real_object(i);
+	if (obj_index[i].number < j &&
+	    (obj = read_object(i, REAL))) {
+	  obj_to_char(obj, mob);
+	  last_cmd = 1;
+#ifndef NEW_RENT
+	} else {
+	  last_cmd = 0;
+#endif
+	}
+	break;
+	
+      case 'H': /* hatred to char */
+	
+	if (AddHatred(mob, i, j))
+	    last_cmd = 1;
+	else 
+	    last_cmd = 0;
+	break;
+	
+      case 'F': /* fear to char */
+	
+	if (AddFears(mob, i, j))
+	    last_cmd = 1;
+	else 
+	    last_cmd = 0;
+	break;
+	
+      case 'E': /* object to equipment list */
+	i = real_object(i);
+	if (obj_index[i].number < j &&
+	    (obj = read_object(i, REAL))) {
+	  if (!mob->equipment[k]) {
+	    equip_char(mob, obj, k);
+	  } else {
+	    sprintf(buf,"eq error - zone %d, cmd %d, item %d, mob %d, loc %d", 
+		    zone, 1, obj_index[i].virtual, 
+		    mob_index[mob->nr].virtual, k);
+	    log_sev(buf, 6);
+	  }
+	  last_cmd = 1;
+	}    else
+	  last_cmd = 0;
+	break;
+	
+      case 'D': /* set state of door */
+	rp = real_roomp(i);
+	if (rp && rp->dir_option[j]) {
+	  switch (k) {
+	  case 0:
+	    SET_BIT(rp->dir_option[j]->exit_info, EX_ISDOOR);
+	    REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
+	    REMOVE_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
+	    break;
+	  case 1:
+            SET_BIT(rp->dir_option[j]->exit_info, EX_ISDOOR);
+	    SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
+	    REMOVE_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
+	    break;
+	  case 2:
+            SET_BIT(rp->dir_option[j]->exit_info, EX_ISDOOR);
+	    SET_BIT(rp->dir_option[j]->exit_info, EX_LOCKED);
+	    SET_BIT(rp->dir_option[j]->exit_info, EX_CLOSED);
+	    break;
+	  }
+	  last_cmd = 1;
+	} else {
+	  /* that exit doesn't exist anymore */
+	}
+	break;
+	
+      default:
+	break;
+      }
+  }
+  
+}
+
+void BootFigurines()
+{
+ FILE *f1;
+ char buf[255];
+
+ if(!(f1 = fopen("figurines", "r"))) {
+    log("Unable to open file \"figurines\".");
+    return;
+  }
+
+ while(fgets(buf, 254, f1)) {
+    sscanf(buf, "%d %d\n", &figurine[fig_count].obj, &figurine[fig_count].mob);
+    fig_count++;
+    if(fig_count >= 255)
+       fig_count = 254;
+  }
+ fclose(f1);
+}
+
+int VerifyMob(struct char_data *ch)
+{
+  char buf[256];
+  /* check to see that the mob falls within certain parameters */
+
+  if (ch->specials.damnodice < 0) {
+    sprintf(buf, "%s's number of damage dice is negative\n",
+            ch->player.name);
+    log_sev(buf, 6);
+  }
+
+  if (ch->specials.damsizedice < 0) {
+    sprintf(buf, "%s's size of damage dice is negative\n",
+            ch->player.name);
+    log_sev(buf, 6);
+  }
+  return(1);
+}
+
+void clean_playerfile()
+{
+  struct junk {
+    struct char_file_u dummy;
+    bool AXE;
+  };
+
+  struct junk grunt;
+  
+  time_t timeH;
+  char buf[80];
+  FILE *f,*f2;
+  int j,max, num_processed, num_deleted, num_demoted, ones;
+
+  num_processed = num_deleted = num_demoted = ones = 0;
+  timeH=time(0);
+
+  if (!(f = fopen(PLAYER_FILE, "rb+")))        {
+    perror("clean player file");
+    exit(0);
+  }
+
+  if (!(f2 = fopen("temp", "w+")))        {
+    perror("clean player file");
+    exit(0);
+  }
+
+
+  for (;!feof(f);) {
+    fread(&(grunt.dummy), sizeof(struct char_file_u), 1, f);
+     if (!feof(f)) {           /* we have someone */
+       num_processed++;
+       grunt.AXE = FALSE;
+       if(!str_cmp(grunt.dummy.name,"111111")) {
+	 sprintf(buf,"%s was deleted (111111 name hopefully).",
+		 grunt.dummy.name);
+	 log(buf);
+	 ones++;
+	 num_deleted++;
+         grunt.AXE = TRUE;
+       } else {
+         for(j=0,max=0;j<6;j++)
+          if(grunt.dummy.level[j] > max)
+             max = grunt.dummy.level[j];
+         if(max < LOW_IMMORTAL) {
+           j=1;
+           if(max > 15)
+             j++;
+           if(max > 30)
+             j++;
+           if(max > 45)
+             j++;
+
+           if(timeH-grunt.dummy.last_logon > (long) j*(SECS_PER_REAL_DAY*30)){
+	     num_deleted++;
+             grunt.AXE = TRUE;	
+	     sprintf(buf,"%s deleted after %d months of inactivity.",
+		     grunt.dummy.name,j);
+	     log(buf);
+           }
+         } else if(max > LOW_IMMORTAL) {
+           if(timeH-grunt.dummy.last_logon > (long) SECS_PER_REAL_DAY*30) {
+	     num_demoted++;
+             sprintf(buf,"%s demoted from %d to %d due to inactivity.",
+                     grunt.dummy.name,max,max-1);
+	     log(buf);
+             grunt.dummy.last_logon = timeH; /* so it doesn't happen twice */
+             max--;
+             max = MAX(51,max);	/* should not be necessary */
+
+             for(j=0;j<6;j++) grunt.dummy.level[j]=max;
+
+           }
+         }
+       }
+      if(!grunt.AXE)
+         fwrite(&(grunt.dummy), sizeof(struct char_file_u), 1, f2);
+     }
+  }
+
+  sprintf(buf,"-- %d characters were processed.", num_processed);
+  log(buf);
+  sprintf(buf,"-- %d characters were deleted.  ", num_deleted);
+  log(buf);
+  sprintf(buf,"-- %d of these were allread deleted. (11111s)", ones);
+  log(buf);
+  sprintf(buf,"-- %d gods were demoted due to inactivity.", num_demoted);
+  log(buf);
+  sprintf(buf,"mv %s %s.bak", PLAYER_FILE, PLAYER_FILE);
+  system(buf);
+  sprintf(buf,"mv temp %s", PLAYER_FILE);
+  system(buf);
+  log("Cleaning done.");
+
+}

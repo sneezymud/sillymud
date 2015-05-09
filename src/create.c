@@ -101,9 +101,11 @@ void ChangeRoomFlags(struct room_data *rp, struct char_data *ch, char *arg, int 
  
 void do_redit(struct char_data *ch, char *arg, int cmd)
 {
+#ifndef TEST_SERVER
  struct room_data *rp;
 
   rp = real_roomp(ch->in_room);
+#endif
 
  if(IS_NPC(ch))
     return;
@@ -114,12 +116,12 @@ void do_redit(struct char_data *ch, char *arg, int cmd)
   if (!ch->desc) /* someone is forced to do something. can be bad! */
     return;      /* the ch->desc->str field will cause problems... */
  
- 
+#ifndef TEST_SERVER
   if((GetMaxLevel(ch) < 56) && (rp->zone != GET_ZONE(ch))) {
      send_to_char("Sorry, you are not authorized to edit this zone.\n\r", ch);
      return;
   }
- 
+#endif
  
  ch->specials.edit = MAIN_MENU;
  ch->desc->connected = CON_EDITING;
@@ -428,7 +430,7 @@ void AddExitToRoom(struct room_data *rp, struct char_data *ch, char *arg, int ty
  int update, dir, row, i = 0;
  char buf[255];
  
- extern char *exit_bits[];
+ extern const char *exit_bits[];
  
  switch(ch->specials.edit) {
         case CHANGE_EXIT_NORTH: dir = 0;

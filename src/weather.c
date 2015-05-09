@@ -14,23 +14,14 @@
 extern struct time_info_data time_info;
 extern struct weather_data weather_info;
 extern struct room_data *room_db;
-
-/*In this part. */
-void SaveTheWorld();
-void weather_and_time(int mode);
-void another_hour(int mode);
-void weather_change(void);
-void GetMonth( int month);
-void ChangeWeather( int change);
-void switch_light(byte why);  /* -DM 7/16/92 */
-void PulseMobiles(int type);
+extern struct descriptor_data *descriptor_list;
 
 /* what stage is moon in?  (1 - 32) */
 unsigned char moontype;   
 
 int gSeason;   /* global variable --- the season */
 int gMoonSet = 3;
-int gSunRise = 5;
+int gSunRise = 5;		/* all global as well :) */
 int gSunSet = 18;
 int gMoonRise = 22;
 
@@ -48,16 +39,19 @@ void weather_and_time(int mode)
 void another_hour(int mode)
 {
   char moon[20], buf[100];
-  int tmp;
+  int tmp, i;
   
   time_info.hours++;
   
   tmp = time_info.hours;
   
-  if (mode) {
+  if (mode) {			/* tick */
     
+    /* as a test, save a piece of the world every mud hour */
+    SaveTheWorld();
     if (tmp == 0) {
-      SaveTheWorld();
+      for (i=0;i<29;i++)   /* save the rest of the world automatically */
+	SaveTheWorld();
     }
     if (tmp == gMoonRise) {
       if (moontype < 4) {
@@ -86,29 +80,29 @@ void another_hour(int mode)
       weather_info.sunlight = SUN_LIGHT;
       switch_light(SUN_LIGHT);
       send_to_outdoor("The day has begun.\n\r");
+      GlobalSunProblemCheck(TRUE);
     }
     if (tmp == gSunSet) {
       weather_info.sunlight = SUN_SET;
-      send_to_outdoor(
-		      "The sun slowly disappears into the eastern horizon.\n\r");
+      send_to_outdoor("The sun slowly disappears into the eastern horizon.\n\r");
     }
     if (tmp == gSunSet+1) {
       weather_info.sunlight = SUN_DARK;
       switch_light(SUN_DARK);
-      send_to_outdoor("The night has begun.\n\r");
+      send_to_outdoor("Nightime has settled upon the realms.\n\r");
+      GlobalSunProblemCheck(FALSE);
     }
     if (tmp == gMoonSet) {
       if((moontype > 15) && (moontype < 25)) {
 	switch_light(MOON_SET);
         send_to_outdoor("Darkness once again fills the realm as the moon sets.\n\r");
       } else {
-	send_to_outdoor("The moon sets\n\r");
+	send_to_outdoor("The moon sets.\n\r");
       }
       
     }
     if (tmp == 12) {
       send_to_outdoor("It is noon.\n\r");
-      SaveTheWorld();
     }
     
     if (time_info.hours > 23)  /* Changed by HHS due to bug ???*/ {
@@ -435,3 +429,98 @@ void switch_light(byte why)
  }
 
 }
+
+void GlobalSunProblemCheck(bool light)
+{
+  struct descriptor_data *i;
+
+  for (i = descriptor_list; i; i = i->next)
+    if (!i->connected) {
+      if(OUTSIDE(i->character)) {
+	if(SUNPROBLEM(i->character)) {
+	  if(!IS_AFFECTED2(i->character, AFF2_SUN_BLIND)) {
+	    if(light)
+	      SunBlind(i->character);
+	    else
+	      RemoveSunBlind(i->character);
+	  }
+	}
+      }
+    }
+
+}
+
+void SunProblemCheck (struct char_data *ch)
+{
+  if(SUNPROBLEM(ch)) {
+    if( (time_info.hours > 5 && time_info.hours < 18) && 
+       (OUTSIDE(ch) && !IS_SET(real_roomp(ch->in_room)->room_flags, DARK)) ) {
+      if(!IS_AFFECTED2(ch, AFF2_SUN_BLIND)) {
+	SunBlind(ch);
+      } 
+    } else if( IS_AFFECTED2(ch, AFF2_SUN_BLIND) ) {
+      RemoveSunBlind(ch);
+    }
+  }
+}
+
+
+void SunBlind(struct char_data *ch) 
+{
+  struct affected_type af;
+
+  if(GetMaxLevel(ch) >= LOW_IMMORTAL)
+    return;
+
+  if(IS_AFFECTED2(ch, AFF2_SUN_BLIND))
+    return;
+  
+  if(IS_AFFECTED(ch, AFF_BLIND))
+    return;
+
+  if(affected_by_spell(ch, SPELL_SUN_BLIND)) 
+    affect_from_char(ch, SPELL_SUN_BLIND);
+  
+  send_to_char("Aaarrrggghh! The sun burns your eyes!\n\r", ch);
+  
+  af.type     = SPELL_SUN_BLIND;
+  af.location = APPLY_HITROLL;
+  af.modifier = -4;
+  af.duration = (number(1,2) + (5 - GetMaxLevel(ch) / 10)); 
+  af.bitvector= 0;
+  affect_to_char(ch, &af);
+
+  af.location  = APPLY_AC;
+  af.modifier  = +20;
+  affect_to_char(ch, &af);
+
+  af.modifier  = 0;
+  af.location  = APPLY_BV2;
+  af.bitvector = AFF2_SUN_BLIND;
+  affect_to_char(ch, &af);
+}
+  
+void RemoveSunBlind(struct char_data *ch)
+{
+  struct affected_type af;
+
+  if(GetMaxLevel(ch) >= LOW_IMMORTAL) 
+    return;
+
+  send_to_char("Your vision begins to return.\n\r", ch);
+  act("$n's vision begins to return.\n\r", TRUE, ch, 0, 0, TO_ROOM);
+  affect_from_char(ch, SPELL_SUN_BLIND);
+
+  af.type     = SPELL_SUN_BLIND;
+  af.location = APPLY_HITROLL;
+  af.modifier = -2;
+  af.duration = 1;
+  af.bitvector=0;
+  affect_to_char(ch, &af);
+
+  af.location = APPLY_AC;
+  af.modifier = +10;
+  affect_to_char(ch, &af);
+
+}
+

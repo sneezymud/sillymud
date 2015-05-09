@@ -25,44 +25,46 @@ int getabunch(char *name, char  *newname);
 void get(struct char_data *ch, struct obj_data *obj_object, 
 	struct obj_data *sub_object) 
 {
-   char buffer[256];
+  char buffer[256];
 
-   if (sub_object) {
-      if (!IS_SET(sub_object->obj_flags.value[1], CONT_CLOSED)) {
-		obj_from_obj(obj_object);
-		obj_to_char(obj_object, ch);
-       		act("You get $p from $P.",0,ch,obj_object,sub_object,TO_CHAR);
-       	        act("$n gets $p from $P.",1,ch,obj_object,sub_object,TO_ROOM);
-      } else {
-		act("$P must be opened first.",1,ch,0,sub_object,TO_CHAR);
-		return;
-      }
-   } else {
+  if (sub_object) {
+    if (!IS_SET(sub_object->obj_flags.value[1], CONT_CLOSED)) {
+      obj_from_obj(obj_object);
+      obj_to_char(obj_object, ch);
+      act("You get $p from $P.",0,ch,obj_object,sub_object,TO_CHAR);
+      act("$n gets $p from $P.",1,ch,obj_object,sub_object,TO_ROOM);
+    } else {
+      act("$P must be opened first.",1,ch,0,sub_object,TO_CHAR);
+      return;
+    }
+  } else {
 /*  jdb -- 11-9 */
-        if (obj_object->in_room == NOWHERE) {
-	  obj_object->in_room = ch->in_room;
-	}
+    if (obj_object->in_room == NOWHERE) {
+      obj_object->in_room = ch->in_room;
+    }
 
-       	obj_from_room(obj_object);
-       	obj_to_char(obj_object, ch);
-       	act("You get $p.", 0, ch, obj_object, 0, TO_CHAR);
-       	act("$n gets $p.", 1, ch, obj_object, 0, TO_ROOM);
-   }
-	if((obj_object->obj_flags.type_flag == ITEM_MONEY) && 
-		(obj_object->obj_flags.value[0]>=1))
-	{
-		obj_from_char(obj_object);
-		sprintf(buffer,"There was %d coins.\n\r", obj_object->obj_flags.value[0]);
-		send_to_char(buffer,ch);
-		GET_GOLD(ch) += obj_object->obj_flags.value[0];
-                if (GET_GOLD(ch) > 500000 && obj_object->obj_flags.value[0] > 100000) {
-                   char buf[MAX_INPUT_LENGTH];
-                   sprintf(buf,"%s just got %d coins",
-			   GET_NAME(ch),obj_object->obj_flags.value[0]);
-		   log(buf);
-		}
-		extract_obj(obj_object);
-	}
+    obj_from_room(obj_object);
+    obj_to_char(obj_object, ch);
+    act("You get $p.", 0, ch, obj_object, 0, TO_CHAR);
+    act("$n gets $p.", 1, ch, obj_object, 0, TO_ROOM);
+  }
+  if((obj_object->obj_flags.type_flag == ITEM_MONEY)) {
+    if (obj_object->obj_flags.value[0]<1)
+      obj_object->obj_flags.value[0] = 1;
+    obj_from_char(obj_object);
+    sprintf(buffer,"There %s %d coins.\n\r", 
+	    obj_object->obj_flags.value[0] > 1 ? "were" : "was",
+	    obj_object->obj_flags.value[0]);
+    send_to_char(buffer,ch);
+    GET_GOLD(ch) += obj_object->obj_flags.value[0];
+    if (GET_GOLD(ch) > 100000 && obj_object->obj_flags.value[0] > 10000) {
+      char buf[MAX_INPUT_LENGTH];
+      sprintf(buf,"%s just got %d coins!",
+	      GET_NAME(ch),obj_object->obj_flags.value[0]);
+      log(buf);
+    }
+    extract_obj(obj_object);
+  }
 }
 
 
@@ -138,7 +140,7 @@ void do_get(struct char_data *ch, char *argument, int cmd)
 	      get(ch,obj_object,sub_object);
 	      found = TRUE;
 	    } else {
-	      send_to_char("You can't take that\n\r", ch);
+	      send_to_char("You can't take that.\n\r", ch);
 	      fail = TRUE;
 	    }
 	  } else {
@@ -186,7 +188,7 @@ void do_get(struct char_data *ch, char *argument, int cmd)
 	      get(ch,obj_object,sub_object);
 	      found = TRUE;
 	    } else {
-	      send_to_char("You can't take that\n\r", ch);
+	      send_to_char("You can't take that.\n\r", ch);
 	      fail = TRUE;
 	      num = 0;
 	    }
@@ -386,7 +388,7 @@ void do_drop(struct char_data *ch, char *argument, int cmd)
     amount = atoi(arg);
     strcpy(arg, s);
     
-    if (0!=str_cmp("coins",arg) && 0!=str_cmp("coin",arg))  {
+    if (str_cmp("coins",arg)) {
       send_to_char("Sorry, you can't do that (yet)...\n\r",ch);
       return;
     }

@@ -54,6 +54,17 @@ He sneers at you.
 50 0 -5 200 3d5+6
 -1 0 8 1
 8 8 4 0 17152 0
+#6
+acid blob~
+An acid blob~
+An acid blob is here, chewing up debris.
+~
+It looks like a big blob of acid, much too tough to kill.
+~
+1 0 0 A 1
+2058 0 0 100 1d1+0
+-1 0 0 20
+8 8 3 0 128 0
 #10
 fire elemental~
 A fire elemental~
@@ -118,7 +129,7 @@ A Vrock stands here
 It is a vulture/human creature. Extremely ugly, and nasty
 ~
 38 40 -666 A 5
-16 4 0 0 1d6+0
+21 4 0 0 1d8+0
 -1 0 2 21
 8 8 3 0 9 0
 #21
@@ -129,7 +140,7 @@ A demon Hezrou stands here.
 Not unlike A large toad/man
 ~
 38 40 -666 A 3
-17 3 -2 0 1d6+0
+22 3 -2 0 1d8+4
 -1 0 2 21
 8 8 3 0 9 0
 #22
@@ -140,7 +151,7 @@ A demon Glabrezu stands here
 I forget what this one looks like.
 ~
 38 40 -666 A 5
-18 2 -4 0 1d8+0
+24 2 -4 0 1d10+2
 -1 0 2 21
 8 8 3 0 9 0
 #23
@@ -151,7 +162,7 @@ Nalfeshnee stands here
 This one is big and mean looking.
 ~
 38 40 -666 A 4
-19 1 -1 0 1d4+0
+26 1 -1 0 1d4+8
 -1 0 4 21
 8 8 3 6 24585 0
 #24
@@ -162,7 +173,7 @@ Marilith slithers here
 A woman with 6 arms and a snake's tail
 ~
 38 40 -666 A 7
-15 3 -5 13 2d4+0
+25 3 -5 13 2d4+0
 -1 0 4 21
 8 8 5 6 8201 0 
 #25
@@ -173,7 +184,7 @@ Balor stands here, surrounded by electrical fire
 He is very large, and looks rather deadly
 ~
 39 40 -666 N
-20 0 -2 14 2d12+2
+30 0 -2 14 2d12+2
 -1 0 6 21
 8 8 3 6 8201 0
 #30
@@ -314,7 +325,7 @@ A huge fire burns here
 It looks vaguely man-shaped
 ~
 2 8 0 L 1
-24 4 2 48 3d8+6
+30 4 2 48 3d8+6
 -1 0 2 26
 8 8 3 0 24577 2
 The fire elemental crackles merrily.
@@ -329,7 +340,7 @@ A large earth elemental stands here
    It looks vaguely man-shaped.
 ~
 2 8 0 A 1
-24 4 2 48 4d8+6
+30 4 2 48 4d8+6
 -1 0 2 26
 8 8 3 32 24780 8
 #42
@@ -340,7 +351,7 @@ A large water elemental stands here
    It looks vaguely man-shaped.
 ~
 2 8 0 L 1
-24 4 2 48 5d6+6
+30 4 2 48 5d6+6
 -1 0 2 26
 8 8 3 32 24576 2
 The water elemental splashes about
@@ -355,7 +366,7 @@ A small tornado spins here
    It looks vaguely man-shaped.
 ~
 2 8 0 L 1
-24 4 2 48 2d10+6
+30 4 2 48 2d10+6
 -1 0 2 26
 8 8 3 96 24576 1
 The Air elemental makes a whistling sound.
@@ -439,7 +450,7 @@ A small rockman stands here, unmoving
 He looks like a small (20 pound) rock, that was turned into a creature
 ~
 2 0 0 A 1
-8 17 0 20 1d8+1
+12 17 0 20 1d8+5
 -1 0 0 37
 8 8 3 96 0 0
 #52
@@ -450,7 +461,7 @@ A rockman stands here, unmoving
 He looks like a 40 pound rock, that was turned into a creature
 ~
 2 0 0 A 1
-12 14 0 40 2d5+1
+16 14 0 40 2d5+4
 -1 0 0 37
 8 8 3 96 0 0
 #53
@@ -461,7 +472,7 @@ A large rockman stands here, unmoving
 He looks like a 80 pound rock, that was turned into a creature
 ~
 2 0 0 A 1
-16 12 0 60 3d4+1
+25 12 0 60 4d4+1
 -1 0 0 37
 8 8 3 96 0 0
 #54
@@ -472,7 +483,7 @@ A big rockman stands here, unmoving
 He looks like a 160 pound rock, that was turned into a creature
 ~
 2 0 0 A 1
-20 10 0 80 3d6+1
+30 10 0 80 4d6+1
 -1 0 0 37
 8 8 3 96 0 0
 #55
@@ -483,7 +494,7 @@ A huge rockman stands here, unmoving
 He looks like a 320 pound rock, that was turned into a creature
 ~
 2 0 0 A 1
-30 4 0 160 4d5+1
+40 4 0 160 4d8+1
 -1 0 0 37
 8 8 3 96 0 0
 #60
@@ -999,7 +1010,7 @@ It is very small, and looks rather lost
 ~
 5 0 0 A 3
 1 18 3 6 1d6+0
--1 500 4 9
+-1 500 8 9
 8 8 3 0 128 0
 #231
 ape carniverous~
@@ -1032,7 +1043,7 @@ She looks lost and confused.
 ~
 133 32768 0 A 3
 1 18 2 8 1d7+0
--1 500 4 9
+-1 500 8 9
 8 8 5 0 4 0
 #234
 dwarf cleric~
@@ -1145,7 +1156,7 @@ kill
 ~
 165 0 -300 A 3
 6 16 3 0 1d5+0
--1 1050 8 9
+-1 1050 10 9
 8 8 3 0 2 0
 #244
 leucrotta~
@@ -2774,6 +2785,247 @@ somewhere outside the shire.
 8 13 5 16 1d4+0
 -1 50 4 4
 8 8 1
+#1033
+halfling youth~
+a halfling youth~
+A halfling youth stands here, waiting for you to look the other way.
+~
+The halfling youth is not yet quite in the prime of his youth.  He's
+knee high and you get the sudden urge to hold your purse closer.
+~
+196 0 -300 N
+3 18 7 3 1d6+0
+-1 20 0 4
+8 8 1
+#1034
+shiriff~
+a shiriff~
+A shiriff of the Shire is making plans to overthrow the Thain here.
+~
+The shiriff is over waist high, quite tall for a halfling.  His eyes are
+ever roaming, looking for signs of trouble from riff-raff like you.  In
+his belt is a thin dagger, and on his body he wears a suit of leather
+armor.
+This is one halfling you don't want to mess with.
+~
+67 0 -450 N
+8 13 5 16 2d4+0
+-1 50 4 4
+6 6 1
+#1035
+shiriff~
+a shiriff~
+A shiriff of the Shire is here plotting to overthrow the Thain.
+~
+The shiriff is over waist high, quite tall for a halfling.  His eyes are
+ever roaming, looking for trouble.  In his belt is a thin dagger, and on
+his body he wears a suit of leather armor.
+This is one halfling you don't want to mess with.
+~
+67 0 -500 N
+8 13 5 16 2d4+0
+-1 50 4 4
+6 6 1
+#1102
+thorn bush thornbush~
+a thornbush~
+A thorn bush is here.
+~
+The thorn bush looks like it contains many thorns!
+~
+2 0 0 N
+1 20 10 -2 1d1+0
+-1 5 0 25
+8 8 1
+#1103
+Master Thief~
+The master thief~
+A small halfling dressed in black and wearing a mask is standing here.
+~
+This hobbit dressed in black will be your death.
+"Die fool!" he screams as he attempts to put a dagger in your back.
+~
+106 35127424 -1000 A 3
+35 0 -10 0 3d4+0
+-1 200 4 4
+8 8 4 0 3072 0
+#1104
+thief master lightfoot~
+Lightfoot~
+Lightfoot the master thief stands here.
+~
+This Tall elf seems to know his was around the streets.
+~
+216 524320 -500 A 2
+20 1 -8 0 2d4+0
+-1 50 2 2
+6 6 4 0 1024 0
+#1105
+apprentice thief~
+A apprentice thief~
+A apprentice thief is here practicing his trade.
+~
+This small child is about 8-10 years old.
+~
+212 524288 -400 N
+1 20 9 2 2d2+0
+-1 10 1 4
+8 8 5 0 1024 0
+#1106
+Lower teacher thief~
+The teacher~
+One of the lesser teachers stands here critiquing the apprentice thieves.
+~
+This board looking teacher looks tike he'd rather be doing other things.
+~
+146 524288 -500 A 2
+10 11 3 0 3d2+0
+-1 80 1 44
+8 8 4 2 1024 0
+#1107
+Helpless victim~
+A helpless victim~
+A helpless victim is here.
+~
+He seems ready to be put out of his misery.
+~
+194 147457 0 S
+1 20 10 5d1+0 1d1+0
+-1 1 20 47
+4 4 4 0 0 32
+#1108
+Thief secretary~
+The secretary~
+The head secretary stands here collecting the guilds percentage.
+~
+He looks as you and says "okay, pay up i haven't got all day."
+He is a huge troll dressed in green with a bad attitude.
+~
+74 34078720 -750 B 2
+20 1 -7 0 2d4+0
+-1 100 1 31
+6 6 3 2 0 1
+#1109
+thief eric~
+Eric One-hand~
+Eric-One hand is here wondering why you have disturbed him.
+~
+Eric seems to be a veteran thief who seems to now be semi-retired.
+You notice that his right hand is missing!,and a notch has been
+cut out of his left ear.
+~
+26 34078720 -500 A 2
+20 1 -8 10 2d4+2
+-1 50 1 4
+8 8 1
+#1110
+rat huge~
+A huge rat~
+A huge rat hisses at you as you draw near.
+~
+This is one Huge rat!
+~
+32804 524320 -200 L 3
+4 17 8 5 1d6+1
+-1 1 2 18
+8 8 0
+A Huge rat hisses loudly.
+~
+You here a loud Hissing and squeaking.
+~
+#1111
+Mole~
+A large Mole~
+A large Mole
+~
+This is a large brown mole looking for insects.
+~
+132 41 0 A 3
+6 15 6 3 2d3+1
+-1 1 2 18
+8 8 3 0 0 0
+#1112
+Brenn thief fence~
+Brenn the Fence~
+Brenn the fence is here waiting to buy your goods.
+~
+Brenn is and of the more know of the shady underworld fences
+he buys anything and gives all purchases complete secrecy.
+~
+130 16777248 -800 A 2
+25 0 -9 10 2d4+2
+-1 500 2 30
+8 8 4 0 2048 0
+#1113
+rockman~
+The rockman~
+A large rockman stands here guarding the entrance.
+~
+looks like about a 80 pound rock with humanoid form.
+~
+42 33554432 -350 A 2
+25 0 -10 10 4d4+0
+-1 100 5 36
+8 8 3 96 25856 16
+#1114
+Guildguard guard thief~
+The Guildguard~
+The Guardian of the Nightwalkers guild stands here.
+~
+He is very Tough looking and you never seen a 8 foot
+Halfling before .
+He is not one to mess with.
+~
+90 33554944 -1000 B 3
+40 0 -10 50 8d3+2
+-1 100 7 4
+8 8 4 0 3072 0
+#1115
+cat~
+A small cat~
+A small cat sits here cleaning its self.
+~
+A small brown cat.
+~
+2056 34080768 0 S
+1 0 -10 1000d1+0 1d1+0
+-1 0 1 39
+8 8 5 0 133360 0
+#1116
+Felix thief Cutpurse~
+Felix the Cutpurse~
+Felix the Cutpurse stands here eyeing your purse.
+~
+Felix is a average size gnome with a taste for flashy clothing.
+Hmm isn't that your purse he's holding?
+~
+214 34078720 -500 A 3
+20 1 -8 10 2d3+2
+-1 100 2 5
+8 8 4 0 2048 0
+#1117
+stirge giant~
+The Giant stirge~
+The masters pet Giant stirge flys here thirsting for you blood.
+~
+This bird like creature is the biggest stirge you have ever seen.
+~
+98 2056 -600 N
+25 0 -6 0 4d4+0
+-1 1 1 12
+8 8 0
+#1118
+Guildmaster~
+Your Guildmaster~
+The Guildmaster of the Nightwalkers guild stand here ready to teach.
+~
+The Guildmaster is one of the most well know and famous thieves in the land 
+and is rumored to be immortal.
+~
+2114 167772288 0 N
+60 0 -10 50 2d20+0
+-1 0 0 4
+8 8 2
 #1400
 rook black chess bqr~
 the black Rook~
@@ -2872,7 +3124,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2884,7 +3136,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2896,7 +3148,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 0 1d5+0
 -1 0 2 1
 8 8 1
@@ -2908,7 +3160,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 0 1d5+0
 -1 0 2 1
 8 8 1
@@ -2920,7 +3172,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2932,7 +3184,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2944,7 +3196,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2956,7 +3208,7 @@ A statuesque black pawn stands here.
 Though this scrawny fighter is not an impressive sight, he is obedient to his
 master.
 ~
-130 0 -300 N
+130 0 -400 N
 1 20 9 1 1d5+0
 -1 0 2 1
 8 8 1
@@ -2968,7 +3220,7 @@ The mini mindflayer is here, looking at you with a... well, some kind of look.
 It's a three foot tall humanoid that seems rather menacing for its size.
 In the middle of its head are four tentacles with sharp points.
 ~
-132 8 -250 N
+132 8 -450 N
 2 17 6 4 1d6+2
 -1 50 2 33
 8 8 0
@@ -4120,7 +4372,7 @@ A wandering wizard is here mumbling to himself
 -1 3210 3 1
 8 8 1
 #1701
-monk human mentor resting$~
+monk human mentor resting~
 the human monk~
 A human monk is quietly resting here.
 ~
@@ -5423,6 +5675,61 @@ without light.
 1 0 10 1d1+1 1d1+1
 -1 0 1 48
 8 8 7 0 134655 0
+#2733
+color pool~
+A color pool~
+A maize and blue pool can be seen as you approach.
+~
+   You find yourself standing in a heavily wooded area, overgrown with brush,
+and gnarled trees. To the north, you see a neglected, twisted path, 
+disappearing far into the mountains.
+~
+2115 2048 0 S
+1 0 10 1d1+1 1d1+1
+-1 0 1 48
+8 8 7 0 134655 0
+#2734
+color pool~
+A color pool~
+A pink and purple, polkadotted pool can be seen as you approach.
+~
+   In this corner of the market some of the largest warriors in the land
+tower over you. It's easy to understand why they hangout here once you
+notice the weapon shop and the armory close by. Perhaps you might stop
+in and take a look at the wares these shops have to offer.
+~
+2115 2048 0 S
+1 0 10 1d1+1 1d1+1
+-1 0 1 48
+8 8 7 0 134655 0
+#2735
+color pool~
+A color pool~
+A red and white swirly pool can be seen as you approach.
+~
+   This is the long hallway that leads into the heart of the palace. It is
+about 3 feet wide and about 6 feet tall, with a arched ceiling.  Mud has been
+used to pack the sides of the hallway to make the walls seem smooth. An
+occasional mouse scurries between your feet. There are doors to both sides
+here.
+~
+2115 2048 0 S
+1 0 10 1d1+1 1d1+1
+-1 0 1 48
+8 8 7 0 134655 0
+#2736
+color pool~
+A color pool~
+A salmon-colored pool can be seen as you approach.
+~
+   The wind has been swirling and blowing from the north making the walls
+like mirrors. It makes it so you can't tell which way you came in.
+In the middle of the room you notice a mass of sticks and cloth.
+~
+2115 2048 0 S
+1 0 10 1d1+1 1d1+1
+-1 0 1 48
+8 8 7 0 134655 0
 #3000
 zifnab~
 Zifnab~
@@ -5678,7 +5985,7 @@ A waiter who knows where all his costumers has their money.
 8 8 4 0 2048 0
 #3045
 waiter~
-the Waiter~
+The Waiter~
 A waiter who easily could kill you, and still carry quite a few firebreathers.
 ~
 ~
@@ -5700,7 +6007,7 @@ but do not mess with him or else he'll get upset.
 8 8 4 0 2048 0
 #3060
 cityguard guard~
-the Cityguard~
+The Cityguard~
 A cityguard stands here.
 ~
 A big, strong, helpful, trustworthy guard.
@@ -5711,7 +6018,7 @@ A big, strong, helpful, trustworthy guard.
 8 8 1
 #3061
 janitor~
-the Janitor~
+The Janitor~
 A janitor is walking around, cleaning up.
 ~
 He looks anal retentive.
@@ -5721,12 +6028,11 @@ He looks anal retentive.
 -1 34 0 1
 8 8 1
 #3062
-black cat~
-The black cat~
-A Black cat is here.
+turkey~
+The plump turkey~
+A plump turkey is eyeing you suspiciously.
 ~
-A cute and furry black cat.  It looks so cute you want to take it home with
-you and hug it and pet it and feed it and love it and......
+Now where did your cleaver go?
 ~
 161 0 -200 N
 2 18 7 0 1d6+0
@@ -5734,18 +6040,18 @@ you and hug it and pet it and feed it and love it and......
 8 8 1
 #3063
 mercenary~
-the Mercenary~
+The Mercenary~
 A Mercenary waiting for a job.
 ~
 He looks pretty mean.
 ~
-4 0 -200 N
+4 0 -400 N
 5 15 5 5 1d6+0
 -1 47 0 1
 8 8 1
 #3064
 drunk~
-the Drunk~
+The drunk~
 A singing, happy Drunk.
 ~
 A drunk who seems to be too happy, and to carry too much money.
@@ -5756,7 +6062,7 @@ A drunk who seems to be too happy, and to carry too much money.
 8 8 1
 #3065
 beggar~
-the Beggar~
+The beggar~
 A beggar is here, asking for a few coins.
 ~
 The beggar looks like she is fed up with life.
@@ -5786,7 +6092,7 @@ OUCH!  That hurt!
 8 8 2
 #3067
 cityguard guard~
-the Cityguard~
+The Cityguard~
 A cityguard is here, guarding the gate.
 ~
 A big, strong, helpful, trustworthy guard. He looks well trained with his
@@ -5809,7 +6115,7 @@ You don't see anything like that.
 8 8 4 479 2080 0
 #3069
 guard elite royal royale~
-the Guard Royale~
+The Guard Royale~
 A Guard Royale stands here, smiling happily.
 ~
 He will do anything to protect the royal family, and is also dedicated to the
@@ -5885,6 +6191,62 @@ A Cool looking mime miming away.
 0 0 400 N
 3 17 8 0 1d6+0
 -1 85 0 1
+8 8 1
+#3076
+janitor~
+the Janitor~
+A greasy looking janitor is walking around, cleaning up stuff.
+~
+He looks like he might pick up a little more than just trash.
+~
+1 0 -900 N
+2 18 9 0 1d6+0
+-1 34 0 1
+8 8 1
+#3077
+cityguard guard~
+the Cityguard~
+A mean looking cityguard stands here glaring at you.
+~
+As you look at her, you hear her mumble something about the chief turning
+her down for a promotion.  The word "revenge" is also discernable.
+~
+193 0 -1000 N
+10 10 9 60 1d8+0
+-1 50 2 1
+8 8 2
+#3078
+rottweiler~
+the Rottweiler~
+A large, disloyal Rottweiler is here.
+~
+This Rottweiler has abandoned his master's side.  Bad doggie.
+~
+6 0 -400 N
+3 18 7 4 1d7+0
+-1 0 1 18
+8 8 0
+#3079
+royal guard elite~
+The Royal Guard~ 
+This Elite Royal Guard has been exiled from midgaard.
+~
+The royal guard glares at you.
+~
+193 8 -1000 A 2
+30 0 -6 120 1d10+6
+-1 100 0 1
+8 8 1
+#3080
+cityguard guard~
+The Cityguard~
+A cityguard stands here, looking mean.
+~
+A big, strong, unhelpful, untrustworthy guard.
+~
+193 0 -750 N
+10 10 9 60 1d8+0
+-1 50 2 1
 8 8 1
 #3090
 kitten~
@@ -5978,11 +6340,12 @@ The white swan is very elegant.
 #3122
 duckling~
 the Duckling~
-A duckling is swimming around in the pond.
+A vicious duckling is swimming around in the pond.
 ~
-The duckling is adorable, it looks most of all like a tiny furball.
+The duckling is adorable, it looks most of all like a tiny furball with large 
+teeth.
 ~
-2 0 1000 N
+2 0 -1000 N
 1 20 10 0 1d1+0
 -1 0 0 16
 8 8 0
@@ -6072,18 +6435,16 @@ The Town Crier sobs sadly.
 You hear a sobbing sound.
 ~
 #3300
-cat~
-the cat~
-Papi's favorite cat is resting here, purring gently.
+black cat~
+the black cat~
+A vicious black cat is here blocking your way.
 ~
-This is just about the most huggable cat you have ever seen! You notice
-that the cat has exceptionally big claws - guess it's nothing to worry
-about as long as you leave it alone.
+All you can see in this other-worldly beast's eyes is a bloodlust.
 ~
 66 8 1000 S
-1 20 10 1d1+1 2d2+1
+10 20 10 12d6+12 6d2+1
 -1 0 0 18
-5 5 0
+8 8 1
 #3600
 mage guildmaster~
 the guildmaster~
@@ -6236,7 +6597,7 @@ You see a half-elf sitting on a stool behind his counter.
 ~
 3 8 100 A 2
 35 0 0 100 2d10+2
--1 2000 1 1
+-1 20000 1 1
 8 8 1
 #3612
 banker~
@@ -6259,7 +6620,7 @@ wardrobe.
 ~
 3 0 0 N
 25 10 5 50 1d5+5
--1 2000 1 1
+-1 20000 1 1
 8 8 1
 #3614
 vera~
@@ -6294,7 +6655,7 @@ his cold stare and place your order.
 ~
 3 0 0 A 2
 25 10 5 150 1d5+5
--1 2000 1 3
+-1 20000 1 3
 8 8 1
 #3617
 igor weaponsmith~
@@ -6305,7 +6666,7 @@ You see a small dwarf with a large hump on his left shoulder.
 ~
 3 0 0 A 2
 25 10 5 150 1d5+5
--1 2000 1 3
+-1 20000 1 3
 8 8 1
 #3618
 cassandra~
@@ -7061,7 +7422,7 @@ Braheem stands here talking to the walls.
 You see a powerful but slighty insane mage.
 ~
 3 0 0 N 8
-45 -10 -10 1000 10d10+40
+45 10 10 1000 10d10+40
 -1 2000 6 1
 8 8 1
 #3681
@@ -7199,8 +7560,8 @@ There is a large snail here inching its way across the floor.
 ~
 A large and ugly snail is slowly moving across the floor.
 ~
-20 0 0 N
-1 20 9 0 1d6+1
+20 0 0 S
+1 20 9 2 1d6+1
 -1 10 0 20
 8 8 0
 #3703
@@ -7210,7 +7571,7 @@ There is a slug oozing its way toward you.
 ~
 A nasty looking slug is slowing oozing across the floor.
 ~
-20 0 0 N
+20 0 0 S
 1 20 8 3 1d6+0
 -1 15 0 20
 8 8 0
@@ -7219,21 +7580,21 @@ giant lizard~
 the giant lizard~
 There is a large lizard lying in the sun.
 ~
-A large lizard is relaxing in the sun.
+A large lizard is lying in the sun.
 ~
-20 0 0 N
-2 19 8 0 1d6+2
+20 0 0 S
+2 19 8 1 1d6+2
 -1 20 0 6
 8 8 0
 #3704
-radioactive rat~
-the radioactive rat~
+Radioactive Rat~
+the Radioactive Rat~
 You see a rat with glowing eyes moving in the shadows.
 ~
-You can see a glowing rat moving around in the shadows.
+You see a glowing rat moving around in the shadows.
 ~
-36 0 -500 N
-2 19 7 5 1d8+1
+36 0 -500 S
+5 15 7 7 2d8+3
 -1 50 0 18
 8 8 1
 #3705
@@ -7243,8 +7604,8 @@ There is a small turtle slowly moving across the floor.
 ~
 A small green turtle is slowly crawling across the fllor.
 ~
-20 0 1000 N
-1 20 9 0 1d6+0
+20 0 1000 S
+1 20 9 1 1d6+0
 -1 5 0 6
 8 8 1
 #3706
@@ -7254,19 +7615,19 @@ There is a small baby eagle trying to fly here.
 ~
 A baby eagle is trying to learn how to fly, without success.
 ~
-20 0 1000 N
-1 20 9 0 1d8+1
+20 0 1000 S
+1 20 9 1 1d8+1
 -1 5 0 16
 8 8 2
 #3707
 antelope~
 the antelope~
-There is a antelope grazing on the grass.
+There is a antelope standing here grazing on the grass.
 ~
 The antelope looks fast and peaceful. It's brown and looks cute.
 ~
-20 0 500 N
-2 19 7 1 1d8+1
+20 0 500 S
+2 19 7 2 1d8+1
 -1 15 0 23
 8 8 2
 #3708
@@ -7276,9 +7637,9 @@ There is a mule wandering around the area.
 ~
 The mule looks like it has a powerful hind kick. It's grey in color.
 ~
-20 0 300 N
-2 19 8 1 1d5+2
--1 25 0 46
+20 0 300 S
+2 19 8 2 1d8+2
+-1 25 0 23
 8 8 1
 #3709
 baby otter~
@@ -7287,20 +7648,20 @@ A otter searches for her mother here.
 ~
 The baby otter looks harmless and very cute.
 ~
-20 0 1000 N
+20 0 1000 S
 1 20 9 2 1d4+0
 -1 5 0 18
 8 8 2
 #3710
 flying ray~
 the flying ray~
-There is a flying Mantra Ray looking for something to eat.
+There is a flying(!) Mantra Ray looking for something to eat.
 ~
-The ray flys though the air very quietly. You can see a nasty stinger.
+The ray is flying though the air very quietly. You can see a nasty stinger.
 ~
 36 0 -1000 S
-3 18 5  3d8+2 1d12+3
--1 200 0 16
+8 13 5 5d8+2 1d12+3
+-1 200 100 18
 8 8 0
 #3711
 stirge~
@@ -7310,9 +7671,9 @@ A ugly looking bird is flying right at you!
 The feathers of the stirge are rusty red, its eyes and feet are yellow.
 The dangling proboscis is pink at the tip, fading to gray at the base.
 ~
-36 0 -750 N
-2 19 7 2 1d10+2
--1 100 0 16
+36 0 -750 S
+4 17 7 4 1d10+2
+-1 100 0 18
 8 8 1
 #3712
 small wasp~
@@ -7321,8 +7682,8 @@ A wasp is buzzing around your head annoyingly.
 ~
 The wasp looks like a normal wasp. Harmless.
 ~
-20 0 0 N
-1 20 8 0 1d3+1
+20 0 0 S
+1 20 8 1 1d3+1
 -1 20 0 12
 8 8 0
 #3713
@@ -7332,8 +7693,8 @@ A weasel is running all over looking for bugs to eat.
 ~
 A woodland creature that just wants dinner.
 ~
-20 0 0 N
-1 20 8 1 1d6+1
+20 0 0 S
+1 20 8 2 1d6+1
 -1 15 0 18
 8 8 1
 #3714
@@ -7344,9 +7705,9 @@ A small sprite like creature is hiding in the shade.
 It is a very thin and has long arms, legs, and fingers.
 The atomic's head and ears are long and narrow. 
 ~
-148 0 0 N
-2 19 7 0 1d6+2
--1 25 0 2
+148 0 0 S
+2 19 7 1 1d6+2
+-1 25 100 2
 8 8 1
 #3715
 magman~
@@ -7358,8 +7719,8 @@ Small puffs of flame can be seen bursting from its' body. It's
 hot near this thing! 
 ~
 134 128 0 S
-4 17 3 4d8+4 2d8+4
--1 500 100 26
+5 15 3 6d8+4 2d8+4
+-1 800 600 26
 8 8 3
 0 1 4
 #3716
@@ -7369,9 +7730,9 @@ A ugly man/animal creature can be seen lurking in the shadows.
 ~
 A creature looks like a half man and half monster mix. It's ugly!
 ~
-132 0 -360 N
-2 19 8 1 2d6+0
--1 75 0 0
+132 0 -360 S
+2 19 8 3 2d6+0
+-1 75 100 0
 8 8 1 
 #3717
 mudman~
@@ -7380,186 +7741,175 @@ A creature that is made of mud is standing here.
 ~
 The creature looks human but is made of mud.
 ~
-20 0 0 N
-3 18 5 0 2d8+2
--1 250 0 26
+20 0 0 S
+4 17 5 2 2d8+2
+-1 450 450 26
 8 8 0
 #3718
 monodrone~
 the monodrone~
-A sphere like creature is standing here.
+A sphere like creature (Monodrone) is standing here.
 ~
 The creature has one eye, two spider like hands, and a pair of wings.
 ~
-148 0 0 N
-1 20 9 0 1d4+0
--1 20 0 27
+148 0 0 S
+1 20 9 1 1d4+0
+-1 120 200 27
 8 8 0
 #3719
 duodrone~
 the duodrone~
-A blocky, rectangular creature is standing here.
+A blocky, rectangular like creature (Duodrone) is standing here.
 ~
 The creature is rectangular, with one eye, 2 legs, 2 arm, and a pair of wings.
 ~
-148 0 0 N
-2 19 7 1 1d6+1
--1 50 0 27
+148 0 0 S
+2 19 7 2 1d6+3
+-1 250 450 27
 8 8 0
 #3720
 tridrone~
 the tridrone~
-A pyramid type of creature is standing here waiting for something.
+A pyramid type of creature (Tridrone) is standing here waiting for something.
 ~
 The creature is pyramid in shape. It has 3 eyes, 3 arms, and 3 legs.
 ~
-148 0 0 N
-3 18 6 2 2d6+2
--1 100 0 27
+148 0 0 S
+3 18 6 2 3d6+2
+-1 300 500 27
 8 8 0
 #3721
 quadrone~
 the quadrone~
-A box like creature with wings is quietly flying around here.
+A box like creature with wings (Quadrone) is quietly flying around here.
 ~
 The creature is cube shaped with 2 arms, 2 legs, and a big set of wings.
 ~
-148 0 0 N
-4 17 5 3 3d8+3
--1 600 0 27
+148 0 0 S
+4 17 5 4 3d8+3
+-1 600 550 27
 8 8 0
 #3722
 radioactive mutant~
 the radioactive mutant~
-A creature that's glowing bright green is standing here.
+A mutant like creature it's glowing bright green is standing here.
 ~
 A zombie like creature that is glowing. It looks vaguely human, it's ugly
 and looks like it's in pain.
 ~
 36 136 -1000 S
-11 9 0 11d8+10 3d5+5
--1 300 2500 0
+15 5 0 15d8+10 3d8+5
+-1 1000 5500 10
 8 8 3 0 2049 2
 #3723
 great quasit~
 the great quasit~
 A huge quasit stands before you, eyeing your flesh hungrily
 ~
-It looks like the Rancor beast from Return of the Jedi, only meaner
+It looks like the Rancor beast from Return of the Jedi, only worse!
 ~
-36 10 -1000 N
-8 13 4 0 2d6+5
--1 100 0 21
+36 10 -1000 S
+10 11 4 6 3d6+5
+-1 300 800 21
 8 8 1
 #3724
 roc~
 the roc~
-A very large flying bird. It seems to be hunting for it's dinner.
+A very large flying bird, a Roc? It seems to be hunting for it's dinner.
 ~
 The bird kinda looks like a eagle but much larger!
 ~
-132 0 -300 N
-7 14 6 0 3d6+3
--1 60 0 16
+132 0 -300 S
+7 14 6 2 3d6+3
+-1 260 200 16
 8 8 1
 #3725
 rust monster~
 the rust monster~
-A ugly creature that is moving slowly, sniffing the air around it.
+A ugly creature that is moving slowly, sniffing the air for metal.
 ~
 The creature looks like a big ugly bug with 2 large antenne.
 ~
-132 0 0 N
-8 13 4 2 3d6+1
--1 85 0 19
+132 0 0 S
+8 13 4 3 3d6+7
+-1 185 300 19
 8 8 1
-#3726
-roper~
-the roper~
-A blob of flesh with many tentacles.
-~
-The thing is made of flesh colored material. It smells awful.
-~
-34 8 -500 N
-9 11 2 1 2d6+1
--1 90 0 18
-8 8 0
 #3727
 baby salamandar~
 the baby salamandar~
-A small creature thats surrounded by flames.
+A small creature, looks like a small salamandar,thats surrounded by flames.
 ~
 The small creature looks like a giant lizard with flames coming from its skin.
 ~
 164 8 -750 S
-7 13 4 7d7+2 2d6+3
--1 60 1000 21
+9 11 4 8d8+2 3d6+3
+-1 360 1550 26
 8 8 3
 0 1 4
 #3728
 pentradrone~
 the pentradrone~ 
-A creature with five eyes, arms, and sides.
+A creature with five eyes, arms, and sides (Pentradrone).
 ~
 The creature looks like a 5 sided dice, if there was a thing. It looks
 big and nasty.
 ~
-132 0 0 N
-6 14 6 0 2d4+3
--1 100 0 27
+132 0 0 S
+6 14 6 8 6d4+6
+-1 200 300 27
 8 8 0
 #3729
 decaton~
 the decaton~
-A creature with 10 sets of eyes, arms, legs, and sides.
+A creature with 10 sets of eyes, arms, legs, and sides (Decaton).
 ~
 This creature looks like a 10 sided dice. No duh! 
 ~
-130 0 0 N
-8 12 3 4 3d6+5
--1 100 027
+130 0 0 S
+8 12 3 10 6d6+5
+-1 200 500 27
 8 8 0
 #3730
-weird water elemental~
+Varrdig~
 the weird water elemental~
-A weird creature thats shaped like a cloud with a chicken legs is floating here.
+A weird water elemental, thats shaped like a cloud with a chicken legs is floating here.
 ~
 The creature looks like a cloud with water squirting out of it. It is
 standing on 2 legs that look like chicken legs.
 ~
-34 8 0 N
-10 10 0 5 4d5+5
--1 150 3 26
+34 8 0 S
+12 8 0 6 4d5+5
+-1 350 1000 26
 8 8 3
 0 4 1
 #3731
-strange fire elemental~
+Harginn~
 the strange fire elemental~
-A half fire/half fire creature is standing here leering at you.
+A half fire/half earthen creature is standing here leering at you
 ~
 The creature's eyes are glowing black, and the body is scarlet and orange,
 crimson and purple-blue, yellow and orange. These colors are everchanging.
 You see small flames burst from its' body from time to time.
 ~
 34 8 0 S
-10 10 0 10d10+2 5d5+4
--1 160 3000 26
+12 8 0 10d10+2 6d5+4
+-1 460 4000 26
 8 8 3
 0 1 4
 #3732
-bizarre air elemental~
+Iidriss~
 the bizarre air elemental~
 A cloud with tentacles and dripping water is floating around the water.
 ~
 This creature looks like a fog like cloud with 3 red glowing eyes.  
 ~ 
 34 10 0 S
-10 10 0 10d10+1 3d4+2
--1 130 8000 26
+12 8 0 11d10+1 3d4+2
+-1 330 9000 26
 8 8 3
 48 2 64
 #3733
-soil beast~
+Chaggrin~
 the soil beast~
 A hedgehog like creature is standing here.
 ~
@@ -7567,12 +7917,12 @@ This thing looks like a yellowish hedgehog but bigger. Its head is Skull
 like.. eek!
 ~
 132 8 0 S
-10 10 -1 10d8+10 5d5+2
--1 200 1000 26
+12 8 -1 11d8+10 5d5+2
+-1 300 1700 26
 8 8 3
 7 16 128
 #3734
-ice monster~
+Ice~
 the ice monster~
 A man-like creature made of ice is standing here.
 ~
@@ -7580,11 +7930,11 @@ This humanoid is vaguely human at best. It's cold alright :)
 ~
 6 8 0 S
 12 8 3 12d8+5 3d6+10
--1 250 1300 27
+-1 350 1800 26
 8 8 3
 48 4 64
 #3735
-smoke monster~
+Smoke~
 the smoke monster~
 A cloud of smoke is floating around the room.
 ~
@@ -7593,11 +7943,11 @@ and a vague mouth.
 ~
 38 8 0 S
 12 8 3 12d8+10 3d6+5
--1 250 1300 27
+-1 450 3300 26
 8 8 3
 7 48 64
 #3736
-magma monster~
+Magma~
 the magma monster~
 A half humaniod/ half magma creature is standing here.
 ~
@@ -7605,12 +7955,12 @@ The creature is half humanoid from the waist up. The bottom half
 is pure magma. It's hot around this creature.
 ~
 38 8 0 S
-12 8 3 12d8+3 3d6+0
--1 200 1000 27
+14 6 3 12d10+3 6d6+5
+-1 400 4000 26
 8 8 3
 128 1 4
 #3737
-ooze monster~
+Ooze~
 the ooze monster~
 A vaguely looking mud creature is standing here.
 ~
@@ -7618,8 +7968,8 @@ This creature is a liquid mass of dark writhing tendrils. It's looks
 like a mudman.
 ~
 134 8 0 S
-14 6 3 14d8+5 4d6+5
--1 300 1500 27
+14 6 3 14d10+5 4d6+5
+-1 400 2500 26
 8 8 3
 48 5 130
 #3738
@@ -7630,12 +7980,12 @@ A creature that's part monkey, camel, lion, and eagle is standing here.
 This creature is the best of monkeys, camels, lions, and eagles. Weird
 to say the least.
 ~
-134 2050 1000 N
-8 12 -2 5 3d6+0
--1 100 0 7
+134 2050 1000 S
+8 12 -2 6 3d8+0
+-1 200 750 7
 8 8 0
 #3739
-shade mage~
+shade~
 the shade mage~
 A mage cloaked in shadows is standing here.
 ~
@@ -7643,12 +7993,12 @@ The mage looks gloomy and is brooding. He's wearing dark clothes, his
 skin and eyes are dusky and grey.
 ~
 132 524298 -600 S
-13 7 0 13d8+0 1d4+0
--1 350 1000 1
+13 7 0 5d8+0 2d4+0
+-1 650 1500 1
 8 8 4
 128 3328 8
 #3740
-shade thief~
+shade~
 the shade thief~
 A thief cloaked in shadows is standing here.
 ~
@@ -7656,12 +8006,12 @@ The thief looks very unhappy. But sneaky! He's wearing pitch black
 clothes. His eyes and skin are dusky and grey.
 ~
 132 1572864 -1000 S
-15 5 -5 15d8+20 2d6+5
--1 250 2500 1
+15 5 -5 10d8+20 2d6+5
+-1 450 3500 1
 8 8 4
 128 256 8
 #3741
-shade warrior~
+shade~
 the shade warrior~
 A fighter in platemail is cloaked in shadows is relaxing here.
 ~
@@ -7670,12 +8020,12 @@ He's carrying a large two-handed sword. His eyes and skin are dusky
 and grey.
 ~
 132 0 -500 S
-11 9 -3 11d8+30 2d10+0
--1 300 1000 1
+19 3 -3 11d12+30 4d10+0
+-1 500 1600 1
 8 8 4
 384 3072 8
 #3742
-shade cleric~
+shade~
 the shade cleric~
 A cleric in platemail is cloaked in shadows is standing here.
 ~
@@ -7684,8 +8034,8 @@ She's carrying a large morningstar. Her eyes and skin are
 dusky and grey.
 ~
 132 128 -400 S
-13 7 -1 13d8+10 3d6+6
--1 350 1500 1
+13 7 -1 13d8+10 6d6+6
+-1 550 3500 1
 8 8 5
 384 3072 8
 #3743
@@ -7693,12 +8043,12 @@ red guardian~
 the red guardian~
 A man-like creature is standing guard in front of the door.
 ~
-The guardian is wearing platemail and wielding a BIG AX! You 
-can just see his eyes. They look dull and lifeless.~
+The guardian is wearing platemail and wielding a BIG AXE! You 
+can just see his eyes. They look dull and lifeless.
 ~
 6 136 -500 S
-15 5 0 15d8+50 5d6+5
--1 400 2000 21
+18 3 0 15d20+50 5d8+5
+-1 600 6000 21
 8 8 4
 0 3072 0
 #3744
@@ -7708,21 +8058,21 @@ A insect warrior is standing here, looking for humans to kill.
 ~
 A insect but bigger! It's carrying weird weapons.. It looks mean!
 ~
-132 0 0 N
-7 13 5 3 4d4+4
--1 50 0 12
+132 0 0 S
+7 13 5 5 4d4+4
+-1 350 400 12
 8 8 0
 #3745
-Orge lord~
-the Orge lord~
-The Lord of Orges is sitting on his throne. He looks quick and mean.
+Ogre lord~
+the Ogre lord~
+The Lord of Ogres is here sitting on his throne. He looks quick and mean.
 ~
-The Orge Lord has platemail armor, and is using weird weapons. They are
+The Ogre Lord has platemail armor, and is using weird weapons. They are
 large glowing weapons made from bone!
 ~
 130 32904 -1000 S
-30 0 -5 30d8+300 3d10+10
--1 8000 9500 17
+45 0 -5 30d20+300 6d10+15
+-1 20000 100000 17
 8 8 5
 304 3088 0 
 #3746
@@ -7733,32 +8083,32 @@ A beautiful demon is standing here. She wants to be your friend.
 This is a woman with horns on her head. She has small wings on her
 back.
 ~
-132 2 -1000 N
-6 14 4 6 2d6+0
--1 100 0 21
+132 2 -1000 S
+8 12 4 7 6d6+6
+-1 300 600 21
 8 8 2
 #3747
 babau~
 the babau~
 A tall skeleton in form-fitting black leather is standing here.
 ~
-This is a skeleton like demon. Its' arms, legs, and head are hill
+This is a skeleton like demon. It's arms, legs, and head are hill
 giant sized.
 ~
-132 8 -1000 N
-8 12 -3 9 3d5+7
--1 155 0 21
+132 8 -1000 S
+10 10 -3 9 3d5+7
+-1 455 500 21
 8 8 0
 #3748
 bar-lgura~
 the bar-lgura~
 A huge orangutan with gruesome visage and tushes is standing here.
 ~
-It's a demon not an animal eek.. 
+It's a demon not an animal eek!!!! Fleee... Run away!
 ~
-132 8 -1000 N
-7 13 -3 6 3d6+6
--1 200 0 21
+132 8 -1000 S
+7 13 -3 7 5d6+6
+-1 400 750 21
 8 8 0
 #3749
 chasme~
@@ -7770,8 +8120,8 @@ forelimbs, which are equipped with strong, chitinous, pincer
 fingers. 
 ~
 132 128 -1000 S
-7 13 -1 7d8+2 3d4+3
--1 300 2000 21
+7 13 -1 9d8+2 3d6+3
+-1 500 3500 21
 8 8 0
 #3750
 su-monster~
@@ -7781,69 +8131,69 @@ A wierd monkey like creature is wandering around aimlessly.
 The creature has fur that's dirty grey. The creature's tail and face
 are black. It's paws are bloodly red.
 ~
-36 8 -500 N
-6 14 6 0 4d4+8
--1 75 0 7
+36 8 -500 S
+6 14 6 10 4d4+8
+-1 275 250 7
 8 8 0
 #3751
-wind creature~
+Wind~
 the wind creature~
 The wind has picked up!  The wind is getting stronger!
 ~
 The wind creature can not be seen only felt! There is something here!
 ~
-128 2050 0 N
-7 13 7 3 3d6+0
--1 90 0 27
+128 2050 0 S
+9 11 7 5 3d8+0
+-1 300 1000 26
 8 8 0
 #3752
-wyvern~
+Wyvern~
 the wyvern~
 A small flying dragon with a stinger is dive bombing you!
 ~
 The creature is dark brown. It's eyes are orange. It has a big nasty
 stinger that its trys to impale you with!
 ~
-32 2048 -400 N
-8 12 3 7 2d8+6
--1 100 0 9
+32 2048 -400 S
+8 12 3 8 3d8+6
+-1 300 175 9
 8 8 2
 #3753
-giant yeti~
-the giant yeti~
+giant Yeti~
+the giant Yeti~
 A large furry creature is reaching for you!!!
 ~
 This creature is huge over 300 pounds at least. It's covered in white fur.
 Its' eyes are pale blue. Its' claws and teeth are ivory white. 
 ~
-36 8 -750 N
-6 14 6 4 2d6+0
--1 75 0 17
+36 8 -750 S
+6 14 6 6 4d6+0
+-1 175 200 17
 8 8 0
 #3754
-cat people guardsman~
-the cat people guardsman~
+cat guardsman~
+the cat guardsman~
 A large cat humanoid is standing here guarding its post.
 ~
 The guard has chainmail armor on. It is holding a longsword. It looks
 mean and very nasty!
 ~
 36 32904 -1000 S
-10 10 2 10d10+10 2d8+0
--1 150 1500 18
+10 10 2 10d12+10 4d8+0
+-1 550 3500 18
 8 8 4
 256 2048 0
 #3755
-cat people guardsman elite~
-the cat people guardsman elite~
+cat guardsman elite~
+the cat guardsman elite~
 A large cat humanoid is standing here ready for battle!
 ~
 The elite guard has platemail armor on. It's holding a greatsword!
 It looks very fast and nasty!
 ~
 34 32904 -1000 S
-17 3 -10 17d10+50 3d8+5
--1 500 6500 18
+19 1 -10 17d20+50 6d8+5
+-1 1500 9500 18
 8 8 4
 256 3088 0
 #3756
@@ -7853,9 +8203,9 @@ A cat humanoid is busy working here.
 ~
 A plain cat humanoid, nothing special about it at all.
 ~
-134 32768 -500 N
-7 13 4 0 2d8+0
--1 50 0 18
+134 32768 -500 S
+7 13 4 2 2d8+0
+-1 150 100 18
 8 8 0
 #3757
 cat cook~
@@ -7864,21 +8214,21 @@ A cat humanoid is busy cooking over a stove.
 ~
 The cat has an apron on. It has a big meat cleaver in one paw.
 ~
-6 32768 -500 N 
+6 32768 -500 S
 8 12 4 5 2d8+0
--1 50 0 18
+-1 150 100 18
 8 8 0
 #3758
-king of the cat people~
-the king of the cat people~
-The king of the cat people sits on his huge throne. He sees you and laughs!
+King Roar~
+the King of the cat people~
+The King of the cat people sits on his huge throne. He sees you and laughs!
 ~
 The king of the cats is wearing all platemail. He is holding a large weapon!
 This cat looks very fast in his armor and very very tough!
 ~
 130 32904 -1000 S
-36 0 -3 36d20+200 6d8+0
--1 2000 15000 18
+38 0 -3 50d20+200 10d8+0
+-1 5000 19000 18
 8 8 3
 416 3088 0
 #3759
@@ -7888,9 +8238,9 @@ This cat humanoid is wearing silks and pretty clothing. She lying on the bed.
 ~
 This creature is very beautiful for a cat. No weapons no nothing!
 ~
-2 32768 0 N
-6 14 4 0 2d8+0
--1 30 0 18
+2 32768 0 S
+6 14 4 1 2d8+0
+-1 130 250 18
 8 8 2
 #3760
 large orge~
@@ -7901,43 +8251,43 @@ Dirty is not the work for this creature! Just wearing some animal skins
 and faking work is all its going! This orge looks bigger than what you are used
 to seeing!
 ~
-130 32768 -1000 N
-10 10 5 1 1d10+0
--1 50 0 17
+130 32768 -1000 S
+10 10 5 2 1d10+0
+-1 150 100 17
 8 8 0
 #3761
-orge guard~
-the orge guard~
+ogre guard~
+the ogre guard~
 A large orge wearing chainmail is standing here guarding the Ogre Lair.
 ~
-This Orge looks smarter and larger than others you have seen! 
+This ogre looks smarter and larger than others you have seen! 
 Its wearing all chainmail armor and using a large 2-handed magical bone weapon!
 ~
 164 32904 -1000 S
-15 5 0 15d12+15 2d10+0
--1 150 3000 17
+15 5 0 15d12+15 2d10+10
+-1 750 4500 17
 8 8 4 0 2048 0
 #3762
-orge cook~
+ogre cook~
 the orge cook~
-A large orge is standing here cooking who-knows-what! 
+A large ogre is standing here cooking who-knows-what! 
 ~
 The cook is not clean and is a mess! She has a large spoon in her hand!
 ~
-130 32768 -1000 N
+130 32768 -1000 S
 12 8 5 5 1d10+0
--1 75 0 17
+-1 200 500 17
 8 8 2
 #3763
-orge queen~
-the orge queen~
-A Orge wearing fairly clean clothes is sitting here on a throne.
+ogre queen~
+the ogre queen~
+A Ogre wearing fairly clean clothes is sitting here on a throne.
 ~
 The queen looks as regal as a orge can :-) She has a large sceptre in one hand!
 ~
 130 32904 -1000 S
-33 0 -3 33d12+50 2d8+5
--1 1000 7500 17
+38 0 -3 33d12+50 6d8+10
+-1 5000 9500 17
 8 8 5 0 3088 0
 #3900
 Eric Johnson hacker DanjerLord skydiver roommate~
@@ -8043,7 +8393,7 @@ This dragon has many scratches on its armor but it looks like nothing ever
 got underneath the scales.
 ~
 133 0 999 B 3
-30 0 -6 200 3d6+2
+20 0 -6 200 3d6+2
 -1 5000 6 9
 8 8 3 143 19456 0
 #3953
@@ -8446,8 +8796,8 @@ This is a very large lizard like creature.  It's burnished brass scales
 gleam in the light from your torch.
 ~ 
 3 32904 450 B 3
-10 8 0 16 3d3+1
--1 5000 10 9
+15 8 0 30 3d5+1
+-1 5000 16 9
 8 8 5 0 8 0
 #5006
 nomad leader~
@@ -8993,7 +9343,7 @@ A cute rabbit is here.
 It is a small, furry creature with long ears and big feet.
 ~
 192 0 0 N
-1 20 6 0 1d4+0
+1 20 6 0 1d1+0
 -1 0 0 23
 8 8 0
 #6002
@@ -9129,7 +9479,7 @@ do.
 ~
 99 32776 -1000 B 3
 10 9 0 40 1d8+1
--1 0 10 9
+-1 0 16 9
 8 8 3 0 256 0
 #6113
 spider huge poisonous~
@@ -9568,7 +9918,7 @@ hot it melts stone, but otherwise pretty normal.
 ~
 71 8 -1000 B 3
 40 1 0 0 3d6+0
--1 15000 10 9
+-1 15000 16 9
 4 4 1
 #6610
 Black knight~
@@ -9989,7 +10339,7 @@ The Ice-dragon looks like it hasn't eaten in a while.
 ~
 99 0 -500 B 3
 20 1 0 75 2d6+2
--1 5000 10 9
+-1 5000 16 9
 8 8 1
 #6643
 Herald~
@@ -10030,7 +10380,7 @@ do.
 ~
 35 8 -1000 B 3
 8 8 -1 18 2d6+0
--1 1000 10 9
+-1 1000 15 9
 8 8 0
 #6802
 dragon silver~
@@ -10044,7 +10394,7 @@ area...'
 ~
 3 8 1000 B 3
 10 9 -1 20 2d8+0
--1 1500 10 9
+-1 1500 15 9
 8 8 0
 #6803
 emperor penguin~
@@ -10057,7 +10407,7 @@ blood stains around it's beak.
 ~
 35 0 -200 A 2
 4 10 4 8 1d8+1
--1 50 0 15
+-1 50 1 15
 8 8 0
 #6804
 polar bear~
@@ -10069,7 +10419,7 @@ snack. *YUMM*
 ~
 34 8 0 A 2
 12 3 5 24 1d9+3
--1 50 0 18
+-1 50 3 18
 8 8 2
 #6805
 owlbear~
@@ -10082,7 +10432,7 @@ terrible to behold.
 ~
 34 8 -100 A 2
 7 12 5 14 2d6+2
--1 10 0 18
+-1 10 2 18
 8 8 0
 #6806
 snow owl~
@@ -10128,7 +10478,7 @@ broken half off.
 ~
 2 0 350 A 2
 5 15 7 10 1d8+2
--1 50 0 15
+-1 50 1 15
 8 8 1
 #6810
 mink~
@@ -10151,7 +10501,7 @@ teeth.  It doesn't resemble those cute little thingies from toy shops at all.
 ~
 34 0 -50 A 2
 8 11 3 18 2d6+2
--1 30 0 17
+-1 30 2 17
 4 8 0
 #6812
 snow crow~
@@ -10199,7 +10549,7 @@ color you see are the red stains on his teeth and hands.
 ~
 35 0 -350 A 2
 5 14 5 10 2d4+0
--1 20 0 1
+-1 20 1 1
 8 8 0
 #6816
 reindeer~
@@ -10222,7 +10572,7 @@ A big, strong, helpful, trustworthy Siberian Husky
 ~
 2 0 1000 A 2
 10 10 2 10 1d8+3
--1 0 0 18
+-1 0 2 18
 8 8 1
 #6818
 otter~
@@ -10255,7 +10605,7 @@ The Mammoth looks like it would take a lot to bring him down.
 ~
 2 0 0 A 3
 14 3 2 68 1d4+6
--1 0 0 23
+-1 0 4 23
 8 8 0
 #6821
 snow snake~
@@ -10269,7 +10619,7 @@ stirs from his sleep and coils...prepared to ATTACK!!!!!!!
 ~
 35 8 -100 B 1
 18 -2 -5 38 2d12+1
--1 100 2 22
+-1 600 6 22
 8 8 2
 #6822
 snow lizard~
@@ -10280,7 +10630,7 @@ The Snow Lizard is very thin. His scales are almost as white as snow.
 ~
 2 0 -1000 N
 10 8 2 20 2d6+3
--1 0 0 6
+-1 1000 2 6
 8 8 1
 #6823
 frost giant~
@@ -10294,7 +10644,7 @@ lot of food. He smiles hungrily at you!!
 ~
 32 0 -800 N
 14 5 3 14 2d6+6
--1 30 0 17
+-1 30 4 17
 8 8 4 0 2 0
 #6824
 purple dragon~
@@ -10318,7 +10668,7 @@ You saw what?? or Who??
 ~
 3 8 -100 N
 10 9 2 20 2d5+1
--1 30 0 1
+-1 30 3 1
 8 8 2
 #6900
 bug~
@@ -10346,7 +10696,7 @@ is covered by a large, hooded cloak as black as her skin and in her broad
 silver belt hangs a long, slender sword in a silver scabbard.
 ~
 1 557064 -1000 N
-20 1 6 80 3d3+4
+45 1 6 80 3d3+9
 -1 900 6 2
 8 8 5 0 7168 0
 #6999
@@ -10528,7 +10878,7 @@ he moves closer ,'Can one NEVER sleep in peace..Hssss'.
 ~
 34 32776 -1000 B 3
 11 8 0 44 2d8+2
--1 10000 10 9
+-1 10000 16 9
 8 8 4 0 1 0
 #7041
 sea hag~
@@ -10670,10 +11020,10 @@ There is a gigantic rat here, looking at you with a hungry look.
 The gigantic rat is about ten foot long from head to tail and has claws
 the size of your head looking very nasty.
 ~
-34 0 -800 A 2
+32 32768 -800 A 2
 12 9 2 48 2d6+2
 -1 513 5 18
-4 8 1
+8 8 1
 #7500
 cthulhu~
 Dread Outer God, Cthulhu~
@@ -10693,6 +11043,339 @@ You are (understandably) overcome with fear, as the dreaded Cthuhlu shambles by.
 ~
 You are overcome with an irrational fear.
 ~
+#7510
+Keeper Demon Keep~
+The Keeper of the Sword~
+The Demon keeper of the sword of King Syagrius stands here grinning.
+~
+Blocking the way to the glowing holy sword is a terrible demon!  It grins
+horribly at you, as if to say, "You shall fail like all before."
+~
+99 32 -1000 L 3
+30 -2 -5 50 3d6+12
+-1 0 3 21
+8 8 3 8192 3072 64
+The demon gibbers insanely.
+~
+Demonic noises come from nearby.  Fear quivers through you.
+~
+#7511
+cloud giant child~
+a cloud giant child~
+A small child around 6 feet high is playing here.
+~
+This child might be considered a runt because his growth spurt has not yet
+kicked in. This child like all children is very curious and inquisitive. Right
+now it is looking at you exactly how a human child with a firecracker in his
+hand looks at a frog.
+~
+196 0 0 N
+5 16 5 0 2d3+3
+-1 50 2 17
+8 8 3 0 6 0 
+#7512
+cloud giant teenager~
+a giant teenager~
+A typical eighteen foot tall teenager with freckles to match bustles by you.
+~
+Ahh, a typical 18 foot teenager. However this one usually carries a large club
+and looks for all kinds of ways to prove his manhood. He casually looks at you
+to consider your trophey value.
+~
+196 0 0 N
+10 14 4 10 2d5+4
+-1 200 3 17
+8 8 4 0 6 0 
+#7513
+cloud giant maiden~
+a cloud giant maiden~
+A very large maiden winks suggestively at you.
+~
+This giant is very beautiful (to giants at least), and is very large, over 18
+feet in height.  She is not what you would call a Graecian beauty, as her
+life is divided between war and her Giant children.
+~
+100 0 0 N
+14 8 4 20 2d6+7
+-1 500 3 17
+8 8 5 0 6 0 
+#7514
+cloud giant guard~
+a cloud giant guard~
+A burley giant guard grumbles at you.
+~
+This is a very tall, powerful guard. He is here to guard the citadel against
+all intruders. He continously looks in your direction.  He swings his club
+low and strides toward you.
+~
+101 0 -200 A 2
+15 5 3 30 2d7+11
+-1 1000 5 17
+8 8 4 0 6 0 
+#7515
+battlemaster cloud giant~
+the Giant Battlemaster~
+A fierce looking giant, bristling with weapons, is crouched in battle stance.
+~
+The scarred old giant stands here, bristling with weapons.  He appears to
+be a veteran of a thousand wars.  The mark of many a dwarven axe is upon
+him.  He looks a very tough nut to crack.  He looks into your eyes and
+says, "you are a cunning mensch to come this far into the castle.  But I
+say you not so smart as you think because Now You Die!"
+~
+105 8 -350 A 2
+25 0 -4 50 5d3+11
+-1 2000 3 17
+8 8 4 0 6 0
+#7516
+cloud giant king~
+The King of the Giants~
+The Lord of the Cloud Giants holds court here.
+~
+Lord over all the cloud giants, in fact over most giants period. He displays a
+good deal of commanding power and shows his power repeatedly. The King is
+always ready to test his mettle against the best.  He leans back in throne
+imperiously, as if mocking your indescretion in entering HIS domain.  He
+fingers his axe, itching to make your visit short indeed.
+~
+103 8 -900 A 2
+30 -3 -4 60 3d5+12
+-1 10000 4 17
+8 6 4 0 6 0
+#7517
+slave boy~
+a slave boy~
+A tired and beaten slave child goes about his duties.
+~
+His eyes no longer hold any hope.  He has been beaten into wretched
+servitude of the giants since he was kidnapped from the distant valley of
+Midgaard.  His clothes hang in rags.
+~
+128 0 0 N
+1 20 10 0 1d2+0
+-1 0 0 1
+8 8 4 0 0 2048
+#7518
+slave girl~
+a slave girl~
+A tired and beaten slave child goes about her duties.
+~
+The slave girl is little more than a rag doll.  She pityfully sweeps the
+floor and cries about her lost parents.  If you ask her name she says it is
+Cosette. 
+~
+129 0 0 N
+1 20 10 0 1d1+0
+-1 0 0 0
+8 8 5 0 0 2048
+#7519
+slave human~
+a slave~
+A human slave toils here.
+~
+The slave is hunched and dirty.  His clothes are ill fitting rags.  Hard
+work has made him strong.  There is no light in his eyes- slavery to the
+giants has killed his spirit.
+~
+192 0 0 N
+3 19 10 0 1d3+0
+-1 0 0 0
+8 8 1
+#7520
+slave dwarf dwarven~
+a dwarven slave~
+A dwarven slave glares about him as he works.
+~
+A stocky dwarf strains with labour.  He scowls about him, hating all
+humans and giants alike.  He waves his fist as he pushes his rocks into
+his trolley.
+~
+64 0 100 N
+4 17 7 2 1d4+1
+-1 0 0 3
+8 8 1
+#7521
+slaver~
+a slaver~
+A human slaver is here, appraising his merchandise.
+~
+This is one of the cold southern men who engage in the flesh trade.  They
+are a rich people now, for the Giants pay well for slaves.  This one wears
+fine Thalos silk, and perfumes from the distant south.  He flies about
+confidently like all of his people but does not look to be a mage himself.
+~
+64 2048 -350 N
+6 16 6 5 1d6+0
+-1 250 3 1
+8 8 1
+#7522
+slaver mage~
+The Slaver Mage~
+The slaver mage flies about here.
+~
+Dressed in fine silks and gleaming jewelry, this painted man has a position
+of power among the slavers.  His magic keeps an air-ship aloft, and lets
+the crew roam the sky without fear with him.  Such men are the foundation
+of the Slaver's industry.
+~
+193 2048 -750 N
+10 14 3 0 1d6+0
+-1 500 6 1
+8 8 4 0 0 0
+#7523
+cloud giant bar tender bartender~
+The Giant bartender~
+The bartender stares down at you suspiciously.
+~
+This cloud giant is at least a little friendly.  He has left the life of a
+warrior to maintain the Landman's Inn.  He is always ready with a mug of
+beer for his giant and slaver friends.  Something tells him you are
+different.. and for now you are not his friend.
+~
+66 0 0 A 2
+14 8 4 20 2d5+10
+-1 300 4 17
+8 8 4 0 6 0
+#7524
+visitor cloud giant visiting~
+a visiting giant~
+A cloud giant relaxes at the bar.
+~
+This giant wears the rough clothes of the giants who live on the land far
+below.  He is here on some unknown task from his clan lord.  Perhaps the
+eating is bad in the mountains this year and he is here to buy some slaves.
+~
+66 0 -200 A 2
+12 9 4 20 2d4+11
+-1 100 4 17
+8 8 1
+#7525
+visitor client slaver human visiting~
+human client~
+A slaver relaxes at a table.
+~
+This slaver has decided to frequent the Landman's Inn.  Perhaps he is tired
+of his vessal or his here on official business to the Giant Lord.  He sits
+a stone table, mug in his hands.  He smiles at you as you come in.
+~
+194 0 -150 N
+6 16 6 5 1d6+0
+-1 250 1 1
+8 6 1
+#7526  
+winger wing winged pink~
+a winger~
+A curious winged pink creature is flying about here.
+~
+The creature is a strange one indeed.  The small pink center sprouts two
+membraneous wings.  A mouth like opening in the body sends out an inaudible
+shriek which seems to make magic waver about you.
+~
+193 2048 0 N 
+8 20 6 -7 1d2+1
+-1 0 0 27
+8 8 3 2 0 0
+#7527
+warrior cloud giant~
+a cloud giant warrior~
+The cloud giant warrior stands here, preparing for battle.
+~
+The Warrior is over 18 feet tall.  He is scarred and tattooed.  His club 
+moves easily in his hand.  He lives to fight, and he isn't too picky.
+~
+101 0 -200 A 2
+15 6 3 40 2d6+11
+-1 50 4 17
+8 8 4 0 6 0
+#7528
+gateguard guard cloud giant~
+a giant gateguard~
+The Gateguard watches you carefully.
+~
+This giant towers over you... and the gate.  He will not leave his post as
+he is the first line of defence against intruders.
+~
+67 2048 -100 A 2
+15 6 3 40 2d6+11
+-1 50 4 17
+8 8 4 0 6 0
+#7529
+auctioneer auction slaver~
+an auctioneer~
+An auctioneer speaks quickly and waves his hands.
+~
+The middle aged slaver cups his hands and shouts a lightning fast series of
+numbers, calling out people around him.  He nods to you with a smile, and
+you wonder what you just agreed to.
+~
+2 0 -350 N
+9 14 4 10 1d8+0
+-1 500 2 1
+8 8 1
+#7530
+slaver guard~
+a slaver guard~
+A sturdy Slaver guard stands here.
+~
+This slaver is a working man, a conscript onboard one of the flying ships.
+His duty in port is to guard the slaves.  He is guarding them now.
+~
+199 0 -250 N
+7 15 6 4 1d8+0
+-1 25 1 1
+8 8 1
+#7531
+slaver master~
+The Master of Boats~
+The Master of Boats sits here, regarding you as a business prospect.
+~
+This is the great master of the slaver combine at the castle.  His ships
+ply the air and sea to the rich, slave hungry lands in the south.  He sends
+much riches home to his Lord in his homeland.  He takes a healthy and
+illicit cut, of course, as reward for serving in the barbarian north.
+His eyes glow with a magical light, and he mumbles incantations under his
+breath.
+~
+3 2056 -800 A 2
+25 3 -1 10 1d8+1
+-1 2500 6 1
+8 8 1
+#7532
+buyer cloud giant~
+a giant buyer~
+A giant is here, waiting to purchase slaves at the auction.
+~
+The giant is carrying a sack of money.  He is here to buy slaves, slaves
+needed for giant households... or for giant food.  His poor clothing marks
+him as a cloud giant from the lands below.
+~
+194 0 -400 A 2
+12 11 4 15 2d6+11
+-1 1500 2 17
+8 8 4 0 6 0
+#7533
+buyer human~
+a human buyer~
+A human is waiting to buy slaves for his fields.
+~
+A richly dressed gentleman is here, fingering his purse as he waits to buy
+new workers for his fields.
+~
+194 0 -350 N
+7 14 6 2 1d8+0
+-1 1500 1 1
+8 8 1
+#7534
+trent reznor happy slave nine inch nails~
+Trent, the happy slave~
+Trent Reznor dances wildly inside his cage.
+~
+Man, what you looking at me for?
+~
+65 0 0 N
+15 10 4 20 2d5+0
+-1 0 0 42
+8 8 1
 #8008
 butterfly fly~
 the butterfly~
@@ -11362,7 +12045,7 @@ You see a very large blue dragon before you. It appears to be quite old.
 ~
 7 32776 -1000 B 3
 12 8 2 36 2d8+3
--1 8000 10 9
+-1 8000 16 9
 5 5 4 0 2052 0
 #9218
 hill giant~
@@ -11578,7 +12261,7 @@ A huge, ancient white dragon is resting here
 ~
 39 32776 -500 B 3
 12 8 2 36 2d8+3
--1 10000 8 9
+-1 10000 16 9
 5 5 4 0 2050 0
 #9419
 white dragon huge old~
@@ -11589,7 +12272,7 @@ A huge, old white dragon is resting here
 ~
 39 32776 -1000 B 3
 12 8 2 24 2d8+2
--1 7000 8 9
+-1 7000 16 9
 5 5 5 0 2052 0
 #9420
 stone giant~
@@ -11826,16 +12509,19 @@ An large impassive fellow who seems to ignore the little people out there.
 #11001
 Lord Python~
 Lord Python of Castle Python~
-Lord Python is resting on his great throne.
+Lord Python is resting on his great throne. His eyes glow yellow.
 ~
      Lord Python sits here contemplating higher realities and bad
 sketches. However Python has killed more people on the battlefield
 than you have ever seen.
 ~
-3 8 500 A 2
+3 8 500 L 2
 25 1 4 25 1d8+6
 -1 1000 2 1
 8 8 4 0 2048 0
+Lord python quaffs a yellow potion of see invisible, which vanishes
+~
+~
 #11002
 elite guard guardsman~
 the Elite Guardsman~
@@ -12745,7 +13431,7 @@ Enter Choice:
 ~
 35 1607690 -1000 B 3
 20 0 2 50 3d4+4
--1 4000 10 7
+-1 9000 16 7
 8 8 1
 #13727
 giant~
@@ -13555,10 +14241,11 @@ Crandel the Skexie Mage is here playing with reality.
    Crandel is a master of magic. His feathers are green and red.
 He has a very strong beak. An unusual mark has been burnt into
 his chest. He often assists the Ancient Skexie in performing special
-rituals.   
+rituals.  Crandel is probably more powerful than you would suspect.
+*hint hint*
 ~
 3 136 0 L 1
-15 5 2 40 2d6+4
+20 5 2 40 2d4+4
 -1 2450 3 38
 8 8 4 7 2048 0
 Crandel utters the words, 'frzlbkckm'
@@ -14074,7 +14761,7 @@ do.
 ~
 7 32776 -700 B 3
 10 9 2 40 1d12+1
--1 0 10 9
+-1 0 16 9
 8 8 3 0 256 0
 #15859
 challenge enfan black~
@@ -14324,7 +15011,7 @@ Old, scaly, but still with a lot of bite in him left.
 ~
 71 32776 -1000 B 3
 22 0 0 44 2d10+2
--1 0 10 9
+-1 0 16 9
 8 8 4 0 1 0
 #15880
 challenge grand knight paladin~
@@ -15132,8 +15819,8 @@ The Gypsy Warlord stands here imperiously.
 ~
 You see a giant gypsy warrior, who will die to protect his caravan.
 ~
-67 40 800 A 2
-20 1 -1 60 2d8+6
+67 40 800 A 3
+40 1 -1 60 3d6+4
 -1 100 1 1
 8 8 4 0 2053 0
 #16108
@@ -15223,7 +15910,7 @@ items for trade.
 ~
 3 0 800 A 2 
 40 1 2 80 2d8+6
--1 2000 3 1
+-1 20000 3 1
 8 8 4 0 3333 0
 #16116
 gypsy weaponsmith~
@@ -15235,7 +15922,7 @@ weapons with muscles like that.
 ~
 3 0 800 A 3
 45 0 2 150 3d8+6
--1 2000 3 1
+-1 20000 3 1
 8 8 4 0 3333 0
 #16117
 gypsy armourer~
@@ -15246,7 +15933,7 @@ You see a massive gypsy warrior, who would probably kill you in a blink.
 ~
 3 0 800 A 3
 40 0 -6 65 2d8+4
--1 2000 3 1
+-1 20000 3 1
 8 8 4 0 3333 0
 #16118
 gypsy alchemist~
@@ -15258,7 +15945,7 @@ which is a BIT disconcerting....
 ~
 3 134217896 800 A 2
 43 -5 2 100 2d8+5
--1 2000 5 1
+-1 20000 5 1
 8 8 4 0 15759 0
 #16119
 gypsy bartender~
@@ -15393,19 +16080,6 @@ A huge cave turtle swims about in these chill waters
 15 10 4 60 1d4+3
 -1 0 1 15
 8 8 1
-#16204
-mind mindflayer~
-The mindflayer~
-A mindflayer stands here, studying ancient text.
-~
-It is a tall humanoid creature, with green skin, blank yellow eyes,
-and four long tentacles dangling about its mouth opening.  They are
-known to be powerful magicians.
-~
-37 32776 -800 N
-10 14 4 0 1d4+2
--1 0 6 33
-8 8 0
 #16205
 mind mindflayer~
 The mindflayer~
@@ -15528,7 +16202,7 @@ An outcast drow soldier stares at you in anger.
 ~
   She appears to be an outcast from the small drow city to the east.
 ~
-36 16809992 -1000 A 1
+36 32768 -1000 A 1
 4 14 7 4 1d4+1
 -1 10 2 2
 8 8 1
@@ -15539,7 +16213,7 @@ An outcast drow warrior stands here, smirking evilly as you approach
 ~
 She seems to resent your intrusion into her home.
 ~
-37 16809992 -1000 A 2
+37 32768 -1000 A 2
 6 12 6 6 1d4+2
 -1 50 2 2
 8 8 1
@@ -15550,7 +16224,7 @@ An outcast drow cleric readies her weapon
 ~
 She seems to have fallen from grace with the goddess of the drow
 ~
-37 16809992 -1000 A 1
+37 32776 -1000 A 1
 7 12 7 6 1d4+2
 -1 150 4 2
 8 8 1
@@ -15562,10 +16236,49 @@ The leader of the outcasts stares at you, wondering why you wish to die.
 Although ragged and young, she is extremely beatiful, and quite 
 a scrappy fighter to boot.
 ~
-37 16809992 -1000 A 3
+37 32776 -1000 A 3
 10 12 7 20 1d4+2
 -1 850 4 2
 8 8 1
+#16218
+huge cave lobster~
+The huge cave lobster~
+A positively enourmous white lobster is staring at you
+~
+   This is the largest lobster you have ever seen.  It has apparently
+been living in these tunnels for hundreds of years, feeding off of the
+giant cave gars.   Now it seems to want to eat you for desert.
+~
+32 524328 0 A 2
+35 0 -10 100 4d10+8
+-1 50000 8 15
+8 8 1
+#16219
+death knight~
+The death knight~
+An ancient form awakens as you intrude upon its prison
+~
+   It is a spirit of incredibly potent evil, clearly imprisoned here
+for countless centuries.   Bright red lights flare in its eye sockets.
+Clearly, it enjoys the challenge you present to its imprisonment.
+~
+39 128 -1000 A 3
+50 0 -10 186 2d8+7
+-1 5000 6 1
+8 8 1
+#16220
+mind mindflayer~
+The mindflayer~
+A mindflayer stands here, studying ancient text.
+~
+It is a tall humanoid creature, with green skin, blank yellow eyes,
+and four long tentacles dangling about its mouth opening.  They are
+known to be powerful magicians.
+~
+37 32776 -800 N
+10 14 4 0 1d4+2
+-1 0 6 33
+8 8 0
 #16610
 Hoeur demon~
 The Hoeur~
@@ -15589,7 +16302,7 @@ as she leaps at you.
 ~
 105 1048614 -1000 B 3
 23 0 2 50 3d6+5
--1 15000 10 21
+-1 15000 16 21
 8 8 5 0 128 0
 #16630
 Portal guard~
@@ -15727,7 +16440,7 @@ is not at all pleased with your intrusion on his home.
 ~
 35 40 -900 B 3
 24 0 -3 80 1d12+3
--1 10000 10 9
+-1 10000 16 9
 8 8 4 0 4 0
 #16701
 trapper~
@@ -16184,7 +16897,7 @@ then attempts to liberate it.
 ~
 39 0 -800 A 2
 8 12 3 8 2d5+2
--1 200 3 8
+-1 200 5 8
 8 8 4 2048 32768 0
 #16902
 Wererat were rat~
@@ -16197,7 +16910,7 @@ probably helps Count Boarish run the criminal elements of life in the city
 ~
 35 0 -850 A 2
 10 9 2 10 2d6+3
--1 500 3 8
+-1 500 5 8
 8 8 4 2048 32768 0
 #16903
 Werewolf were wolf~
@@ -16209,7 +16922,7 @@ plans to solve its malnourishment difficulties with your corpse.
 ~
 33 0 -900 A 2
 10 9 2 10 2d6+2
--1 500 3 8 
+-1 500 5 8 
 8 8 4 2048 32768 0
 #16904 
 Weretiger were tiger~
@@ -16221,7 +16934,7 @@ ripping humans limb from limb.
 ~
 35 0 -950 A 3
 11 8 1 11 2d7+2
--1 750 3 8
+-1 750 5 8
 8 8 5 2048 32768 0
 #16905
 Wereshark were shark~
@@ -16234,7 +16947,7 @@ lunging at you with powerful jaws.
 ~
 35 0 -950 A 2
 12 7 1 24 2d7+3
--1 1000 3 8
+-1 1000 5 8
 8 8 4 2048 32768 0
 #16906
 Pooh werebear were bear~
@@ -16249,7 +16962,7 @@ adventuring days, but the evil Count Boarish has stolen it from me."
 ~
 3 0 1000 A 2
 13 6 1 26 2d8+3
--1 1500 3 8
+-1 1500 5 8
 8 8 4 2048 32768 0
 #16907
 Mistress werefox were fox~
@@ -16261,7 +16974,7 @@ before the mirror preening herself.  She snarls at you before attacking.
 ~
 35 0 -1000 A 2
 13 6 1 26 2d8+1
--1 1500 3 8
+-1 1500 5 8
 8 8 5 2048 32768 0
 #16908
 Werebadger were badger~
@@ -16274,7 +16987,7 @@ can deliver.
 ~
 35 0 -1000 A 3
 13 6 1 13 2d8+3
--1 1000 4 8
+-1 1000 6 8
 8 8 4 2048 32768 0
 #16909
 Werefox were fox~
@@ -16286,7 +16999,7 @@ doesn't take kindly to you looking at her either.  (you haven't even payed!)
 ~     
 34 0 -750 A 2
 10 9 2 10 2d4+2
--1 200 3 8
+-1 200 5 8
 8 8 5 2048 32768 0
 #16910
 Count Boarish were~
@@ -16300,7 +17013,7 @@ gore his opponents (you).
 ~
 35 0 -1000 A 3
 15 3 1 45 2d4+6
--1 5000 4 8
+-1 5000 7 8
 8 8 4 2048 32768 0
 #16911 
 wererat rat were~
@@ -16312,7 +17025,7 @@ that it is standing.
 ~
 101 0 -700 A 2
 6 13 3 12 2d4+2
--1 50 2 8
+-1 50 4 8
 8 8 4 2048 32768 0
 #17000
 black pudding~
@@ -16834,7 +17547,7 @@ undiscovered bewilderment.
 ~
 3 0 1000 L 1
 20 1 1 20 1d8+1
--1 10000 4 1
+-1 50000 4 1
 8 8 4 0 2080 0
 Emilither says 'Hrm...healing potions require belladonna, no?'
 ~
@@ -16849,7 +17562,7 @@ He looks like a fink.
 ~
 2 0 900 A 2
 23 0 1 50 1d5+3
--1 10000 0 1
+-1 50000 0 1
 8 8 4 0 2048 0
 #18202
 heimslan~
@@ -16860,7 +17573,7 @@ A tall, brooding man.  He looks around, then smiles at you.
 ~
 2 0 900 A 2
 23 0 1 50 1d5+3
--1 8200 0 1
+-1 22200 0 1
 8 8 4 0 2048 0
 #18203
 damathar~
@@ -16873,7 +17586,7 @@ inspecting your manner.
 ~
 2 0 900 A 3
 23 0 1 50 1d5+2
--1 8200 0 1
+-1 28200 0 1
 8 8 4 0 2048 0
 #18204
 syrathen~
@@ -17042,18 +17755,18 @@ He has a look of pure bored content on his face..
 8 8 1
 #18217
 dog rabid cur~
-the rabid cur dog~
+The rabid cur dog~
 A cur dog is here, foaming at the mouth.
 ~
 Perhaps you should stay away from it?
 ~
 161 0 -200 N
 2 18 7 0 1d6+0
--1 10 0 16
+-1 10 0 18
 8 8 1
 #18218
 gladiator~
-the Gladiator~
+The Gladiator~
 A Gladiator stands here, taking a break from the arena.
 ~
 He looks pretty scarred to you.
@@ -17064,7 +17777,7 @@ He looks pretty scarred to you.
 8 8 1
 #18219
 citizen~
-the Citizen~
+The citizen~
 A wandering citizen is standing here..
 ~
 Nothing spectacular here....
@@ -17132,7 +17845,7 @@ An evil-looking rogue crouches here in the shadows.
 He is a scruffy-looking character, with a nasty scar on his face.  His
 clothes are all black, and he carries an assortment of knives with him.
 ~
-98 524296 -100 N
+98 524296 -800 N
 9 11 4 10 1d6+1
 -1 150 0 1
 8 8 1
@@ -17311,7 +18024,7 @@ Old, scaly, but still with a lot of bite in him left.
 ~
 71 32776 -1000 B 3
 22 0 0 44 2d10+2
--1 10000 10 9
+-1 10000 16 9
 8 8 4 0 1 0
 #20003
 spider wolf~
@@ -17483,7 +18196,7 @@ A medium-sized dragon--seems it hasn't killed anything yet by itself.
 ~
 3 32776 0 B 3
 9 9 1 50 2d7+1
--1 5000 10 9
+-1 5000 14 9
 8 8 4 0 1 0
 #21001
 enfan blue~
@@ -17549,7 +18262,7 @@ carries a large weapon.
 A small child like being who struts about rather haughtily.
 ~
 96 168 -1000 A 2
-22 0 0 44 2d6+6
+22 0 0 44 3d6+6
 -1 2000 8 35
 8 8 0
 #21007
@@ -18542,80 +19255,87 @@ Claybin the Bartender says, 'How about a shot of whiskey stranger.'
 ~
 ~
 #21700
-captain saltmere man~
+captain saltmere tytan~
 Captain Saltmere~
 Captain Saltmere stands here, watching over his ship.
 ~
-The patch over his eye and the many scars lining his face tell you that you
-are looking at a well experienced veteran.
+The many scars lining his face and hardened look about him tells you
+that you are looking at a well experience veteran.  He must be because
+he is the captain of the S.S.Minnow.
 ~
-131 33554440 150 L 3
-50 0 -9 250 5d5+5
--1 6000 5 1
-8 8 4 272 0 0
+3 33554432 600 L 4
+50 0 -8 575 2d12+6
+-1 6000 9 43
+8 8 4 15 2048 128
 The Captain yells at the Helmsman because the ship has drifted off course.
 ~
 You hear yelling and screaming close by.
 ~
 #21701
-first mate man~
-The First Mate~
-The First Mate stands here looking for something to do.
+first mate tytan~
+The first mate~
+The first mate stands here looking for something to do.
 ~
 This man is actually responsible for the smooth running of the ship. He is 
 here looking for something to correct, someone to put to work, or someone to
-discipline.
+discipline. Like the Captain, he looks like he is a very good fighter.
+The first mate's eyes glow yellow.
+The first mate's eyes glow with a silvery hue.
 ~
-69 33554568 200 A 3
-50 0 -8 350 3d8+5
--1 5000 5 1
-8 8 4 0 2048 0
+65 33554560 600 A 5
+50 0 -10 575 5d5+0
+-1 5000 10 43
+8 8 4 112 2048 0
 #21702
 stowaway man~
-The Stowaway~
-Someone who shouldnt be on the ship is here hiding from the crew.
+A stowaway~
+Someone who shouldn't be on the ship is here hiding from the crew.
 ~
 He is hungry, tired, and cold but he still insists on getting a free ride
 and not being found.
 ~
 391 1572864 -200 S
-25 2 -1 125d1+0 3d10+5
--1 0 25000 4
+25 2 -1 150d1+75 3d10+5
+-1 0 35000 4
 6 6 0
 #21703
-lookout man~
-The Lookout~
-A Lookout is here, watching for any signs of trouble on the ocean.
+lookout tytan~
+The lookout~
+A lookout is here, watching for any signs of trouble on the ocean.
 ~
 He is doing his job, even tho it is quite boring.
+The lookout's eyes glow with a silvery hue.
 ~
-130 33554432 0 A 3
-40 0 -4 250 3d8+5
--1 2000 3 1
-8 8 0
+130 33554432 0 A 4
+47 0 -6 550 2d20+4
+-1 2000 5 43
+8 8 3 73856 0 0
 #21704
-master chef man~
-The Master Chef~
-The Master Chef is here preparing a meal for the crew.
+master chef tytan~
+The master chef~
+The master chef is here preparing a meal for the crew.
 ~
 The man looks like he knows his way around the kitchen.
 ~
-130 0 0 A 2
-40 0 -2 250 2d12+5
--1 2000 3 1
-8 8 3 16 0 0
+2 33554432 0 A 4
+47 0 -6 440 2d12+5
+-1 2000 7 43
+8 8 3 83 0 0
 #21705
-gorga priestess elf~
-Gorga the Elven Priestess~
-Gorga the Elven Priestess lies on the massive bed looking very royal.
+gnorga gnome sorceress~
+Gnorga the Gnome High Sorceress~
+Gnorga the Gnome High Sorceress is sleeping here... above the bed.
 ~
-She looks very rich. Hmmm, I wouldn't try stealing any of it tho. She also
-looks like she can take care of herself.
+By above the bed, I mean ABOVE THE BED.  She is laying on a cushion of
+air four feet above the bed.  She also looks pretty rich, Hmmm.... 
+I wouldn't try to steal any of it tho because she looks like she could 
+turn you into a frog and squish you like road kill.
+Gnorga the Gnome High Sorceress's eyes glow with a silvery hue.
 ~
-131 33554560 200 A 2
-40 0 -8 200 2d8+6
--1 8500 4 2
-5 5 2
+3 167772160 -300 A 3
+47 0 -10 350 2d8+4
+-1 8500 9 5
+8 8 5 8323 2048 0
 #21706
 jedadia dwarf~
 Jedadia the Massacrer~
@@ -18624,50 +19344,54 @@ Jedadia the Massacrer is doing his daily workout right now, don't bother him.
 This dwarf is HUGH! Look at all those bulging muscles. He could definitely
 do quite a bit of damage to you.
 ~
-3 0 200 A 2
-40 0 -5 270 50d1+0
--1 7500 5 3
+3 32768 200 A 3
+47 0 -8 300 40d1+0
+-1 7500 9 3
 8 8 4 0 2048 1024
 #21707
 sea hag~
 A Sea Hag~
 The Sea Hag of the S.S.Minnow is here, it looks as if it is moving.
 ~
-This is the wooden carving of a ugly woman that every ship has, however this
-one looks like it is alive. Watch out, it looks like it wants some lovin and
-it wants if from YOU!
+This is that wooden carving of an ugly woman that every ship has hanging
+off of its bow, however this Sea Hag looks like it is alive.  Watch out!!!
+It looks like it wants some lovin and it looks like it wants it from YOU!!
+A Sea Hag is flying.
 ~
-34 2048 -300 A 2
-40 0 -3 170 15d2+0
--1 5000 2 17
-8 8 3 16 0 1
+34 33556512 -300 A 4
+50 0 -5 350 15d2+0
+-1 5000 7 28
+8 8 3 12849 2048 2
 #21708
-strong man~
-A Very Strong Man~
-A very strong man is taking a break after operating the bulge pump.
+bilge operator tytan~
+The bilge pump operator~
+A very strong man is taking a break after operating the bilge pump.
 ~
-This man looks like he could work the bulge pump for hour upon hour. Maybe
-that is why he is down here.
+This man looks like he could operate that bilge pump for days on
+end without taking a break.
+The bilge pump operator's eyes glow with a silvery hue.
 ~
 130 33554432 0 A 3
-43 0 -5 350 3d10+8
--1 5500 4 1
-5 5 1
+47 0 -5 450 3d6+15
+-1 5500 8 43
+5 5 4 8207 0 0
 #21709
-master torturer man~
-The Master Torturer~
-The Master Torturer grins and says 'Ahhh, you've come to play with me!'
+master torturer tytan~
+The master torturer~
+The master torturer grins and says 'Ahhh, you've come to play with me!'
 ~
 This man REALLY likes what he does. . .  Inflicting pain on any 
 unsuspecting fool that happens to try and get a free ride on the 
 S.S.Minnow seems to be the perfect hobbie for him.
+The master torturer's eyes glow yellow.
+The master torturer's eyes glow with a silvery hue.
 ~
 34 33554440 -250 A 3
-40 0 -10 275 2d12+8
--1 5000 3 1
-6 6 1
+49 0 -10 425 3d10+4
+-1 5000 5 43
+6 6 4 8240 0 12
 #21710
-prisoner~
+prisoner man~
 A prisoner~
 A withered, tortured prisoner is shackled in here.
 ~
@@ -18677,45 +19401,46 @@ really doing his job on this guy.
 ~
 130 0 0 L 2
 25 3 3 15 2d4+4
--1 0 1 1
+-1 0 0 1
 6 6 1
-A Prisoner begs "Please get me out of here, PLEASE! PLEASE! PLEASE!"
+A prisoner begs "Please get me out of here, PLEASE! PLEASE! PLEASE!"
 ~
-You here begging, moaning and screaming coming from the prisoners cell.
+You here begging, moaning and screaming coming from the prisoner's cell.
 ~
 #21711
-crew member~
-A Crew Member~
-A Crew Member is lying here sleeping on his bunk.
+crew member man~
+A crew member~
+A crew member is lying here sleeping on his bunk.
 ~
 He looks well rested, imagine that.
 ~
-2 0 0 A 2
-30 1 -2 25 2d6+2
+2 0 0 A 3
+30 1 -4 150 2d6+4
 -1 500 1 1
 4 4 1
 #21712
-Crew Member guard~
-A Crew Member~
-A Crew Member stands here doing his work.
+crew member guard man~
+A crew member~
+A crew member stands here doing his work.
 ~
 This man is very very busy doing his work, dont bother him.
+A crew member's eyes glow yellow.
 ~
-197 8 0 A 2
-30 0 -5 75 2d8+2
--1 600 1 1
+197 8 0 A 3
+30 0 -5 175 2d8+4
+-1 600 2 1
 8 8 1
 #21713
-helmsman~
-The Helmsman~
-A man stands here piloting the ship in the wrong direction.
+helmsman man~
+The helmsman~
+A huge man stands here piloting the ship in the wrong direction.
 ~
 This man looks confused. I'm not surprised tho, the Captain is telling him
 where to go, cursing and screaming at him and the charts tell him to go anothe
 ~
-134 0 0 A 2
-30 2 0 0 2d8+2
--1 1000 1 1
+134 0 0 A 3
+35 2 0 130 2d8+4
+-1 1000 3 1
 8 8 1
 #21714
 zat zatagaster~
@@ -18728,26 +19453,56 @@ four legs, two wings, scales, etc etc etc. Oh, did I mention the fangs,
 there are four large fangs dripping with some disgusting goop - must be
 poison.
 ~
-33029 35127298 -1000 L 5
-50 0 -5 600 5d5+5
--1 7500 5 6
-8 8 3 3 2304 128
+33025 35127298 -1000 L 5
+50 0 -5 700 5d7+0
+-1 7500 15 6
+8 8 3 143 51456 0
 You become scared that something menacing is watching you.
 ~
-You hear something closeby that makes your spin tingle.
+You hear something closeby that makes your skin crawl.
 ~
 #21715
-mimic protector~
-The protector of the Captains Treasure~
+mimic chest treasure~
+The mimic~
 A huge chest overflowing with riches and treasure lies on the ground here.
 ~
-It isnt really a chest of treasure, its the Captains pet. He placed it here
-to keep people like you away and the rest of his crew away from his riches.
+It isn't really a chest of treasure it just looks like one.  it's the 
+Captain's pet. He placed it here to keep people like you away from his riches.
 ~
 32770 33554472 -150 A 5
-40 0 -8 333 2d10+5
--1 25000 4 18
+40 0 -8 350 3d7+7
+-1 25000 12 18
 8 8 3 8192 0 0
+#21716
+Creion~
+Creion the Archmagi~
+Creion sits at the table studying a book of ancient magic.
+~
+Creion's eyes glow with a strange magical power.  When he sees you looking
+at him the glow in those eyes darkens, yet, when he smiles and says 'hello'
+the warmth of his salutation calms you.  You decide not to disturb Creion
+from his studies.
+~
+3 167772288 600 A 3
+50 0 -10 400 2d9+3
+-1 9000 10 43
+6 6 4 7 8192 8
+#21717
+crew member man~
+A crew member~
+A crew member is here... relieving himself.  He looks pissed to see you in here
+~
+This guy looks very relieved.  Guess that could be why it stinks so bad
+in here.
+~
+34 8 -600 L 2
+35 0 0 75 2d6+3
+-1 200 3 1
+6 6 1
+The crew member screams 'I told you not to come in here... I'm BUSY!'
+~
+You hear some strange noises coming from the Head.
+~
 #21800
 ankylosaurus dino dinosaur~
 The ankylosaurus~
@@ -18937,7 +19692,7 @@ whether or not you are worthy to pass.
 ~
 75 167807144 1000 L 6
 50 0 -10 500 3d10+5
--1 20000 10 49
+-1 22222 10 49
 8 8 4 8304 8077 0
 Timnus says 'Only the truly young may pass.'
 ~
@@ -20796,7 +21551,7 @@ her massive body.
 ~
 71 32776 0 B 3
 30 1 0 30 2d8+4
--1 5000 10 9
+-1 5000 16 9
 8 8 5 0 4 0
 #25505
 fire giant high priest~
@@ -21020,7 +21775,7 @@ cause to hate you.
 ~
 3 8 -850 B 3
 30 0 -5 120 3d8+5
--1 30000 10 9 
+-1 30000 15 9 
 8 8 4 1 130 0
 #27017
 sartan necromancer~
@@ -21033,7 +21788,7 @@ He is dressed in long black robes.
 ~
 69 32776 -300 N
 18 10 5 18 2d8+1
--1 50 2 42 
+-1 50 6 42 
 8 8 4 527 0 0
 #27018
 lazar~
@@ -21045,7 +21800,7 @@ docile animated dead you have encountered here so far. It HATES you.
 ~
 97 32808 -1000 A 2
 15 5 5 30 2d6+6
--1 250 6 10
+-1 250 12 10
 8 8 3 22 768 0
 #27019
 human magician~
@@ -21057,7 +21812,7 @@ at the absolute most.
 ~
 67 0 500 N
 4 18 10 0 1d4+0
--1 60 2 1
+-1 60 3 1
 8 8 1
 #27020
 zombie farmer~
@@ -21083,7 +21838,7 @@ Ah, it seems to recognize you...you must be the enemy!
 ~
 96 40 0 N
 8 12 4 16 1d8+2
--1 200 1 10
+-1 200 3 10
 8 8 3 32 768 0
 #27022
 zombie sentry~
@@ -21094,7 +21849,7 @@ It could alertly watch the horizon for days and not notice you standing here.
 ~
 2 0 0 A 2
 12 8 4 12 1d8+0
--1 100 1 10
+-1 100 3 10
 8 8 3 32 768 0 
 #27023
 zombie guard~
@@ -21105,7 +21860,7 @@ It seems quite animated, really.
 ~
 34 8 0 N
 10 10 4 10 1d8+0
--1 500 2 10
+-1 500 3 10
 8 8 3 32 768 0
 #27025
 samah~
@@ -21328,7 +22083,7 @@ behind enemy lines and kill as many Roos as possible.
 100 524328 300 A 2
 20 0 -1 100 3d3+7
 -1 500 2 35
-8 8 4 16 256 0
+8 8 4 0 256 0
 #27416
 aborigine abor chief~
 The Aborigine Chief~

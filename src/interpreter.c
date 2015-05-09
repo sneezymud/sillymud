@@ -11,16 +11,14 @@
 
 #include "protos.h"
 
-
-
-
 #define NOT !
 #define AND &&
 #define OR ||
 
 #define STATE(d) ((d)->connected)
-#define MAX_CMD_LIST 300
+#define MAX_CMD_LIST 400
 
+extern struct RaceChoices RaceList[RACE_LIST_SIZE];
 extern const struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
 extern char motd[MAX_STRING_LENGTH];
 extern char wmotd[MAX_STRING_LENGTH];
@@ -43,10 +41,10 @@ int WizLock;
 int Silence = 0;
 int plr_tick_count=0;
 
-
+#if 0
 int command_search( char *arg, int len, struct command_info *cmd_info, 
   char **list);
-
+#endif
 
 void do_cset(struct char_data *ch, char *arg, int cmd);
 
@@ -718,7 +716,11 @@ void assign_command_pointers ()
   AddCommand("pull",do_not_here,224,POSITION_STANDING,1);
   AddCommand("stealth",do_stealth,225,POSITION_DEAD,LOW_IMMORTAL);
   AddCommand("edit",do_edit,226,POSITION_DEAD,CREATOR);
+#ifdef TEST_SERVER
+  AddCommand("@",do_set,227,POSITION_DEAD,CREATOR);
+#else
   AddCommand("@",do_set,227,POSITION_DEAD,SILLYLORD);
+#endif
   AddCommand("rsave",do_rsave,228,POSITION_DEAD,CREATOR);
   AddCommand("rload",do_rload,229,POSITION_DEAD,CREATOR);
   AddCommand("track",do_track,230,POSITION_DEAD,1);
@@ -782,15 +784,34 @@ void assign_command_pointers ()
   AddCommand("disguise",do_disguise,286, POSITION_STANDING, 1);
   AddCommand("climb",do_climb,287, POSITION_STANDING,1);
   AddCommand("beep",do_beep,288, POSITION_DEAD, 51);
-  AddCommand("bite",do_action,289, POSITION_RESTING, 1);
+  AddCommand("bite",do_bite,289, POSITION_RESTING, 1);
   AddCommand("redit", do_redit, 290, POSITION_SLEEPING, CREATOR);
   AddCommand("display", do_display, 291, POSITION_SLEEPING, 1);
   AddCommand("resize", do_resize, 292, POSITION_SLEEPING, 1);
   AddCommand("\"", do_commune, 293, POSITION_SLEEPING, LOW_IMMORTAL);
   AddCommand("#", do_cset, 294, POSITION_DEAD, 59);
-
+  AddCommand("inset", do_inset, 295, POSITION_RESTING, 1);
+  AddCommand("showexits", do_show_exits, 296, POSITION_DEAD, 1);
+  AddCommand("split", do_split, 297, POSITION_RESTING, 1);
+  AddCommand("report", do_report, 298, POSITION_RESTING, 1);
+  AddCommand("gname", do_gname, 299, POSITION_RESTING, 1);
+#if STUPID
+ /* this command is a little flawed.  Heavy usage generates obscenely 
+    long linked lists in the "donation room" which cause the mud to 
+    lag a horrible death. */
+  AddCommand("donate", do_donate, 300, POSITION_STANDING, 1);
+#endif
+  AddCommand("auto",do_auto,301,POSITION_RESTING,1);
+  AddCommand("brew", do_makepotion, 302, POSITION_RESTING, 1);
+  AddCommand("changeform", do_changeform, 303, POSITION_STANDING, 1);
+  AddCommand("walk", do_walk, 301, POSITION_STANDING, 1);
+  AddCommand("fly", do_fly, 302, POSITION_STANDING, 1);
+  AddCommand("berserk", do_berserk, 303, POSITION_FIGHTING,1);
+  AddCommand("palm", do_palm, 304, POSITION_STANDING, 1);
+  AddCommand("peek", do_peek, 305, POSITION_STANDING, 1);
+  AddCommand("prompt", do_prompt, 306, POSITION_RESTING, 1);
 #if PLAYER_AUTH
-  AddCommand("auth", do_auth, 299, POSITION_SLEEPING, LOW_IMMORTAL);
+  AddCommand("auth", do_auth, 399, POSITION_SLEEPING, LOW_IMMORTAL);
 #endif
 }
 
@@ -841,15 +862,21 @@ int _parse_name(char *arg, char *name)
 /* deal with newcomers and other non-playing sockets */
 void nanny(struct descriptor_data *d, char *arg)
 {
-  char buf[100];
-  int player_i, count=0, oops=FALSE, index=0;
+
+  char buf[100],*help_thing;
+  int player_i, count=0, oops=FALSE, index=0, number, choice;
+  int i; int junk[6];			/* generic counter */
   char tmp_name[20];
+  bool koshername;
   struct char_file_u tmp_store;
   struct char_data *tmp_ch;
   struct descriptor_data *k;
   extern struct descriptor_data *descriptor_list;
   extern int WizLock;
   extern int plr_tick_count;
+  extern int top_of_mobt;
+  extern int RacialMax[][6];
+  extern const char *RaceName[];
   
   void do_look(struct char_data *ch, char *argument, int cmd);
   void load_char_objs(struct char_data *ch);
@@ -858,70 +885,232 @@ void nanny(struct descriptor_data *d, char *arg)
   write(d->descriptor, echo_on, 6);
   
   switch (STATE(d))	{
+
+  case CON_ALIGN:
+
+    for (; isspace(*arg); arg++)  ;
     
+    if(!arg) {
+      if(!(GET_ALIGNMENT(d->character))) 
+	GET_ALIGNMENT(d->character) = get_racial_alignment(d);
+      if(!(GET_ALIGNMENT(d->character))) {
+	SEND_TO_Q("Shall you start with Good, Neutral, or Evil (G/N/E) tendencies? ", d);
+	STATE(d) = CON_ALIGN;
+	break;
+      } else {  /* We aren't neutral anyway, skip this part */
+	if (GET_RACE(d->character) == RACE_VEGMAN) {
+	  SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	  d->character->player.sex = SEX_NEUTRAL;
+	  SEND_TO_Q(STATQ_MESSG,d);
+	  STATE(d) = CON_STAT_LIST;
+	  return;
+	}
+        SEND_TO_Q("What is your gender, male or female (M/F)?",d);
+	STATE(d) = CON_QSEX;
+	break;
+      }
+    } else if(!(GET_ALIGNMENT(d->character))) {
+      if(!strcmp(arg,"G") || !strcmp(arg,"g")) {
+	GET_ALIGNMENT(d->character) = 500;
+	SEND_TO_Q("You will enter the realms a champion of goodness.",d);
+	if (GET_RACE(d->character) == RACE_VEGMAN) {
+	  SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	  d->character->player.sex = SEX_NEUTRAL;
+	  SEND_TO_Q(STATQ_MESSG,d);
+	  STATE(d) = CON_STAT_LIST;
+	  return;
+	}
+	SEND_TO_Q("\n\r\n\rWhat is your gender, male or female (M/F)?",d);
+	STATE(d) = CON_QSEX;
+	break;
+      } else if(!strcmp(arg,"N") || !strcmp(arg,"n")) {
+	GET_ALIGNMENT(d->character) = 0;
+	SEND_TO_Q("You will enter the realms unbiased.",d);
+	if (GET_RACE(d->character) == RACE_VEGMAN) {
+	  SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	  d->character->player.sex = SEX_NEUTRAL;
+	  SEND_TO_Q(STATQ_MESSG,d);
+	  STATE(d) = CON_STAT_LIST;
+	  return;
+	}
+	SEND_TO_Q("\n\r\n\rWhat is your gender, male or female (M/F)?",d);
+        STATE(d) = CON_QSEX;
+	break;
+      } else if(!strcmp(arg,"E") || !strcmp(arg,"e")) {
+	GET_ALIGNMENT(d->character) = -500;
+	SEND_TO_Q("You will enter the realms as a minion of evil.",d);
+	if (GET_RACE(d->character) == RACE_VEGMAN) {
+	  SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	  d->character->player.sex = SEX_NEUTRAL;
+	  SEND_TO_Q(STATQ_MESSG,d);
+	  STATE(d) = CON_STAT_LIST;
+	  return;
+	}
+	SEND_TO_Q("\n\r\n\rWhat is your gender, male or female (M/F)?",d);
+        STATE(d) = CON_QSEX;
+	break;
+      } else {
+	SEND_TO_Q("Please enter (G/N/E) to describe your tendencies: ", d);
+	STATE(d) = CON_ALIGN;
+	break;
+      }
+    } else {			/* railroaded into an alignment */
+      if (GET_RACE(d->character) == RACE_VEGMAN) {
+	SEND_TO_Q(VT_HOMECLR,d);
+	SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	d->character->player.sex = SEX_NEUTRAL;
+	SEND_TO_Q(STATQ_MESSG,d);
+	STATE(d) = CON_STAT_LIST;
+	return;
+      }
+      SEND_TO_Q("What is your gender, male or female (M/F)?",d);
+      STATE(d) = CON_QSEX;
+      break;
+    }
+    break;
   case CON_QRACE:
     
     for (; isspace(*arg); arg++)  ;
     if (!*arg) {
-      SEND_TO_Q("Choose A Race:\n\r", d);
-      SEND_TO_Q("D)warf, E)lf, H)uman G)nome hA)lfling\n\r",d); 
-      SEND_TO_Q("For help, and level limits type '?'. \n\r RACE?:  ", d);
+      SEND_TO_Q(VT_HOMECLR,d);
+      SEND_TO_Q("Choose A Race:\n\r\n\r", d);
+      DisplayRaces(d);
       STATE(d) = CON_QRACE;
     } else {
-      switch (*arg)  	{
-      case 'd':
-      case 'D': {
-	GET_RACE(d->character) = RACE_DWARF;
-	SEND_TO_Q("What is your sex (M/F) ? ", d);
-	STATE(d) = CON_QSEX;
-	
-      } break;
-	
-      case 'e':
-      case 'E': {
-	GET_RACE(d->character) = RACE_ELVEN;
-	SEND_TO_Q("What is your sex (M/F) ? ", d);
-	STATE(d) = CON_QSEX;
-	
-      } break;
-	
-      case '?': {
-	SEND_TO_Q(RACEHELP, d);
-	SEND_TO_Q("Choose A Race:\n\r", d);
-	SEND_TO_Q("D)warf, E)lf, H)uman G)nome hA)lfling\n\r",d); 
-	SEND_TO_Q("For help type '?' - will also list level limits. \n\r RACE?:  ", d);
-	STATE(d) = CON_QRACE;
-      } break;
-	
-      case 'h':
-      case 'H': {
-	GET_RACE(d->character) = RACE_HUMAN;
-	SEND_TO_Q("What is your sex (M/F) ? ", d);
-	STATE(d) = CON_QSEX;
-	
-      } break;
+      if(is_number(arg)) {
+        choice = atoi(arg);
+      } else if(*arg == '?') {
+	/*         SEND_TO_Q(RACEHELP, d); */
+	arg++;			/* increment past the ? */
+	for (; isspace(*arg); arg++)  ;	/* eat more spaces if any */
+	if(is_number(arg)) {
+	  choice = atoi(arg);
+	  for(i=1;RaceList[i].what[0] != '\n';i++);
+	  if(choice < 1 || choice > i) {
+	    SEND_TO_Q("That is not a valid race number.\n\r", d);
+	    SEND_TO_Q("\n\r*** PRESS RETURN ***", d);
+	    STATE(d) = CON_QRACE;
+	    break;
+	  } else {
+	    extern struct help_index_element *help_index;
 
-      case 'g':
-      case 'G': {
-	GET_RACE(d->character) = RACE_GNOME;
-	SEND_TO_Q("What is your sex (M/F) ? ", d);
-	STATE(d) = CON_QSEX;
-      } break;
+	    if (!help_index) {
+	      SEND_TO_Q("Sorry, no help is currently available.\n\r",d);
+	      STATE(d) = CON_QRACE;
+	      break;
+	    }
+	    choice--;
+	    help_thing = RaceList[choice].what;
+	    GET_RACE(d->character) = RaceList[choice].race_num;	/* for CVC() */
+	    if(*help_thing == '*') /* infra types */
+	      ++help_thing;
+	    SEND_TO_Q(VT_HOMECLR,d);
+	    do_help(d->character,help_thing,0);
+	    SEND_TO_Q("Level limits (NVC = Not a Valid Class):\n\r",d);
+	    if(CheckValidClass(d, CLASS_MAGIC_USER)) {
+	      sprintf(buf,"Mage: %d  ",
+		      RacialMax[RaceList[choice].race_num][0]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Mage: NVC  ",d);
+	    
+	    if(CheckValidClass(d, CLASS_CLERIC)) {
+	      sprintf(buf,"Cleric: %d  ",
+		      RacialMax[RaceList[choice].race_num][1]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Cleric: NVC  ",d);
 
-      case 'a':
-      case 'A': {
-	GET_RACE(d->character) = RACE_HALFLING;
-	SEND_TO_Q("What is your sex (M/F) ? ", d);
-	STATE(d) = CON_QSEX;
-      } break;
+	    
+	    if(CheckValidClass(d, CLASS_WARRIOR)) {
+	      sprintf(buf,"Warrior: %d  ",
+		      RacialMax[RaceList[choice].race_num][2]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Warrior: NVC  ",d);
 
-	default : {
-	  SEND_TO_Q("\n\rThat's not a race.\n\rRACE?:", d);
+	    
+	    if(CheckValidClass(d, CLASS_THIEF)) {
+	      sprintf(buf,"Thief: %d  ",
+		      RacialMax[RaceList[choice].race_num][3]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Thief: NVC  ",d);
+	    
+	    if(CheckValidClass(d, CLASS_DRUID)) {
+	      sprintf(buf,"Druid: %d  ",
+		      RacialMax[RaceList[choice].race_num][4]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Druid: NVC  ",d);
+
+	    
+	    if(CheckValidClass(d, CLASS_MONK)) {
+	      sprintf(buf,"Monk: %d  ",
+		      RacialMax[RaceList[choice].race_num][0]);
+	      SEND_TO_Q(buf,d);
+	    } else 
+	      SEND_TO_Q("Monk: NVC  ",d);
+
+	    
+	    SEND_TO_Q("\n\r", d);
+	    SEND_TO_Q("\n\r*** PRESS RETURN ***", d);
+	    STATE(d) = CON_QRACE;
+	    break;
+	  }
+	} else {
+	  SEND_TO_Q("\n\rThat is not a valid choice!!", d);
+	  SEND_TO_Q("\n\r*** PRESS RETURN ***", d);
 	  STATE(d) = CON_QRACE;
-	} break;
-	
+	  break;
+	} 
+      } else {
+        SEND_TO_Q("\n\rThat is not a valid choice!!", d);
+        SEND_TO_Q("\n\r*** PRESS RETURN ***", d);
+	STATE(d) = CON_QRACE;
+        break;
+      }
+      /* assume a race number was chosen */
+      for(i=1;RaceList[i].what[0] != '\n';i++);
+      if(choice < 1 || choice > i) {
+	SEND_TO_Q("That is not a valid race number.\n\r", d);
+	SEND_TO_Q("\n\r*** PRESS RETURN ***", d);
+	STATE(d) = CON_QRACE;
+	break;
+      } else {
+	GET_RACE(d->character) = RaceList[choice-1].race_num;
+	if(CheckValidClass(d,CLASS_DRUID))
+	  SEND_TO_Q("Reminder:  Druids must be neutral.\n\r",d);
+	if(!get_racial_alignment(d)) { /* neutral chars can choose */
+	  SEND_TO_Q("Shall you start with Good, Neutral, or Evil (G/N/E) tendencies? ", d);
+	  STATE(d) = CON_ALIGN;
+	  break;
+	} else {
+	  GET_ALIGNMENT(d->character) = get_racial_alignment(d);
+	  if(GET_ALIGNMENT(d->character) < 0)
+	    SEND_TO_Q("You are now a minion of evil.\n\r",d);
+	  else 
+	    SEND_TO_Q("You are now a champion of goodness.\n\r",d);
+	  if (GET_RACE(d->character) == RACE_VEGMAN) {
+	    SEND_TO_Q(VT_HOMECLR,d);
+	    SEND_TO_Q("\n\rVeggies have no gender.\n\r",d);
+	    d->character->player.sex = SEX_NEUTRAL;
+	    SEND_TO_Q(STATQ_MESSG,d);
+	    STATE(d) = CON_STAT_LIST;
+	    return;
+	  }
+	  SEND_TO_Q("What is your gender, male or female (M/F)?",d);
+	  STATE(d) = CON_QSEX;
+	  break;
+	  
+	}
       }
     }
+    
     break;
     
   case CON_NME:		/* wait for input of name	*/
@@ -947,11 +1136,12 @@ void nanny(struct descriptor_data *d, char *arg)
 
 
    NOT! :-)
-*/      
+*/ 
+        
      if(!strncmp(d->host,"128.197.152.10",14)) {
 	if (!strcmp(tmp_name,"Kitten") || !strcmp(tmp_name,"SexKitten")
 	|| !strcmp(tmp_name,"Rugrat")) {
-	  SEND_TO_Q("You're a special exception.\n\r", d);
+	  SEND_TO_Q("You are a special exception.\n\r", d);
 	} else {
 	  SEND_TO_Q("Sorry, this site is temporarily banned.\n\r", d);
 	  close_socket(d);
@@ -985,7 +1175,7 @@ void nanny(struct descriptor_data *d, char *arg)
 	 */
 	/*
 	  if (tmp_store.max_corpse > 3) {
-	  SEND_TO_Q("Too many corpses in game, can't connect\n\r", d);
+	  SEND_TO_Q("Too many corpses in game, can not connect\n\r", d);
 	  sprintf(buf, "%s: too many corpses.",tmp_name);
 	  log(buf);
 	  STATE(d) = CON_WIZLOCK;
@@ -999,6 +1189,20 @@ void nanny(struct descriptor_data *d, char *arg)
 	write(d->descriptor, echo_off, 4); 
 	STATE(d) = CON_PWDNRM;
       } else {
+	koshername = TRUE;
+
+	for(number = 0; number<=top_of_mobt; number++) {
+	  if(isname(tmp_name, mob_index[number].name)) {
+	    koshername = FALSE;
+	    break;
+	  }
+	}
+	if(koshername == FALSE) {
+	  SEND_TO_Q("You have chosen a name in use by a monster.\n\r", d);
+	  SEND_TO_Q("For your own safety, choose another name: ", d);
+	  return;
+	}
+        
 	/* player unknown gotta make a new */
 	if (!WizLock) {
 	  CREATE(GET_NAME(d->character), char, 
@@ -1048,7 +1252,7 @@ void nanny(struct descriptor_data *d, char *arg)
     if (!*arg)
       close_socket(d);
     else  {
-      if (strncmp(crypt(arg, d->pwd), d->pwd, 10)) 	{
+      if (strncmp(crypt(arg, d->character->player.name), d->pwd, 10)) 	{
 	SEND_TO_Q("Wrong password.\n\r", d);
 	close_socket(d);
 	return;
@@ -1140,10 +1344,10 @@ void nanny(struct descriptor_data *d, char *arg)
     /* skip whitespaces */
     for (; isspace(*arg); arg++);
     
-    if (strncmp(crypt(arg, d->pwd), d->pwd, 10)) {
+    if (strncmp(crypt(arg, d->character->player.name), d->pwd, 10)) {
       write(d->descriptor, echo_on, 6);
       
-      SEND_TO_Q("Passwords don't match.\n\r", d);
+      SEND_TO_Q("Passwords do not match.\n\r", d);
       SEND_TO_Q("Retype password: ", d);
       STATE(d) = CON_PWDGET;
       write(d->descriptor, echo_off, 4);
@@ -1151,15 +1355,14 @@ void nanny(struct descriptor_data *d, char *arg)
     } else {
       write(d->descriptor, echo_on, 6);
       
-      SEND_TO_Q("Choose A Race:\n\r", d);
-      SEND_TO_Q("D)warf, E)lf, H)uman hA)lfling G)nome\n\r",d); 
-      SEND_TO_Q("For help type '?'- will list level limits. \n\r RACE:  ", d);
+      SEND_TO_Q("Choose A Race:\n\r\n\r", d);
+      DisplayRaces(d);
       STATE(d) = CON_QRACE;
     }
     break;
   
   case CON_QSEX:		/* query sex of new user	*/
-    /* skip whitespaces */
+    
     for (; isspace(*arg); arg++);
     switch (*arg)
       {
@@ -1176,70 +1379,84 @@ void nanny(struct descriptor_data *d, char *arg)
 	break;
 	
       default:
-	SEND_TO_Q("That's not a sex..\n\r", d);
-	SEND_TO_Q("What IS your sex? :", d);
+	SEND_TO_Q("That is not a valid gender type!\n\r", d);
+        SEND_TO_Q("What IS your gender, male or female (M/F)?",d);
 	return;
 	break;
       }
-
-    SEND_TO_Q("\n\rSelect your stat priority, by listing them from highest to lowest\n\r",d);    
-    SEND_TO_Q("Seperated by spaces.. don't duplicate\n\r", d);
-    SEND_TO_Q("for example: 'S I W D Co Ch' would put the highest roll in Strength, \n\r",d);
-    SEND_TO_Q("next in intelligence, Wisdom, Dex, Con, and lastly charisma\n\r",d);
-    SEND_TO_Q("Your choices? ",d);
+    SEND_TO_Q(VT_HOMECLR,d);
+    SEND_TO_Q(STATQ_MESSG,d);
     STATE(d) = CON_STAT_LIST;
     break;
   
   case CON_STAT_LIST:
     /* skip whitespaces */
-    for (; isspace(*arg); arg++);
 
     index = 0;
+    for(i=0;i<6;i++) junk[i]=0;
+
     while (*arg && index < MAX_STAT) {
-      if (*arg == 'S' || *arg == 's') 
-	d->stat[index++] = 's';
-      if (*arg == 'I' || *arg == 'i')
-	d->stat[index++] = 'i';
-      if (*arg == 'W' || *arg == 'w')
-	d->stat[index++] = 'w';
-      if (*arg == 'D' || *arg == 'd')
-	d->stat[index++] = 'd';
-      if (*arg == 'C' || *arg == 'c') {
+      for (; isspace(*arg); arg++);
+      if (*arg == 'S' || *arg == 's')  {
+	if(!junk[0])
+	  d->stat[index++] = 's';
+	junk[0]++;
+      } else if (*arg == 'I' || *arg == 'i') {
+	if(!junk[1])
+	  d->stat[index++] = 'i';
+	junk[1]++;
+      } else if (*arg == 'W' || *arg == 'w') {
+	if(!junk[2])
+	  d->stat[index++] = 'w';
+	junk[2]++;
+      } else if (*arg == 'D' || *arg == 'd') {
+	if(!junk[3])
+	  d->stat[index++] = 'd';
+	junk[3]++;
+      } else if (*arg == 'C' || *arg == 'c') {
 	arg++;
 	if (*arg == 'O' || *arg == 'o') {
-	  d->stat[index++] = 'o';
+	  if(!junk[4])
+	    d->stat[index++] = 'o';
+	  junk[4]++;
 	} else if (*arg == 'H' || *arg == 'h') {
-	  d->stat[index++] = 'h';
+	  if(!junk[5])
+	    d->stat[index++] = 'h';
+	  junk[5]++;
 	} else {
+	  SEND_TO_Q(VT_HOMECLR,d);
 	  SEND_TO_Q("That was an invalid choice.\n\r",d);
-	  SEND_TO_Q("\n\rSelect your stat priority, by listing them from highest to lowest\n\r",d);    
-	  SEND_TO_Q("Seperated by spaces.  don't duplicate letters \n\r", d);
-	  SEND_TO_Q("for example: 'S I W D Co Ch' would put the highest roll in Strength, \n\r",d);
-	  SEND_TO_Q("next in intelligence, Wisdom, Dex, Con and lastly Charisma\n\r",d);
-	  SEND_TO_Q("Your choice? ",d);
+	  SEND_TO_Q(STATQ_MESSG,d);
 	  STATE(d) = CON_STAT_LIST;
 	  break;
 	}
+      } else if(*arg == '?') {
+	SEND_TO_Q(VT_HOMECLR,d);
+	SEND_TO_Q(STATHELP,d);
+	SEND_TO_Q(STATQ_MESSG,d);
+	return;
+	break;
+      } else {
+	SEND_TO_Q(VT_HOMECLR,d);
+	sprintf(buf,"Hey, what kinda statistic does an %c represent?\n\r",
+		*arg);
+	SEND_TO_Q(STATQ_MESSG,d);
+	STATE(d) = CON_STAT_LIST;
+	return;
+	break;
       }
       arg++;      
     }
     if (index < MAX_STAT) {
-      SEND_TO_Q("You did not enter enough legal stats\n\r", d);
-      SEND_TO_Q("That was an invalid choice.\n\r",d);
-      SEND_TO_Q("\n\rSelect your stat priority, by listing them from highest to lowest\n\r",d);    
-      SEND_TO_Q("Seperated by spaces, don't duplicate letters \n\r", d);
-      SEND_TO_Q("for example: 'S I W D Co Ch' would put the highest roll in Strength, \n\r",d);
-      SEND_TO_Q("next in intelligence, Wisdom, Dex, Con and lastly Charisma\n\r",d);
-      SEND_TO_Q("Your choice? ",d);
+      SEND_TO_Q(VT_HOMECLR,d);
+      SEND_TO_Q("You did not enter enough legal statistics.\n\r", d);
+      SEND_TO_Q(STATQ_MESSG,d);
       STATE(d) = CON_STAT_LIST;
       break;
     } else {
       SEND_TO_Q("Ok.. all chosen.\n\r", d);
-      SEND_TO_Q("\n\rSelect a class:\n\r C)leric, T)hief,  W)arrior, M)agic-user\n\r", d);
-      SEND_TO_Q(" D)ruid, monK)\n\r", d);
-      SEND_TO_Q("\n\rEnter M/W or M/C/T, T/D (etc) to be multi-classed", d);
-      SEND_TO_Q(" Enter ? for help. Monks can only be single classed\n\r", d);
-      SEND_TO_Q("\n\rClass :", d);
+      SEND_TO_Q("\n\r",d);
+      DisplayRaceClasses(d);
 #if PLAYER_AUTH
       /* set the AUTH flags */
       /* (3 chances) */
@@ -1248,12 +1465,8 @@ void nanny(struct descriptor_data *d, char *arg)
       STATE(d) = CON_QCLASS;
       break;
     }
+    DisplayRaceClasses(d);
     
-    SEND_TO_Q("\n\rSelect a class:\n\rC)leric, T)hief, W)arrior, M)age\n\r",d);
-    SEND_TO_Q(" D)ruid, monK)\n\r", d);
-    SEND_TO_Q("\n\rEnter M/W or M/C/T, T/D (etc) to be multi-classed", d);
-    SEND_TO_Q(" Enter ? for help.  Monks can only be single classed\n\r", d);
-    SEND_TO_Q("\n\rClass :", d);
 #if PLAYER_AUTH
     /* set the AUTH flags */
     /* (3 chances) */
@@ -1269,63 +1482,108 @@ void nanny(struct descriptor_data *d, char *arg)
     count=0;
     oops=FALSE;
     for (; *arg && count < 3 && !oops; *arg++) {
+      if(count && GET_RACE(d->character) == RACE_HUMANTWO)
+	break;
       switch (*arg)  	{
       case 'm':
       case 'M': {
-	if (!IS_SET(d->character->player.class, CLASS_MAGIC_USER))
-  	   d->character->player.class += CLASS_MAGIC_USER;
-	count++;
-	STATE(d) = CON_RMOTD;
+	if(CheckValidClass(d,CLASS_MAGIC_USER)) {
+	  if (!IS_SET(d->character->player.class, CLASS_MAGIC_USER))
+	    d->character->player.class += CLASS_MAGIC_USER;
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+	  SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Your race may not be a magic user.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	}
 	break;
       }
       case 'c':
       case 'C': {	
-	if (!IS_SET(d->character->player.class, CLASS_CLERIC))
-           d->character->player.class += CLASS_CLERIC;
-	count++;
-	STATE(d) = CON_RMOTD;
+	if(CheckValidClass(d,CLASS_CLERIC)) {
+	  if (!IS_SET(d->character->player.class, CLASS_CLERIC))
+	    d->character->player.class += CLASS_CLERIC;
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+          SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Your race may not be a cleric.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	   
+	}
 	break;
       }
-
       case 'k':
       case 'K': {
-	if (!IS_SET(d->character->player.class, CLASS_MONK)) {
-/*
-  monks can only be single classed.
-*/
-           d->character->player.class = CLASS_MONK;
-	   count = 4;
-	 }
-	count++;
-	STATE(d) = CON_RMOTD;
+	if(CheckValidClass(d,CLASS_MONK)) {
+	  if (!IS_SET(d->character->player.class, CLASS_MONK)) {
+	    d->character->player.class = CLASS_MONK;
+	    count = 4;
+	  }
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+          SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Only humans may be monks.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	}
 	break;
       }
-
       case 'd':
       case 'D': {
-	if (!IS_SET(d->character->player.class, CLASS_DRUID))
-           d->character->player.class += CLASS_DRUID;
-	count++;
-	STATE(d) = CON_RMOTD;
+	if(CheckValidClass(d,CLASS_DRUID)) {
+	  if (!IS_SET(d->character->player.class, CLASS_DRUID))
+	    d->character->player.class += CLASS_DRUID;
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+          SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Your race may not be druids.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	}
 	break;
       }
       case 'f':
       case 'F':
       case 'w':
       case 'W': {
-	if (!IS_SET(d->character->player.class, CLASS_WARRIOR))
-  	   d->character->player.class += CLASS_WARRIOR;
-	count++;
-	STATE(d) = CON_RMOTD;
+	if(CheckValidClass(d,CLASS_WARRIOR)) {
+	  if (!IS_SET(d->character->player.class, CLASS_WARRIOR))
+	    d->character->player.class += CLASS_WARRIOR;
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+          SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Your race may not be warriors.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	}
 	break;
-
       }
       case 't':
       case 'T': {
-	if (!IS_SET(d->character->player.class, CLASS_THIEF))
+	if(CheckValidClass(d,CLASS_THIEF)) {
+	  if (!IS_SET(d->character->player.class, CLASS_THIEF))
 	    d->character->player.class += CLASS_THIEF;
-	count++;
-	STATE(d) = CON_RMOTD;
+	  count++;
+	  STATE(d) = CON_RMOTD;
+	} else {
+          SEND_TO_Q(VT_HOMECLR,d);
+	  SEND_TO_Q("Your race may not be a thieves.\n\r",d);
+	  DisplayRaceClasses(d);
+	  STATE(d) = CON_QCLASS;
+	  return;
+	}
 	break;
       }
       case '\\':    /* ignore these */
@@ -1339,16 +1597,14 @@ void nanny(struct descriptor_data *d, char *arg)
 	SEND_TO_Q("Magic-users:  Weak, puny, smart and very powerful at high levels.\n\r", d);
 	SEND_TO_Q("Thieves:      Quick, agile, sneaky.  Nobody trusts them.\n\r", d);
 	SEND_TO_Q("Monks:        Masters of the martial arts.  They can only be single classed\n\r",d);
-	SEND_TO_Q("\n\rSelect a class:\n\r C)leric, T)hief,  W)arrior, M)agic-user\n\r", d);
-	SEND_TO_Q(" D)ruid, monK)\n\r", d);
-	SEND_TO_Q("\n\rEnter M/W or M/C/T, T/D (etc) to be multi-classed", d);
-	SEND_TO_Q(" Enter ? for help.  Monks can only be single classed\n\r", d);
-	SEND_TO_Q("\n\rClass :", d);
+	SEND_TO_Q("\n\r",d);
+	DisplayRaceClasses(d);
 	STATE(d) = CON_QCLASS;
+	return;
 	break;
 
       default:
-	SEND_TO_Q("I don't recognize that class.\n\r", d);
+	SEND_TO_Q("I do not recognize that class.\n\r", d);
 	STATE(d) = CON_QCLASS;
 	oops = TRUE;
 	break;
@@ -1356,11 +1612,8 @@ void nanny(struct descriptor_data *d, char *arg)
     }
     if (count == 0) {
       SEND_TO_Q("You must choose at least one class!\n\r", d);
-      SEND_TO_Q("\n\rSelect a class:\n\r C)leric, T)hief,  W)arrior, M)agic-user\n\r", d);
-      SEND_TO_Q(" D)ruid, monK)\n\r", d);
-      SEND_TO_Q("\n\rEnter M/W or M/C/T, T/D (etc) to be multi-classed", d);
-      SEND_TO_Q(" Enter ? for help. Monks can only be single classed\n\r", d);
-      SEND_TO_Q("\n\rClass :", d);
+      SEND_TO_Q("\n\r",d);
+      DisplayRaceClasses(d);
       STATE(d) = CON_QCLASS;
       break;
     } else {
@@ -1765,6 +2018,39 @@ void nanny(struct descriptor_data *d, char *arg)
       SEND_TO_Q("Your choice? ",d);
       STATE(d) = CON_CITY_CHOICE;
       break;
+
+    case 'D': {
+      int i;
+      struct char_file_u ch_st;
+      FILE *char_file;
+
+      for (i = 0; i <= top_of_p_table; i++)	{
+	if (!str_cmp((player_table + i)->name, GET_NAME(d->character))) {
+	  free((player_table +i)->name);
+	  (player_table +i)->name = (char *)malloc(strlen("111111"));
+	  strcpy((player_table +i)->name, "111111");
+	  break;
+	}
+      }
+      /* get the structure from player_table[i].nr */
+      if (!(char_file = fopen(PLAYER_FILE, "r+"))) {
+	perror("Opening player file for updating. (interpreter.c, nanny)");
+	assert(0);
+      }
+      fseek(char_file, (long) (player_table[i].nr *
+				   sizeof(struct char_file_u)), 0);
+
+      /* read in the char, change the name, write back */
+      fread(&ch_st, sizeof(struct char_file_u), 1, char_file);
+      sprintf(ch_st.name,"111111");
+      fseek(char_file, (long) (player_table[i].nr *
+			       sizeof(struct char_file_u)), 0);
+      fwrite(&ch_st, sizeof(struct char_file_u), 1, char_file);
+      fclose(char_file);
+
+      close_socket(d);
+      break;
+    }
     
     default:
       SEND_TO_Q("Wrong option.\n\r", d);
@@ -1804,7 +2090,7 @@ void nanny(struct descriptor_data *d, char *arg)
     /* skip whitespaces */
     for (; isspace(*arg); arg++);
     
-    if (strncmp(crypt(arg, d->pwd), d->pwd, 10))      {
+    if (strncmp(crypt(arg, d->character->player.name), d->pwd, 10))      {
 	  write(d->descriptor, echo_on, 6);
 	  SEND_TO_Q("Passwords don't match.\n\r", d);
 	  SEND_TO_Q("Retype password: ", d);
@@ -1825,6 +2111,136 @@ void nanny(struct descriptor_data *d, char *arg)
     log("Nanny: illegal state of con'ness");
     abort();
     break;
+  }
+}
+
+char *class_selections[] = {
+  "(M)age",
+  "(C)leric",
+  "(W)arrior",
+  "(T)hief",
+  "(D)ruid",
+  "mon(K)",
+  "\n"
+};
+
+int CheckValidClass(struct descriptor_data *d, int class)
+{
+  extern int RacialMax[][6];
+  
+  if(GET_RACE(d->character) == RACE_HUMANTWO)
+    return(TRUE);
+
+  if(class == CLASS_MONK)
+    return(FALSE);
+
+  if(class == CLASS_DRUID) {
+    if(GET_RACE(d->character) == RACE_VEGMAN) /* NOT VEGGIE! */
+      return(TRUE);
+    else
+      return(FALSE);
+  }
+  
+  if(class == CLASS_MAGIC_USER && RacialMax[GET_RACE(d->character)][0] > 10)
+    return(TRUE);
+
+  if(class == CLASS_CLERIC && RacialMax[GET_RACE(d->character)][1] > 10)
+    return(TRUE);
+
+  if(class == CLASS_WARRIOR && RacialMax[GET_RACE(d->character)][2] > 10)
+    return(TRUE);
+
+  if(class == CLASS_THIEF && RacialMax[GET_RACE(d->character)][3] > 10)
+    return(TRUE);
+
+  return(FALSE);
+}
+
+void DisplayRaceClasses(struct descriptor_data *d)
+{
+  extern int RacialMax[][6];
+  int i;
+  bool bart=FALSE;
+  char buf[40];
+
+  int classes[MAX_CLASS];
+  classes[0] = CLASS_MAGIC_USER;
+  classes[1] = CLASS_CLERIC;
+  classes[2] = CLASS_WARRIOR;
+  classes[3] = CLASS_THIEF;
+  classes[4] = CLASS_DRUID;
+  classes[5] = CLASS_MONK;
+  
+  if(GET_RACE(d->character) == RACE_HUMAN ) {
+    SEND_TO_Q("Humans can only be single class characters.  They can choose",d);   SEND_TO_Q("\n\rfrom any class though.",d);
+  }
+
+  SEND_TO_Q("\n\rYou can choose from the following classes:\n\r",d);
+  SEND_TO_Q("The number in brackets is the maximum level your race can attain.\n\r", d);
+  for(i = bart = 0;i<MAX_CLASS;i++) {
+    if(CheckValidClass(d,classes[i])) {
+      if(bart)
+	SEND_TO_Q(", ",d);
+      sprintf(buf,"%s [%d]", class_selections[i], 
+	      RacialMax[GET_RACE(d->character)][i]);
+      SEND_TO_Q(buf,d);
+      bart = TRUE;
+    }
+  }
+  SEND_TO_Q("\n\r",d);
+  if(GET_RACE(d->character) != RACE_HUMAN) 
+    SEND_TO_Q("Enter M/W or M/C/T, T/M (etc) to be multi-classed.\n\r", d);
+  SEND_TO_Q("Enter ? for help.\n\rYour choice: ",d);
+}
+    
+void DisplayRaces(struct descriptor_data *d)
+{
+  int i;
+  char buf[80];
+
+  SEND_TO_Q("     ",d);
+  for(i=1;RaceList[i-1].what[0] != '\n'; i++) {
+    sprintf(buf,"%2d - %-15s ",i,RaceList[i-1].what);
+    if(!(i%3))
+      strcat(buf,"\n\r     ");
+    SEND_TO_Q(buf,d);
+  }
+  SEND_TO_Q("\n\rAn (*) signifies that this race has infravision.\n\r",d);
+  SEND_TO_Q("\n\rFor more help on a race, enter ?#, where # is the number",d);
+  SEND_TO_Q("\n\rof the race you want more information on.\n\rYour choice? ",d);
+}
+
+
+int get_racial_alignment(struct descriptor_data *d)
+{
+  switch(GET_RACE(d->character)) {
+
+    /* Good Aligned */
+  case RACE_SMURF:
+  case RACE_FAERIE:
+    return(500);
+    break;
+    
+  case RACE_DEMON:
+  case RACE_DEVIL:
+    return(-1000);
+    break;
+  case RACE_UNDEAD:
+  case RACE_LYCANTH:
+  case RACE_ORC:
+  case RACE_GOBLIN:
+  case RACE_TROLL:
+  case RACE_DROW:
+  case RACE_VAMPIRE:
+  case RACE_OGRE:
+  case RACE_SARTAN:
+  case RACE_ENFAN:
+  case RACE_MFLAYER:
+  case RACE_ROO:
+    return(-500);
+    break;
+  default:
+    return(0);
   }
 }
 

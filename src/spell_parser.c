@@ -9,27 +9,29 @@
 
 #include "protos.h"
 
+/* because I don't want to recompile */
+
 #define MANA_MU 1
 #define MANA_CL 1
 
 
 #define SPELLO(nr, beat, pos, mlev, clev, dlev, mana, tar, func, sf) { \
-      	       spell_info[nr].spell_pointer = (func);    \
-               spell_info[nr].beats = (beat);            \
-               spell_info[nr].minimum_position = (pos);  \
-               spell_info[nr].min_usesmana = (mana);     \
-               spell_info[nr].min_level_cleric = (clev); \
-               spell_info[nr].min_level_magic = (mlev);  \
-	       spell_info[nr].min_level_druid = (dlev);  \
-               spell_info[nr].targets = (tar);           \
-	       spell_info[nr].spellfail = (sf);          \
+      	       skill_info[nr].spell_pointer = (func);    \
+               skill_info[nr].beats = (beat);            \
+               skill_info[nr].minimum_position = (pos);  \
+	       skill_info[nr].min_usesmana = (mana);     \
+               skill_info[nr].min_level[MIN_LEVEL_CLERIC] = (clev); \
+               skill_info[nr].min_level[MIN_LEVEL_MAGIC] = (mlev);  \
+               skill_info[nr].min_level[MIN_LEVEL_DRUID] = (dlev);  \
+               skill_info[nr].targets = (tar);           \
+	       skill_info[nr].spellfail = (sf);          \
        	}
 
 
 
 /* 100 is the MAX_MANA for a character */
 #define USE_MANA(ch, sn) \
-  MAX((int)spell_info[sn].min_usesmana, 100/MAX(2,(2+GET_LEVEL(ch, BestMagicClass(ch))-SPELL_LEVEL(ch,sn))))
+  MAX((int)skill_info[sn].min_usesmana, 100/MAX(2,(2+GET_LEVEL(ch, BestMagicClass(ch))-SPELL_LEVEL(ch,sn))))
 
 #define SPELL_MEMORIZED 2
 
@@ -46,339 +48,25 @@ extern char *spell_wear_off_room_msg[];
 extern char *spell_wear_off_soon_room_msg[];
 extern struct obj_data *object_list;
 extern struct index_data *obj_index;
+extern struct con_app_type con_app[];
+extern struct weather_data weather_info;
+extern int sf_where[];
 
 /*  internal procedures */
 void SpellWearOffSoon(int s, struct char_data *ch);
 void check_drowning( struct char_data *ch);
 int check_falling( struct char_data *ch);
+int IsIntrinsic(struct char_data *ch, int spl);
+int CastIntrinsic(struct char_data *ch, int spl);
 void check_decharm( struct char_data *ch);
 void SpellWearOff(int s, struct char_data *ch);
 
-
-
-/* Extern procedures */
-
-char *strdup(char *str);
-
-void NailThisSucker( struct char_data *ch);
-void do_look( struct char_data *ch, char *arg, int cmd);
-void DamageAllStuff( struct char_data *ch, int dam_type);
-
-
-/* Extern procedures */
-void cast_animate_dead( byte level, struct char_data *ch, char *arg, int type,
-		       struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_conjure_elemental( byte level, struct char_data *ch, char *arg, 
-			    int type, struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_acid_blast( byte level, struct char_data *ch, char *arg, int type,
-		     struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_armor( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_teleport( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_bless( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_blindness( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_burning_hands( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_call_lightning( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_charm_person( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_charm_monster( byte level, struct char_data *ch, char *arg, int si, 
-			struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cacaodemon( byte level, struct char_data *ch, char *arg, int si, 
-			struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_chill_touch( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_shocking_grasp( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_clone( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_colour_spray( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_control_weather( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_create_food( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_create_water( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cure_blind( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cure_critic( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cause_critic( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cure_light( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cause_light( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_curse( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cont_light( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, 
-		     struct obj_data *tar_obj);
-void cast_calm( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, 
-	       struct obj_data *tar_obj);
-void cast_detect_evil( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_detect_invisibility( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_detect_magic( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_detect_poison( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_dispel_evil( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_dispel_good( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_dispel_magic( byte level, struct char_data *ch, char *arg, int type,
-		       struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_earthquake( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_enchant_weapon( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_energy_drain( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_fear( byte level, struct char_data *ch, char *arg, int type,
-	       struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_fireball( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_flamestrike( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_flying( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_flying( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_harm( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_heal( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_infravision( byte level, struct char_data *ch, char *arg, int type, struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_invisibility( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cone_of_cold( byte level, struct char_data *ch, char *arg, int type,
-		       struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_ice_storm( byte level, struct char_data *ch, char *arg, int type,
-		    struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_knock( byte level, struct char_data *ch, char *arg, int type,
-		struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_know_alignment(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_true_seeing(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_minor_creation(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_faerie_fire(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_faerie_fog(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_heroes_feast(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_fly_group(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_web(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_minor_track(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_major_track(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_mana(byte level, struct char_data *ch, char *arg, int type,
-			 struct char_data *tar_ch, struct obj_data *tar_obj );
-
-
-
-void cast_lightning_bolt( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_light( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, 
-		struct obj_data *tar_obj);
-void cast_locate_object( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_magic_missile( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_mon_sum1( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum2( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum3( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum4( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum5( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum6( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mon_sum7( byte level, struct char_data *ch, char *arg, int si, 
-		   struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_meteor_swarm( byte level, struct char_data *ch, char *arg, int si, 
-		       struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_poly_self( byte level, struct char_data *ch, char *arg, int si, 
-		 struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_change_form( byte level, struct char_data *ch, char *arg, int si, 
-		 struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_poison( byte level, struct char_data *ch, char *arg, int si, 
-		 struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_protection_from_evil( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_remove_curse( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_sanctuary( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_sleep( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_strength( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_stone_skin( byte level, struct char_data *ch, char *arg, int si, 
-		     struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_summon( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_ventriloquate( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_word_of_recall( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_water_breath( byte level, struct char_data *ch, char *arg, int si, 
-		       struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_remove_poison( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_remove_paralysis( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_weakness( byte level, struct char_data *ch, char *arg, int type,
-		   struct char_data *tar_ch, struct obj_data *tar_obj );
-void cast_sense_life( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_identify( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_paralyze( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_dragon_breath( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *potion);
-void cast_fireshield( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cure_serious( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_cause_serious( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_refresh( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_second_wind( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_shield( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_turn( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_succor( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_astral_walk( byte level, struct char_data *ch, char *arg, int si, struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_resurrection( byte level, struct char_data *ch, char *arg, int si,
-struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-void cast_tree_travel( byte level, struct char_data *ch, char *arg, int type,
-                       struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_haste( byte level, struct char_data *ch, char *arg, int type,
-                       struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_slow( byte level, struct char_data *ch, char *arg, int type,
-                       struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_speak_with_plants( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-void cast_transport_via_plant( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-
-
-void cast_changestaff( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_holyword( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_unholyword( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_aid( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_golem( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_familiar( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_pword_kill( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_pword_blind( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_command( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_scare( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_chain_lightn( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_reincarnate( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_feeblemind( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_shillelagh( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_goodberry( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_flame_blade( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_animal_growth( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_insect_growth( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_creeping_death( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_commune( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-void cast_animal_summon_1( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_animal_summon_2( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_animal_summon_3( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_fire_servant( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_earth_servant( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_water_servant( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_wind_servant( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-void cast_charm_veggie( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_veggie_growth( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_tree( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_animate_rock( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_travelling( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_animal_friendship( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_invis_to_animals( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_slow_poison( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_entangle( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_snare( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_gust_of_wind( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_barkskin( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_sunray( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_heat_stuff( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_warp_weapon( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_find_traps( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_firestorm( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_dust_devil( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_know_monster( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-void cast_silence( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-void cast_sending( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_teleport_wo_error( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_portal( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_dragon_ride( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-void cast_mount( byte level, struct char_data *ch, char *arg, 
-		int type,  struct char_data *tar_ch, struct obj_data *tar_obj);
-
-
-
-
-
-
-
-struct spell_info_type spell_info[MAX_SPL_LIST];
+/* struct spell_info_type spell_info[MAX_SPL_LIST]; */
+struct skill_data skill_info[MAX_SPL_LIST];
 
 char *spells[]=
 {
-   "armor",               /* 1 */
+   "spirit armor",               /* 1 */
    "teleport",
    "bless",
    "blindness",
@@ -422,8 +110,6 @@ char *spells[]=
    "word of recall",
    "remove poison",
    "sense life",         /* 44 */
-
-   /* RESERVED SKILLS */
    "sneak",        /* 45 */
    "hide",
    "steal",
@@ -432,8 +118,6 @@ char *spells[]=
    "kick",         /* 50 */
    "bash",
    "rescue",
-   /* NON-CASTABLE SPELLS (Scrolls/potions/wands/staffs) */
-
    "identify",           /* 53 */
    "infravision",        
    "cause light",        
@@ -494,14 +178,14 @@ char *spells[]=
    "find familiar",	/* 110 */
    "changestaff",
    "holy word",
-   "unholy word",
+   "enchant armor",
    "power word kill",
    "power word blind",
    "chain lightning",
    "scare",
    "aid",
    "command",
-   "change form",	/* 120 */
+   "****",	/* 120 */
    "feeblemind",
    "shillelagh",
    "goodberry",
@@ -548,9 +232,9 @@ char *spells[]=
    "portal",
    "dragon ride",
    "mount",
+   "thorn spray",
    "****",
-   "****",
-   "****",
+   "dual wield",
    "first aid",	/* 170 */
    "sign language",
    "riding",
@@ -562,11 +246,11 @@ char *spells[]=
    "safe fall",
    "feign death",
    "hunt",	/* 180 */
-   "find trap",
+   "locate trap",
    "spring leap",
    "disarm",
    "read magic",
-   "evauluate",
+   "evaluate",
    "spy",
    "doorbash",
    "swim",
@@ -578,22 +262,33 @@ char *spells[]=
    "people lore",
    "giant lore",
    "other lore",
-   "",
-   "",
-   "",
-   "",	/* 200 */
+   "disguise",
+   "climb",
+   "inset",
+   "****",			/* 200 */
    "fire breath",
    "gas breath",
    "frost breath",
    "acid breath",
    "lightning breath",
-   "",
-   "",
-   "",
-   "",
-   "",	/* 210 */
-   "",
-   "",    /*  (180) */
+   "resist hold",
+   "resist electricity",
+   "resist cold",
+   "resist drain",
+   "resist poison",		/* 210 */
+   "resist acid",
+   "resist fire",
+   "resist energy",
+   "resist pierce",
+   "resist slash",
+   "resist blunt",		/* 216 */
+   "brewing", 
+   "sun blindness",		/* 218 */
+   "berserk",
+   "palm",
+   "peek",			/* 221 */
+   "insect lore",
+   "avian lore",		/* 223 */
    "\n"
 };
 
@@ -649,18 +344,19 @@ const byte saving_throws[MAX_CLASS][5][ABS_MAX_LVL] = {
 };
 
 
-void spello(int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev, ubyte mana,
-	    sh_int tar, void *func, sh_int sf)
+void spello(int nr, byte beat, byte pos, byte mlev, byte clev, byte dlev, 
+  ubyte mana, sh_int tar, void *func, sh_int sf)
 {
-  spell_info[nr].spell_pointer = func;
-  spell_info[nr].beats = beat;
-  spell_info[nr].minimum_position = pos;
-  spell_info[nr].min_usesmana = mana;
-  spell_info[nr].min_level_cleric = clev;
-  spell_info[nr].min_level_magic = mlev;
-  spell_info[nr].min_level_druid = dlev;
-  spell_info[nr].targets = tar;
-  spell_info[nr].spellfail = sf;
+  skill_info[nr].spell_pointer = func;
+  skill_info[nr].beats = beat;
+  skill_info[nr].minimum_position = pos;
+  skill_info[nr].min_usesmana = mana;
+  skill_info[nr].min_level[MIN_LEVEL_CLERIC] = clev; /* Kiku's changes to */
+  skill_info[nr].min_level[MIN_LEVEL_MAGIC] = mlev;  /* the skill_data    */
+  skill_info[nr].min_level[MIN_LEVEL_DRUID] = dlev; 
+  skill_info[nr].targets = tar;
+  skill_info[nr].spellfail = sf;
+  skill_info[nr].percent = 60;
 }
 
 
@@ -671,26 +367,18 @@ int SPELL_LEVEL(struct char_data *ch, int sn)
   min = ABS_MAX_LVL;
 
   if (HasClass(ch, CLASS_MAGIC_USER))
-    min = MIN(min, spell_info[sn].min_level_magic);
+    min = MIN(min, skill_info[sn].min_level[MIN_LEVEL_MAGIC]);
+
 
   if (HasClass(ch, CLASS_CLERIC))
-    min = MIN(min, spell_info[sn].min_level_cleric);
+    min = MIN(min, skill_info[sn].min_level[MIN_LEVEL_CLERIC]);
+
 
   if (HasClass(ch, CLASS_DRUID))
-    min = MIN(min, spell_info[sn].min_level_druid);
+    min = MIN(min, skill_info[sn].min_level[MIN_LEVEL_DRUID]);
+
 
   return(min);
-
-#if 0
-  if ((HasClass(ch, CLASS_MAGIC_USER)) &&
-      (HasClass(ch, CLASS_CLERIC))) {
-   return(MIN(spell_info[sn].min_level_magic,spell_info[sn].min_level_cleric));
-  } else if (HasClass(ch, CLASS_MAGIC_USER)) {
-    return(spell_info[sn].min_level_magic);
-  } else {
-    return(spell_info[sn].min_level_cleric);
-  }
-#endif
 
 }
 
@@ -723,7 +411,7 @@ void affect_update( int pulse )
       if (af->duration >= 1) {
 	af->duration--;
 
-	if (af->duration == 1) {
+	if (af->duration == 1 && af->location != APPLY_INTRINSIC) {
 	  SpellWearOffSoon(af->type, i);
 	}
 
@@ -734,7 +422,9 @@ void affect_update( int pulse )
 	      (af->next->duration > 0)) {
 
 	    k = af->type;
-            SpellWearOff(k, i);
+
+	    if(af->location != APPLY_INTRINSIC)
+	      SpellWearOff(k, i);
 	    affect_remove(i, af);
 
 	  }
@@ -755,7 +445,16 @@ void affect_update( int pulse )
     if (!dead) {
 
       if (GET_POS(i) >= POSITION_STUNNED && (i->desc || !IS_PC(i))) {
-        GET_HIT(i)  = MIN(GET_HIT(i)  + hit_gain(i),  hit_limit(i));
+	/* note - because of poison, this one has to be in the 
+	   opposite order of the others.  The logic:
+
+	   hit_gain() modifies the characters hps if they are poisoned.
+	   but if they were in the opposite order,
+	   the total would be: hps before poison + gain.  But of course,
+           the hps after poison are lower, but No one cares!
+	   and that is why the gain is added to the hits, not vice versa
+	   */
+        GET_HIT(i)  = MIN(hit_gain(i) + GET_HIT(i),  hit_limit(i));
         GET_MANA(i) = MIN(GET_MANA(i) + mana_gain(i), mana_limit(i));
         GET_MOVE(i) = MIN(GET_MOVE(i) + move_gain(i), move_limit(i));
         if (GET_POS(i) == POSITION_STUNNED) 
@@ -773,22 +472,58 @@ void affect_update( int pulse )
         rp = real_roomp(i->in_room);
 	if (rp) {
 	  if (rp->sector_type == SECT_WATER_SWIM ||
-		   rp->sector_type == SECT_WATER_NOSWIM) {
-             gain_condition(i,FULL,-1);
-             gain_condition(i,DRUNK,-1);
-	   } else if (rp->sector_type == SECT_DESERT) {
-             gain_condition(i,FULL,-1);
-             gain_condition(i,DRUNK,-2);
-             gain_condition(i,THIRST,-2);
-	   } else if (rp->sector_type == SECT_MOUNTAIN ||
-		      rp->sector_type == SECT_HILLS) {
-             gain_condition(i,FULL,-2);
-             gain_condition(i,DRUNK,-2);
-	   } else {
-             gain_condition(i,FULL,-1);
-             gain_condition(i,DRUNK,-1);
-             gain_condition(i,THIRST,-1);
-	   }
+	      rp->sector_type == SECT_WATER_NOSWIM) {
+	    if(GET_RACE(i) == RACE_HALFLING) {
+	      gain_condition(i,FULL,-2);
+	      gain_condition(i,DRUNK,-2);
+	    } else if(GET_RACE(i) == RACE_OGRE) {
+	      gain_condition(i,FULL,-3);
+	      gain_condition(i,DRUNK,-2);
+	    } else {
+	      gain_condition(i,FULL,-1);
+	      gain_condition(i,DRUNK,-1);
+	    }
+	  } else if (rp->sector_type == SECT_DESERT) {
+	    if(GET_RACE(i) == RACE_HALFLING) {
+	      gain_condition(i,FULL,-2);
+	      gain_condition(i,DRUNK,-3);
+	      gain_condition(i,THIRST,-3);
+	    } else if(GET_RACE(i) == RACE_OGRE) {
+              gain_condition(i,FULL,-3);
+              gain_condition(i,DRUNK,-2);
+	      gain_condition(i,THIRST,-3);
+            } else {
+	      gain_condition(i,FULL,-1);
+	      gain_condition(i,DRUNK,-2);
+	      gain_condition(i,THIRST,-2);
+	    }
+	  } else if (rp->sector_type == SECT_MOUNTAIN ||
+		     rp->sector_type == SECT_HILLS) {
+            if(GET_RACE(i) == RACE_HALFLING) {
+	      gain_condition(i,FULL,-3);
+	      gain_condition(i,DRUNK,-3);
+	    } else if(GET_RACE(i) == RACE_OGRE) {
+              gain_condition(i,FULL,-3);
+              gain_condition(i,DRUNK,-3);
+            } else {
+	      gain_condition(i,FULL,-2);
+	      gain_condition(i,DRUNK,-2);
+	    }
+	  } else {
+            if(GET_RACE(i) == RACE_HALFLING) {
+	      gain_condition(i,FULL,-2);
+	      gain_condition(i,DRUNK,-2);
+	      gain_condition(i,THIRST,-2);
+	    } else if(GET_RACE(i) == RACE_OGRE) {
+              gain_condition(i,FULL,-3);
+              gain_condition(i,DRUNK,-3);
+              gain_condition(i,THIRST,-3);
+            } else {
+	      gain_condition(i,FULL,-1);
+	      gain_condition(i,DRUNK,-1);
+	      gain_condition(i,THIRST,-1);
+	    }
+	  }
 	}
         if (i->specials.tick == time_info.hours) {/* works for 24, change for
 						     anything else        */
@@ -869,7 +604,7 @@ void affect_update( int pulse )
 
 void clone_char(struct char_data *ch)
 {
-        send_to_char("Nosir, i don't like it\n\r", ch);
+  send_to_char("Nosir, i don't like it\n\r", ch);
 }
 
 
@@ -1013,7 +748,7 @@ struct syllable syls[] = {
   { "re", "candus" },
   { "son", "sabru" },
   { "se",  "or"},
-  { "tect", "infra" },
+  { "tect", "bulgo" },
   { "tri", "cula" },
   { "ven", "nofo" },
   {"a", "a"},{"b","b"},{"c","q"},{"d","e"},{"e","z"},{"f","y"},{"g","o"},
@@ -1031,28 +766,29 @@ say_spell( struct char_data *ch, int si )
   struct char_data *temp_char;
   extern struct syllable syls[];
   
-  
-  
   strcpy(buf, "");
   strcpy(splwd, spells[si-1]);
   
   offs = 0;
+  if(si == SPELL_FIREBALL && GET_SEX(ch) == SEX_MALE) {
+    sprintf(buf2,"$n utters the words, 'Hmm hmmhmm, heh heh, FIRE! FIRE! FIRE!'");
+    sprintf(buf, "$n utters the words, 'Hmm hmmhmm, heh heh, FIRE! FIRE! FIRE!'");
+  } else {
   
-  while(*(splwd+offs)) {
-    for(j=0; *(syls[j].org); j++)
-      if (strncmp(syls[j].org, splwd+offs, strlen(syls[j].org))==0) {
-	strcat(buf, syls[j].new);
-	if (strlen(syls[j].org))
-	  offs+=strlen(syls[j].org);
-	else
-	  ++offs;
-      }
+    while(*(splwd+offs)) {
+      for(j=0; *(syls[j].org); j++)
+	if (strncmp(syls[j].org, splwd+offs, strlen(syls[j].org))==0) {
+	  strcat(buf, syls[j].new);
+	  if (strlen(syls[j].org))
+	    offs+=strlen(syls[j].org);
+	  else
+	    ++offs;
+	}
+    }
+    
+    sprintf(buf2,"$n utters the words, '%s'", buf);
+    sprintf(buf, "$n utters the words, '%s'", spells[si-1]);
   }
-  
-  
-  sprintf(buf2,"$n utters the words, '%s'", buf);
-  sprintf(buf, "$n utters the words, '%s'", spells[si-1]);
-  
   for(temp_char = real_roomp(ch->in_room)->people;
       temp_char;
       temp_char = temp_char->next_in_room)
@@ -1074,6 +810,11 @@ bool saves_spell(struct char_data *ch, sh_int save_type)
   /* Negative apply_saving_throw makes saving throw better! */
   
   save = ch->specials.apply_saving_throw[save_type];
+
+  if(GET_RACE(ch) == RACE_DWARF || GET_RACE(ch) == RACE_GNOME || GET_RACE(ch) 
+     == RACE_HALFLING ) {
+    save -= con_app[GET_CON(ch)].hitp;
+  }
   
   if (!IS_NPC(ch)) {
     
@@ -1128,10 +869,8 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
   struct char_data *tar_char;
   char name[MAX_INPUT_LENGTH];
   int qend, spl, i;
-#if 0
-  int  mlev, clev, dlev, minl;
-#endif
-  bool target_ok;
+  int spell_class, max, cost;
+  bool target_ok, intrinsic = FALSE;
   
   if (IS_NPC(ch) && (!IS_SET(ch->specials.act, ACT_POLYSELF)))
     return;
@@ -1141,21 +880,13 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
     return;
   }
   
-  if (!IS_IMMORTAL(ch)) {
-    if (BestMagicClass(ch) == WARRIOR_LEVEL_IND) {
-      send_to_char("Think you had better stick to fighting...\n\r", ch);
-      return;
-    } else if (BestMagicClass(ch) == THIEF_LEVEL_IND) {
-      send_to_char("Think you should stick to stealing...\n\r", ch);
-      return;
-    } else if (BestMagicClass(ch) == MONK_LEVEL_IND) {
-      send_to_char("Think you should stick to meditating...\n\r", ch);
-      return;
-    }
-  }
-
   if (apply_soundproof(ch))
      return;
+
+  if(GET_MANA(ch) < 1 && GetMaxLevel(ch) < LOW_IMMORTAL) {
+    send_to_char("You are much too fatigued to cast right now.\n\r",ch);
+    return;
+  }
 
   argument = skip_spaces(argument);
   
@@ -1187,11 +918,47 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
     return;
   }
 
+  if(IsIntrinsic(ch, spl)) 
+    if(CastIntrinsic(ch, spl)) 
+      intrinsic = TRUE;
+
+
+  if (!IS_IMMORTAL(ch) && !intrinsic) {
+    if (BestMagicClass(ch) == WARRIOR_LEVEL_IND) {
+      if(IsIntrinsic(ch,spl)) {
+	send_to_char("You are unable to draw upon your innate abilities.\n\r",
+		     ch);
+      } else 
+	send_to_char("You wave your hands about and grunt to no avail.\n\r",
+		     ch);
+      return;
+    } else if (BestMagicClass(ch) == THIEF_LEVEL_IND) {
+      if(IsIntrinsic(ch,spl)) {
+        send_to_char("You are unable to draw upon your innate abilities.\n\r",
+                     ch);
+      } else
+	send_to_char("You make weird noises and hop about to no avail.\n\r", 
+		     ch);
+      return;
+    } else if (BestMagicClass(ch) == MONK_LEVEL_IND) {
+      if(IsIntrinsic(ch,spl)) {
+        send_to_char("You are unable to draw upon your innate abilities.\n\r",
+                     ch);
+      } else {
+	send_to_char("You wave your hands and feet furiously in the air.\n\r",
+		     ch);
+	send_to_char("Bummer, you aren't a mage.\n\r",ch);
+      }
+      return;
+    }
+  }
+
+
   if (!ch->skills)
     return;
   
-  if ((spl > 0) && (spl < MAX_SKILLS) && spell_info[spl].spell_pointer) {
-    if (GET_POS(ch) < spell_info[spl].minimum_position) {
+  if ((spl > 0) && (spl < MAX_SKILLS) && skill_info[spl].spell_pointer) {
+    if (GET_POS(ch) < skill_info[spl].minimum_position) {
       switch(GET_POS(ch)) {
       case POSITION_SLEEPING :
 	send_to_char("You dream about great magical powers.\n\r", ch);
@@ -1211,13 +978,12 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
       } /* Switch */
     }	else {
       
-      if (!IS_IMMORTAL(ch)) {
-
-	if ((spell_info[spl].min_level_magic > 
+      if (!IS_IMMORTAL(ch) && !intrinsic) {
+	if ((skill_info[spl].min_level[MIN_LEVEL_MAGIC] > 
 	     GET_LEVEL(ch,MAGE_LEVEL_IND)) &&
-	    (spell_info[spl].min_level_cleric >
+	    (skill_info[spl].min_level[MIN_LEVEL_CLERIC] >
 	     GET_LEVEL(ch,CLERIC_LEVEL_IND)) &&
-	    (spell_info[spl].min_level_druid >
+	    (skill_info[spl].min_level[MIN_LEVEL_DRUID] >
 	     GET_LEVEL(ch, DRUID_LEVEL_IND))) {
 	  send_to_char("Sorry, you can't do that.\n\r", ch);
 	  return;
@@ -1232,16 +998,16 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
       tar_char = 0;
       tar_obj = 0;
       
-      if (IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
+      if (IS_SET(skill_info[spl].targets, TAR_VIOLENT) &&
 	  check_peaceful(ch, "Impolite magic is banned here."))
 	return;
 
-      if (!IS_SET(spell_info[spl].targets, TAR_IGNORE)) {
+      if (!IS_SET(skill_info[spl].targets, TAR_IGNORE)) {
 	
 	argument = one_argument(argument, name);
 	
 	if (*name) {
-	  if (IS_SET(spell_info[spl].targets, TAR_CHAR_ROOM)) {
+	  if (IS_SET(skill_info[spl].targets, TAR_CHAR_ROOM)) {
 	    if (tar_char = get_char_room_vis(ch, name)) {
 	      if (tar_char == ch || tar_char == ch->specials.fighting ||
 		  tar_char->attackers < 6 || 
@@ -1255,23 +1021,23 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
 	      target_ok = FALSE;
 	    }
 	  }
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_CHAR_WORLD))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_CHAR_WORLD))
 	    if (tar_char = get_char_vis(ch, name))
 	      target_ok = TRUE;
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_INV))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_OBJ_INV))
 	    if (tar_obj = get_obj_in_list_vis(ch, name, ch->carrying))
 	      target_ok = TRUE;
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_ROOM))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_OBJ_ROOM))
 	    if (tar_obj = get_obj_in_list_vis(ch, name, real_roomp(ch->in_room)->contents))
 	      target_ok = TRUE;
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_OBJ_WORLD))
 	    if (tar_obj = get_obj_vis(ch, name))
 	      target_ok = TRUE;
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_EQUIP)) {
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_OBJ_EQUIP)) {
 	    for(i=0; i<MAX_WEAR && !target_ok; i++)
 	      if (ch->equipment[i] && str_cmp(name, ch->equipment[i]->name) == 0) {
 		tar_obj = ch->equipment[i];
@@ -1279,13 +1045,13 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
 	      }
 	  }
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_SELF_ONLY))
 	    if (str_cmp(GET_NAME(ch), name) == 0) {
 	      tar_char = ch;
 	      target_ok = TRUE;
 	    }
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_NAME)) {
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_NAME)) {
 	    tar_obj = (void*)name;
 	    target_ok = TRUE;
 	  }
@@ -1301,20 +1067,20 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
 	  
 	} else { /* No argument was typed */
 	  
-	  if (IS_SET(spell_info[spl].targets, TAR_FIGHT_SELF))
+	  if (IS_SET(skill_info[spl].targets, TAR_FIGHT_SELF))
 	    if (ch->specials.fighting) {
 	      tar_char = ch;
 	      target_ok = TRUE;
 	    }
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_FIGHT_VICT))
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_FIGHT_VICT))
 	    if (ch->specials.fighting) {
 	      /* WARNING, MAKE INTO POINTER */
 	      tar_char = ch->specials.fighting;
 	      target_ok = TRUE;
 	    }
 	  
-	  if (!target_ok && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
+	  if (!target_ok && IS_SET(skill_info[spl].targets, TAR_SELF_ONLY)) {
 	    tar_char = ch;
 	    target_ok = TRUE;
 	  }
@@ -1327,50 +1093,52 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
       
       if (!target_ok) {
 	if (*name) {
-	  if (IS_SET(spell_info[spl].targets, TAR_CHAR_WORLD))
+	  if (IS_SET(skill_info[spl].targets, TAR_CHAR_WORLD))
 	    send_to_char("Nobody playing by that name.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_CHAR_ROOM))
+	  else if (IS_SET(skill_info[spl].targets, TAR_CHAR_ROOM))
 	    send_to_char("Nobody here by that name.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_OBJ_INV))
+	  else if (IS_SET(skill_info[spl].targets, TAR_OBJ_INV))
 	    send_to_char("You are not carrying anything like that.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_OBJ_ROOM))
+	  else if (IS_SET(skill_info[spl].targets, TAR_OBJ_ROOM))
 	    send_to_char("Nothing here by that name.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD))
+	  else if (IS_SET(skill_info[spl].targets, TAR_OBJ_WORLD))
 	    send_to_char("Nothing at all by that name.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_OBJ_EQUIP))
+	  else if (IS_SET(skill_info[spl].targets, TAR_OBJ_EQUIP))
 	    send_to_char("You are not wearing anything like that.\n\r", ch);
-	  else if (IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD))
+	  else if (IS_SET(skill_info[spl].targets, TAR_OBJ_WORLD))
 	    send_to_char("Nothing at all by that name.\n\r", ch);
 	  
 	} else { /* Nothing was given as argument */
-	  if (spell_info[spl].targets < TAR_OBJ_INV)
+	  if (skill_info[spl].targets < TAR_OBJ_INV)
 	    send_to_char("Who should the spell be cast upon?\n\r", ch);
 	  else
 	    send_to_char("What should the spell be cast upon?\n\r", ch);
 	}
 	return;
       } else { /* TARGET IS OK */
-	if ((tar_char == ch) && IS_SET(spell_info[spl].targets, TAR_SELF_NONO)) {
+	if ((tar_char == ch)&&IS_SET(skill_info[spl].targets, TAR_SELF_NONO)) {
 	  send_to_char("You can not cast this spell upon yourself.\n\r", ch);
 	  return;
 	}
-	else if ((tar_char != ch) && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
+	else if ((tar_char != ch) && 
+		 IS_SET(skill_info[spl].targets, TAR_SELF_ONLY)) {
 	  send_to_char("You can only cast this spell upon yourself.\n\r", ch);
 	  return;
-	} else if (IS_AFFECTED(ch, AFF_CHARM) && (ch->master == tar_char)) {
-	  send_to_char("You are afraid that it could harm your master.\n\r", ch);
+	} else if (IS_AFFECTED(ch, AFF_CHARM) &&(ch->master == tar_char)) {
+	  send_to_char("You are afraid that it could harm your master.\n\r", 
+		       ch);
 	  return;
 	}
       }
-
-
+      
+      
       if (cmd == 283) { /* recall */
 	if (!MEMORIZED(ch, spl)) {
 	  send_to_char("You don't have that spell memorized!\n\r", ch);
 	  return;
 	}
       } else {      
-	if (GetMaxLevel(ch) < LOW_IMMORTAL) {
+	if (GetMaxLevel(ch) < LOW_IMMORTAL && !intrinsic) {
 	  if (GET_MANA(ch) < (unsigned int)USE_MANA(ch, (int)spl)) {
 	    send_to_char("You can't summon enough energy to cast the spell.\n\r", ch);
 	    return;
@@ -1380,69 +1148,120 @@ void do_cast(struct char_data *ch, char *argument, int cmd)
 
       if (spl != SPELL_VENTRILOQUATE)  /* :-) */
 	say_spell(ch, spl);
-      
-      WAIT_STATE(ch, spell_info[spl].beats);
-      
-      if ((spell_info[spl].spell_pointer == 0) && spl>0)
+
+
+      if ((skill_info[spl].spell_pointer == 0) && spl>0) {
 	send_to_char("Sorry, this magic has not yet been implemented :(\n\r", 
 		     ch);
-      else {
-	int max, cost;
+	return;
+      } 
 
-	max = ch->specials.spellfail;
-	max += GET_COND(ch, DRUNK)*10; /* 0 - 240 */
+      /* assume we have a valid spell & caster */
 
-	if (ch->attackers > 0)
-	  max += spell_info[spl].spellfail;
-	else if (ch->specials.fighting)
-	  max += spell_info[spl].spellfail/2;
+      if(HasClass(ch, CLASS_DRUID)) {
+	if(skill_info[spl].min_level[MIN_LEVEL_MAGIC] < 
+	   skill_info[spl].min_level[MIN_LEVEL_CLERIC] &&
+	   skill_info[spl].min_level[MIN_LEVEL_MAGIC] <=
+	   skill_info[spl].min_level[MIN_LEVEL_DRUID]) {
+	  spell_class = CLASS_MAGIC_USER;
+	} else if(skill_info[spl].min_level[MIN_LEVEL_CLERIC] <
+		  skill_info[spl].min_level[MIN_LEVEL_MAGIC] &&
+		  skill_info[spl].min_level[MIN_LEVEL_CLERIC] <=
+		  skill_info[spl].min_level[MIN_LEVEL_DRUID]) {
+	  spell_class = CLASS_CLERIC;
+	} else {
+	  spell_class = CLASS_DRUID;
+	}
+      } else {
+	if(skill_info[spl].min_level[MIN_LEVEL_MAGIC] <
+           skill_info[spl].min_level[MIN_LEVEL_CLERIC])
+	  spell_class = CLASS_MAGIC_USER;
+	else 
+	  spell_class = CLASS_CLERIC;
+      }
+      
+      if (OnlyClass(ch, CLASS_DRUID)) {
+	spell_class = CLASS_DRUID;
+      }
 
-	if (number(1,max) > ch->skills[spl].learned) { 
-	  send_to_char("You lost your concentration!\n\r", ch);
+      max = ch->specials.spellfail;
+
+      if(!IS_IMMORTAL(ch)) {
+	if(spell_class == CLASS_DRUID) {
+	  if(EqWBits(ch, ITEM_METAL)) {
+	    send_to_char("You can't cast that spell while touching metal!\n\r",
+			 ch);
+	    return;
+	  }
+	} else {
+	  int i;
+	  
+	  if(!intrinsic) {
+	    if(spell_class == CLASS_CLERIC)
+	      spell_class = ITEM_ANTI_CLERIC;
+	    else if(spell_class == CLASS_MAGIC_USER)
+	      spell_class = ITEM_ANTI_MAGE;
+	    else 
+	      log("Logic error in sf routine(spell_parser.c), go get Ripper!");
+	    for(i=0;i<MAX_WEAR;i++) {
+	      if (ch->equipment[i]) {
+		if(IS_SET(ch->equipment[i]->obj_flags.extra_flags,spell_class))
+		  max += sf_where[i];
+	      }
+	    }
+	  }
+	}
+      }
+      
+      WAIT_STATE(ch, skill_info[spl].beats);
+      
+      max += GET_COND(ch, DRUNK)*10; /* 0 - 240 */
+	
+      if (ch->attackers > 0)
+	max += skill_info[spl].spellfail;
+      else if (ch->specials.fighting)
+	max += skill_info[spl].spellfail/3;
+
+        /* Gecko Druid Spell Fail */
+        if (HasClass(ch, CLASS_DRUID) && !IS_NEUTRAL(ch))
+          max += MIN(650, MAX(0, abs(GET_ALIGNMENT(ch)) - 350));
+      
+      if (number(1,max) > (intrinsic ? 95 : ch->skills[spl].learned)) { 
+	send_to_char("You lost your concentration!\n\r", ch);
+	if(!intrinsic) {
 	  cost = (int)USE_MANA(ch, (int)spl);
 	  GET_MANA(ch) -= (cost>>1);
 	  LearnFromMistake(ch, spl, 0, 95);
 	  return;
 	}
-        if (tar_char) {
-	  if (GET_POS(tar_char) == POSITION_DEAD) {
-	    send_to_char("The magic fizzles against the dead body\n", ch);
-	    return;
-	  }
-	}
-
-	if (check_nomagic(ch, 
-	    "Your magical spell is destroyed by unknown forces", 
-	    "$n's spell dissolves like so much wet toilet paper"))
+      }
+      if (tar_char) {
+	if (GET_POS(tar_char) == POSITION_DEAD) {
+	  send_to_char("The magic fizzles against the dead body.\n", ch);
 	  return;
-
-#if 0
-	mlev = spell_info[spl].min_level_magic;
-	clev = spell_info[spl].min_level_cleric;
-	dlev = spell_info[spl].min_level_druid;
-
-	minl = 0;
-	if (HasClass(ch, CLASS_MAGIC_USER)) {
-	  if (!EqWBits(ch, ITEM_ANTI_MAGE))
-	    minl = 
-	}
-#endif
-
-	send_to_char("Ok.\n\r",ch);
-	((*spell_info[spl].spell_pointer) (GET_LEVEL(ch, BestMagicClass(ch)), ch, argument, SPELL_TYPE_SPELL, tar_char, tar_obj));
-	cost = (int)USE_MANA(ch, (int)spl);
-	if (cmd == 283) /* recall */ {
-	  FORGET(ch, spl);
-	} else {
-	  GET_MANA(ch) -= cost;
 	}
       }
       
+      if (check_nomagic(ch, 
+			"Your magical spell is destroyed by unknown forces.", 
+			"$n's spell dissolves like so much wet toilet paper."))
+	return;
+      
+	
+      send_to_char("Ok.\n\r",ch);
+      ((*skill_info[spl].spell_pointer) (GET_LEVEL(ch, BestMagicClass(ch)), ch, argument, SPELL_TYPE_SPELL, tar_char, tar_obj));
+      cost = (int)USE_MANA(ch, (int)spl);
+      if (cmd == 283) /* recall */ {
+	FORGET(ch, spl);
+      } else if(!intrinsic) {
+	if(OUTSIDE(ch) && weather_info.sky < 2)
+	  cost -= cost>>2;
+	GET_MANA(ch) -= cost;
+      }
     }	/* if GET_POS < min_pos */
-    
     return;
   }
-  
+
   switch (number(1,5)){
   case 1: send_to_char("Bylle Grylle Grop Gryf???\n\r", ch); break;
   case 2: send_to_char("Olle Bolle Snop Snyf?\n\r",ch); break;
@@ -1457,8 +1276,9 @@ void assign_spell_pointers()
 {
   int i;
   
-  for(i=0; i<MAX_SPL_LIST; i++)
-    spell_info[i].spell_pointer = 0;
+  for(i=0; i<MAX_SPL_LIST; i++) {
+    skill_info[i].spell_pointer = 0;
+  }
   
   
   /* From spells1.c */
@@ -1487,7 +1307,7 @@ void assign_spell_pointers()
 	 TAR_IGNORE | TAR_VIOLENT, cast_fireball,25);
 
 /* cleric */
-  spello(23,24,POSITION_FIGHTING, LOW_IMMORTAL, 15, LOW_IMMORTAL, 15,
+  spello(23,24,POSITION_FIGHTING, LOW_IMMORTAL, 16, LOW_IMMORTAL, 15,
 	 TAR_IGNORE | TAR_VIOLENT, cast_earthquake,30);
     
   spello(22,24,POSITION_FIGHTING, LOW_IMMORTAL, 20,  LOW_IMMORTAL, 15,
@@ -1506,7 +1326,7 @@ void assign_spell_pointers()
   
   /* Spells2.c */
   
-  spello( 1,12,POSITION_STANDING, 5,  2, LOW_IMMORTAL, 5,
+  spello( 1,12,POSITION_STANDING, LOW_IMMORTAL,  2, LOW_IMMORTAL, 5,
 	 TAR_CHAR_ROOM, cast_armor, 0);
   
   spello( 2,12,POSITION_STANDING, 17, LOW_IMMORTAL,  LOW_IMMORTAL, 33,
@@ -1538,7 +1358,7 @@ void assign_spell_pointers()
 	 TAR_CHAR_ROOM, cast_cure_blind,0);
   
   spello(15,24,POSITION_FIGHTING,LOW_IMMORTAL,  10, 13, 11,
-	 TAR_CHAR_ROOM, cast_cure_critic, 30);
+	 TAR_CHAR_ROOM, cast_cure_critic, 20);
   
   spello(16,12,POSITION_FIGHTING,LOW_IMMORTAL,  1, 2, 5,
 	 TAR_CHAR_ROOM, cast_cure_light, 10);
@@ -1558,7 +1378,7 @@ void assign_spell_pointers()
   spello(21,12,POSITION_STANDING,LOW_IMMORTAL,  LOW_IMMORTAL, 1, 5,
 	 TAR_CHAR_ROOM | TAR_OBJ_INV | TAR_OBJ_EQUIP, cast_detect_poison,0);
   
-  spello(24,48,POSITION_STANDING,14, LOW_IMMORTAL, LOW_IMMORTAL, 100,
+  spello(24,48,POSITION_STANDING,14, 16, LOW_IMMORTAL, 100,
 	 TAR_OBJ_INV | TAR_OBJ_EQUIP, cast_enchant_weapon,0);
   
   spello(28,12,POSITION_FIGHTING,LOW_IMMORTAL, 25, LOW_IMMORTAL, 50,
@@ -1582,19 +1402,19 @@ void assign_spell_pointers()
   spello(36,36,POSITION_STANDING, LOW_IMMORTAL, 26, LOW_IMMORTAL, 50,
 	 TAR_CHAR_ROOM, cast_sanctuary, 0);
   
-  spello(38,24,POSITION_STANDING, 3, LOW_IMMORTAL, LOW_IMMORTAL, 15,
+  spello(38,24,POSITION_STANDING, 3, LOW_IMMORTAL, 5, 15,
 	 TAR_CHAR_ROOM | TAR_VIOLENT |TAR_FIGHT_VICT, cast_sleep, 0);
   
   spello(39,12,POSITION_STANDING, 6, LOW_IMMORTAL, LOW_IMMORTAL, 10,
 	 TAR_CHAR_ROOM, cast_strength, 0);
   
-  spello(40,36,POSITION_STANDING, 27,  19, LOW_IMMORTAL, 20,
+  spello(40,36,POSITION_STANDING, 27,  19, 30, 20,
 	 TAR_CHAR_WORLD, cast_summon, 0);
   
   /* */	spello(41,12,POSITION_STANDING, 1, LOW_IMMORTAL, LOW_IMMORTAL, 5,
 	 TAR_CHAR_ROOM | TAR_OBJ_ROOM | TAR_SELF_NONO, cast_ventriloquate, 0);
   
-  spello(42,12,POSITION_STANDING,LOW_IMMORTAL, 15, LOW_IMMORTAL, 5,
+  spello(42,12,POSITION_STANDING,LOW_IMMORTAL, 15, 27, 5,
 	 TAR_CHAR_ROOM | TAR_SELF_ONLY, cast_word_of_recall, 0);
   
   spello(43,12,POSITION_STANDING,LOW_IMMORTAL,  17, 8, 5,
@@ -1602,7 +1422,8 @@ void assign_spell_pointers()
   
   spello(44,12,POSITION_STANDING,LOW_IMMORTAL,  4, LOW_IMMORTAL, 5,
 	 TAR_CHAR_ROOM, cast_sense_life,0);
-  
+#if 0				/* new skill stuff */
+
   spello(45,0,POSITION_STANDING,LOKI+1,LOKI+1, LOKI+1,200,
 	 TAR_IGNORE, 0, 0);
   spello(46,0,POSITION_STANDING,LOKI+1,LOKI+1,LOKI+1,200,
@@ -1619,7 +1440,7 @@ void assign_spell_pointers()
 	 TAR_IGNORE, 0, 0);
   spello(52,0,POSITION_STANDING,LOKI+1,LOKI+1,LOKI+1, 200,
 	 TAR_IGNORE, 0, 0);
-  
+#endif  
   spello(53,1,POSITION_STANDING,IMMORTAL,IMMORTAL, IMMORTAL, 100, 
 	 TAR_CHAR_ROOM | TAR_OBJ_ROOM | TAR_OBJ_INV, cast_identify, 0);
   
@@ -1632,7 +1453,7 @@ void assign_spell_pointers()
   spello(56,24,POSITION_FIGHTING, LOW_IMMORTAL,  10,  13, 11,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT , cast_cause_critic, 20);
   
-  spello(57,36,POSITION_FIGHTING, LOW_IMMORTAL , 15, LOW_IMMORTAL, 15,
+  spello(57,36,POSITION_FIGHTING, LOW_IMMORTAL , 15, LOW_IMMORTAL, 20,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_flamestrike, 50);
   
   spello(58,36,POSITION_FIGHTING, LOW_IMMORTAL, 20, LOW_IMMORTAL, 15,
@@ -1724,7 +1545,7 @@ void assign_spell_pointers()
 	 TAR_CHAR_ROOM, cast_second_wind,25);
   
   spello(87,12,POSITION_STANDING, LOW_IMMORTAL, 1, 12, 5,
-	 TAR_CHAR_ROOM, cast_turn,0);
+	 TAR_CHAR_ROOM | TAR_SELF_NONO | TAR_VIOLENT, cast_turn,0);
   
   spello(88,24,POSITION_STANDING, 24, 23, LOW_IMMORTAL, 15,
 	 TAR_IGNORE, cast_succor,0);
@@ -1738,7 +1559,7 @@ void assign_spell_pointers()
   spello(91,24,POSITION_STANDING, 4, 2, LOW_IMMORTAL, 15,
 	 TAR_CHAR_ROOM, cast_calm,0);
   
-  spello(92,24,POSITION_STANDING, 26, LOW_IMMORTAL, LOW_IMMORTAL, 20,
+  spello(92,24,POSITION_STANDING, 26, LOW_IMMORTAL, 23, 20,
 	 TAR_SELF_ONLY, cast_stone_skin,0);
   
   spello(93,24,POSITION_STANDING, 16, 13, 11, 30,
@@ -1771,7 +1592,7 @@ void assign_spell_pointers()
   spello( 102,36,POSITION_STANDING, LOW_IMMORTAL, 36, LOW_IMMORTAL, 33,
 	 TAR_OBJ_ROOM, cast_resurrection,0);
 
-  spello( 103,12,POSITION_STANDING, LOW_IMMORTAL, 24, LOW_IMMORTAL, 40,
+  spello( 103,12,POSITION_STANDING, LOW_IMMORTAL, 24, 24, 40,
 	 TAR_IGNORE, cast_heroes_feast,0);
 
   spello( 104,12,POSITION_STANDING, 24, LOW_IMMORTAL, 22, 30,
@@ -1791,10 +1612,10 @@ void assign_spell_pointers()
 
 /* new stuff */
 
-  spello(109,24,POSITION_STANDING, IMMORTAL, 15, IMMORTAL, 30,
+  spello(109,24,POSITION_STANDING, IMMORTAL, 15, 20, 30,
 	 TAR_IGNORE, cast_golem,0);
 
-  spello(110,24,POSITION_STANDING, 2, IMMORTAL, IMMORTAL, 30,
+  spello(110,24,POSITION_STANDING, 2, IMMORTAL, 2, 30,
 	 TAR_IGNORE, cast_familiar,0);
 
   spello(111,24,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 30, 30,
@@ -1803,8 +1624,10 @@ void assign_spell_pointers()
   spello(112,24,POSITION_FIGHTING, IMMORTAL, 31, IMMORTAL, 30,
 	 TAR_IGNORE | TAR_VIOLENT,  cast_holyword,80);
 
-  spello(113,24,POSITION_FIGHTING, IMMORTAL, 31, IMMORTAL, 30,
-	 TAR_IGNORE | TAR_VIOLENT, cast_unholyword,80);
+  /* unholy word nuked and enchant armor replaced*/
+
+  spello(113,24,POSITION_STANDING, 15, 14, IMMORTAL, 60,
+	 TAR_OBJ_INV | TAR_OBJ_EQUIP, cast_enchant_armor,0);
 
   spello(114,24,POSITION_FIGHTING, 23, IMMORTAL, IMMORTAL, 10,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_pword_kill,40);
@@ -1823,26 +1646,26 @@ void assign_spell_pointers()
 
   spello(119,24,POSITION_FIGHTING, LOW_IMMORTAL, 1, IMMORTAL, 3,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_command,30);
-
-  spello(120, 12, POSITION_STANDING, IMMORTAL, IMMORTAL, 12, 20,
+#if 0
+  spello(120, 12, POSITION_STANDING, IMMORTAL, IMMORTAL, IMMORTAL, 20,
 	 TAR_IGNORE, cast_change_form, 0);
-
+#endif
   spello(121,24,POSITION_FIGHTING, 34, IMMORTAL, IMMORTAL, 30,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT |TAR_VIOLENT,cast_feeblemind,70);
 
   spello(122,12,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 3, 10,
 	 TAR_OBJ_INV, cast_shillelagh, 0);
 
-  spello(123,12,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 4, 10,
+  spello(123,12,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 2, 10,
 	 TAR_IGNORE ,cast_goodberry,0);
 
-  spello(124,12,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 7, 10,
+  spello(124,12,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 5, 10,
 	 TAR_IGNORE,cast_flame_blade,0);
 
-  spello(125,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 35, 20,
+  spello(125,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 23, 20,
 	 TAR_CHAR_ROOM | TAR_SELF_NONO,cast_animal_growth,40);
 
-  spello(126,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 33, 20,
+  spello(126,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 22, 20,
 	 TAR_CHAR_ROOM | TAR_SELF_NONO,cast_insect_growth,40);
 
   spello(127,36,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 45, 50,
@@ -1851,31 +1674,31 @@ void assign_spell_pointers()
   spello(128,24,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 20, 10,
 	 TAR_IGNORE,cast_commune,0);
 
-  spello(129,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 15, 15,
+  spello(129,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 10, 15,
 	 TAR_IGNORE, cast_animal_summon_1,0);
-  spello(130,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 20, 20,
+  spello(130,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 15, 20,
 	 TAR_IGNORE, cast_animal_summon_2,0);
-  spello(131,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 25, 25,
+  spello(131,24,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 20, 25,
 	 TAR_IGNORE, cast_animal_summon_3,0);
 
 
-  spello(132,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 35, 30,
+  spello(132,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 27, 30,
 	 TAR_IGNORE, cast_fire_servant,0);
-  spello(133,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 36, 30,
+  spello(133,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 28, 30,
 	 TAR_IGNORE, cast_earth_servant,0);
-  spello(134,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 37, 30,
+  spello(134,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 29, 30,
 	 TAR_IGNORE, cast_water_servant,0);
-  spello(135,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 38, 30,
+  spello(135,24,POSITION_STANDING, IMMORTAL, IMMORTAL, 30, 30,
 	 TAR_IGNORE, cast_wind_servant,0);
 
-  spello(136,36,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 39, 50,
+  spello(136,36,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 26, 50,
 	 TAR_OBJ_ROOM, cast_reincarnate,0);
 
 
-  spello(137,12,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 17, 5,
+  spello(137,12,POSITION_STANDING, IMMORTAL, LOW_IMMORTAL, 10, 5,
 	 TAR_CHAR_ROOM | TAR_VIOLENT, cast_charm_veggie,0);
 
-  spello(138,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 20, 20,
+  spello(138,24,POSITION_FIGHTING, LOW_IMMORTAL, IMMORTAL, 15, 20,
 	 TAR_CHAR_ROOM | TAR_SELF_NONO,cast_veggie_growth,40);
 
   spello(139,24,POSITION_STANDING, LOW_IMMORTAL, IMMORTAL, 15, 30,
@@ -1891,35 +1714,35 @@ void assign_spell_pointers()
   spello( 142, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 10, 2,
 	 TAR_SELF_ONLY, cast_travelling, 0);
 
-  spello( 143, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 5, 2,
+  spello( 143, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 4, 2,
 	 TAR_CHAR_ROOM | TAR_SELF_NONO, cast_animal_friendship, 0);
 
-  spello( 144, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 11, 10,
+  spello( 144, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 10, 10,
 	 TAR_SELF_ONLY, cast_invis_to_animals, 0);
 
   spello( 145, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 6, 20,
 	 TAR_CHAR_ROOM, cast_slow_poison, 0);
 
-  spello( 146, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 16, 20,
+  spello( 146, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 13, 20,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_entangle, 0);
 
-  spello( 147, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 8, 10,
+  spello( 147, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 7, 10,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_snare, 0);
 
-  spello( 148, 12, POSITION_SITTING, 10, LOW_IMMORTAL, IMMORTAL, 2,
+  spello( 148, 12, POSITION_SITTING, 18, LOW_IMMORTAL, 11, 2,
 	 TAR_IGNORE, cast_gust_of_wind, 30);
 
   spello( 149, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 3, 5,
 	 TAR_CHAR_ROOM, cast_barkskin, 0);
 
-  spello( 150, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 27, 15,
+  spello( 150, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 22, 15,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_sunray, 30);
 
-  spello( 151, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 19, 20,
+  spello( 151, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 16, 20,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT | 
 	 TAR_OBJ_ROOM | TAR_OBJ_INV, cast_warp_weapon, 60);
 
-  spello( 152, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 23, 30,
+  spello( 152, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 18, 30,
 	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_heat_stuff, 30);
 
   spello( 153, 12, POSITION_STANDING, LOW_IMMORTAL, LOW_IMMORTAL, 15, 10,
@@ -1937,7 +1760,7 @@ void assign_spell_pointers()
   spello(157,24,POSITION_STANDING, LOW_IMMORTAL, 3, 1, 10,
 	 TAR_IGNORE, cast_dust_devil,0);
 
-  spello(158, 12, POSITION_FIGHTING, 9, IMMORTAL, IMMORTAL, 20,
+  spello(158, 12, POSITION_FIGHTING, 9, IMMORTAL, 12, 20,
 	 TAR_SELF_NONO| TAR_CHAR_ROOM | TAR_FIGHT_VICT, 
 	 cast_know_monster, 50);
 
@@ -1956,16 +1779,36 @@ void assign_spell_pointers()
 	 TAR_CHAR_WORLD, cast_teleport_wo_error, 0);
   spello( 164, 12, POSITION_STANDING, 43, LOKI, LOKI, 50,
 	 TAR_CHAR_WORLD, cast_portal, 0);
+
   spello( 165, 12, POSITION_STANDING, LOKI, LOKI, LOKI, 20,
 	 TAR_IGNORE, cast_dragon_ride, 0);
   spello( 166, 12, POSITION_STANDING, LOKI, LOKI, LOKI, 20,
 	 TAR_IGNORE, cast_mount, 0);
 
-
-    
-  spello(180,0,POSITION_STANDING,LOKI+1,LOKI+1,LOKI+1,200, 
-	 TAR_IGNORE, 0, 0);
-  
+  spello( 167, 12, POSITION_FIGHTING, LOW_IMMORTAL, LOW_IMMORTAL, 1, 15,
+	 TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT, cast_thorn_spray, 10);
+    spello(206,24,POSITION_STANDING, LOW_IMMORTAL, 12, LOW_IMMORTAL, 20,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_hold,0);
+  spello(207,24,POSITION_STANDING, LOW_IMMORTAL, 21, LOW_IMMORTAL, 25,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_electricity,0);
+  spello(208,24,POSITION_STANDING, LOW_IMMORTAL, 27, LOW_IMMORTAL, 30,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_cold,0);
+  spello(209,24,POSITION_STANDING, LOW_IMMORTAL, 28, LOW_IMMORTAL, 35,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_drain,0);
+  spello(210,24,POSITION_STANDING, LOW_IMMORTAL, 18, LOW_IMMORTAL, 40,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_poison,0);
+  spello(211,24,POSITION_STANDING, LOW_IMMORTAL, 29, LOW_IMMORTAL, 45,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_acid,0);
+  spello(212,36,POSITION_STANDING, LOW_IMMORTAL, 41, LOW_IMMORTAL, 50,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_fire,0);
+  spello(213,36,POSITION_STANDING, LOW_IMMORTAL, 39, LOW_IMMORTAL, 55,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_energy,0);
+  spello(214,36,POSITION_STANDING, LOW_IMMORTAL, 33, LOW_IMMORTAL, 60,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_pierce,0);
+  spello(215,36,POSITION_STANDING, LOW_IMMORTAL, 47, LOW_IMMORTAL, 65,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_slash,0);
+  spello(216,36,POSITION_STANDING, LOW_IMMORTAL, 48, LOW_IMMORTAL, 70,
+         TAR_SELF_ONLY | TAR_CHAR_ROOM, cast_resist_blunt,0);
 }
 
 
@@ -2203,6 +2046,9 @@ void check_drowning( struct char_data *ch)
   if (IS_AFFECTED(ch, AFF_WATERBREATH))
     return;
 
+  if(GetMaxLevel(ch) >= LOW_IMMORTAL)
+    return;
+
   rp = real_roomp(ch->in_room);
 
   if (!rp) return;
@@ -2334,4 +2180,103 @@ int check_nature( struct char_data *i)
   }
   check_drowning(i);
 
+}
+
+int IsIntrinsic(struct char_data *ch, int spl) 
+{
+  int i;
+
+  for(i=0;i<MAX_RACE_INTRINSIC;i++)
+    if(GET_RACE(ch) == skill_info[spl].race_intrinsic[i])
+      return(TRUE);
+  return(FALSE);
+}
+
+int CastIntrinsic(struct char_data *ch, int spl)
+{
+  struct affected_type af, *p;
+  
+  af.duration = 0;
+  af.location = APPLY_INTRINSIC;
+  af.type = spl;
+
+  if(!IsIntrinsic(ch,spl)) {
+    send_to_char("Hey bozo, what are you doing trying to use an intrinsic?\n\r", ch);
+    return(FALSE);
+  }
+
+  /* I'd like for this to be in a table or something, but... */
+  switch(GET_RACE(ch)) {
+  case RACE_ELVEN:
+    switch(spl) {
+    case SPELL_FAERIE_FIRE:
+      af.duration  = 12;
+      break;
+    case SPELL_FAERIE_FOG:
+      af.duration  = 8;
+      break;
+    }
+    break;
+  case RACE_DWARF:
+    switch(spl) {
+    case SPELL_ENCHANT_WEAPON:
+      af.duration = 24*7;
+      break;
+    case SPELL_ENCHANT_ARMOR:
+      af.duration = 24*7;
+      break;
+    }
+    break;
+  case RACE_FAERIE:
+    switch(spl) {
+      case SPELL_CURE_LIGHT:
+      af.duration = 8;
+      break;
+    case SPELL_FAERIE_FIRE:
+      af.duration = 8;
+      break;
+    }
+    break;
+  case RACE_DROW:
+    switch(spl) {
+    case SPELL_FAERIE_FIRE:
+      af.duration = 8;
+      break;
+    case SPELL_WEB:
+      af.duration = 12;
+      break;
+    case SPELL_FAERIE_FOG:
+      af.duration = 8;
+      break;
+    }
+    break;
+  case RACE_VAMPIRE:
+    switch(spl) {
+    case SPELL_FEAR:
+      af.duration = 8;
+      break;
+    case SPELL_CHARM_PERSON:
+      af.duration = 12;
+      break;
+    }
+    break;
+  }
+
+  if(af.duration) {
+    for(p=ch->affected; p; p = p->next) 
+      if(p->type == spl)
+	if(p->location == APPLY_INTRINSIC)
+	  return(FALSE);
+  } else {
+    log("Unaccounted racial intrinsic, no duration set in CastIntrinsic()");
+    return(FALSE);
+  }
+
+  af.modifier = 0;
+  af.bitvector = 0;
+
+  affect_to_char(ch, &af);
+
+  send_to_char("Calling on your innate powers...\n\r", ch);
+  return(TRUE);
 }

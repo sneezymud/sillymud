@@ -17,7 +17,7 @@ extern struct str_app_type str_app[];
 extern struct descriptor_data *descriptor_list;
 extern char *drinks[];
 extern int drink_aff[][3];
-extern struct spell_info_type spell_info[];
+extern struct skill_data skill_info[];
 
 
 void weight_change_object(struct obj_data *obj, int weight)
@@ -216,26 +216,30 @@ void do_eat(struct char_data *ch, char *argument, int cmd)
 		return;
 	}
 
-	act("$n eats $p",TRUE,ch,temp,0,TO_ROOM);
+	act("$n eats $p.",TRUE,ch,temp,0,TO_ROOM);
 	act("You eat the $o.",FALSE,ch,temp,0,TO_CHAR);
 
-	gain_condition(ch,FULL,temp->obj_flags.value[0]);
+	if(GET_RACE(ch) == RACE_VAMPIRE) {
+	  send_to_char("It does not seem to alleviate your hunger.\n\r", ch);
+	} else {
+	  gain_condition(ch,FULL,temp->obj_flags.value[0]);
+	}
 
 	if(GET_COND(ch,FULL)>20)
 		act("You are full.",FALSE,ch,0,0,TO_CHAR);
 
         for(j=0; j<MAX_OBJ_AFFECT; j++)
-	    if (temp->affected[j].location == APPLY_EAT_SPELL) {
-		   num = temp->affected[j].modifier;
+	  if (temp->affected[j].location == APPLY_EAT_SPELL) {
+	    num = temp->affected[j].modifier;
 
-/* hit 'em with the spell */
-
-                   ((*spell_info[num].spell_pointer)
-                         (6, ch, "", SPELL_TYPE_POTION, ch, 0));
-		 }
-
+	    /* hit 'em with the spell */
+	    
+	    ((*skill_info[num].spell_pointer)
+	     (6, ch, "", SPELL_TYPE_POTION, ch, 0));
+	  }
+	
 	if(temp->obj_flags.value[3] && (GetMaxLevel(ch) < LOW_IMMORTAL)) {
-       	   act("That tasted rather strange !!",FALSE,ch,0,0,TO_CHAR);
+       	   act("That tasted rather strange!!",FALSE,ch,0,0,TO_CHAR);
 	   act("$n coughs and utters some strange sounds.",
 	       FALSE,ch,0,0,TO_ROOM);
 
@@ -245,7 +249,7 @@ void do_eat(struct char_data *ch, char *argument, int cmd)
 		af.location = APPLY_NONE;
 		af.bitvector = AFF_POISON;
 		affect_join(ch,&af, FALSE, FALSE);
-	}
+	 }
 
 	extract_obj(temp);
 }
@@ -563,27 +567,8 @@ int IsRestricted(int Mask, int Class)
 
 
   /*
-    druids and monks are special cases
+     monks are special cases
     */
-  if (IS_SET(Class, CLASS_DRUID)) {
-#if 1
-/* anything not restricted to mages, a druid/mage can wear/use */
-    if (!IS_SET(Mask, CLASS_MAGIC_USER) && IS_SET(Class, CLASS_MAGIC_USER))
-      return(FALSE);
-/* anything not restricted to warriors, a druid/warrior can wear/use */
-    if (!IS_SET(Mask, CLASS_WARRIOR) && IS_SET(Class, CLASS_WARRIOR))
-      return(FALSE);
-/* anything not restricted to clerics, a druid/cleric can wear/use */
-    if (!IS_SET(Mask, CLASS_CLERIC) && IS_SET(Class, CLASS_CLERIC))
-      return(FALSE);
-/* anything not restricted to thieves, a druid/thief can wear/use */
-    if (!IS_SET(Mask, CLASS_THIEF) && IS_SET(Class, CLASS_THIEF))
-      return(FALSE);
-#endif
-
-    if (IS_SET(Mask, CLASS_THIEF) || (IS_SET(Mask, CLASS_CLERIC)))
-      return(TRUE);
-  }
 
   if (IS_SET(Class, CLASS_MONK)) {
     if (Mask != 0)
@@ -603,18 +588,30 @@ int IsRestricted(int Mask, int Class)
 
 }
 
+int GetMobClassRestrictions(struct char_data *ch)
+{
+  int tmp;
+  tmp = ch->player.class;
+
+  if (IS_SET(tmp, CLASS_DRUID)) {
+    SET_BIT(tmp, CLASS_CLERIC);
+    REMOVE_BIT(tmp, CLASS_DRUID);
+  }
+  return(tmp);
+}
 
 void wear(struct char_data *ch, struct obj_data *obj_object, int keyword)
 {
   char buffer[MAX_STRING_LENGTH];
-  int BitMask;
+  int BitMask, ClMask;
   struct room_data *rp;
 
   
   if (!IS_IMMORTAL(ch)) {
     
     BitMask = GetItemClassRestrictions(obj_object);
-    if (IsRestricted(BitMask, ch->player.class) && 
+    ClMask = GetMobClassRestrictions(ch);
+    if (IsRestricted(BitMask, ClMask) && 
 	IS_PC(ch)) {
       send_to_char("You are forbidden to do that.\n\r", ch);
       return;
@@ -623,28 +620,37 @@ void wear(struct char_data *ch, struct obj_data *obj_object, int keyword)
 
   if (IS_SET(obj_object->obj_flags.extra_flags, ITEM_ANTI_MEN)) {
     if (GET_SEX(ch) != SEX_FEMALE) {
-      send_to_char("Only women can do that\n\r", ch);
+      send_to_char("Only women can do that.\n\r", ch);
       return;
     }
   }
 
   if (IS_SET(obj_object->obj_flags.extra_flags, ITEM_ANTI_WOMEN)) {
     if (GET_SEX(ch) != SEX_MALE) {
-      send_to_char("Only men can do that\n\r", ch);
-      return;
-    }
-  }
-
-
-  rp = real_roomp(ch->in_room);
-
-  if (!IsHumanoid(ch)) {
-    if ((keyword != 13) || (!HasHands(ch))) {
-      send_to_char("You can't wear things!\n\r",ch);
+      send_to_char("Only men can do that.\n\r", ch);
       return;
     }
   }
   
+  if(IS_PC(ch)) {
+    if (IS_SET(obj_object->obj_flags.extra_flags, ITEM_METAL)) {
+      if (OnlyClass(ch, CLASS_DRUID)) {
+	send_to_char("You can not use metal.\n\r", ch);
+	return;
+      }
+    }
+  }
+
+  rp = real_roomp(ch->in_room);
+
+  if (!IsHumanoid(ch)) {
+    if( (keyword == 14 || keyword == 13 || keyword == 12 || keyword == 1) &&
+       !HasHands(ch)) {
+      send_to_char("You can't wear that without having hands!\n\r",ch);
+      return;
+    }
+  }
+
   switch(keyword) {
   case 0: {  /* LIGHT SOURCE */
     if (ch->equipment[WEAR_LIGHT]) {
@@ -858,19 +864,20 @@ void wear(struct char_data *ch, struct obj_data *obj_object, int keyword)
       if (ch->equipment[WIELD]) {
 	send_to_char("You are already wielding something.\n\r", ch);
       } else if (ch->equipment[WEAR_LIGHT] && ch->equipment[HOLD]) {
-	  send_to_char("You must first remove something from one of your hands.\n\r", ch);
+	send_to_char("You must first remove something from one of your hands.\n\r", ch);
+      } else if(IS_SET(ch->specials.affected_by2, AFF2_FEEDING)) {
+	send_to_char("And mutilate lunch? Never!\n\r",ch);
       } else {
-	
 	if (GET_OBJ_WEIGHT(obj_object) >
 	    str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
 	  send_to_char("It is too heavy for you to use single-handedly.\n\r",ch);
 	  if (GET_OBJ_WEIGHT(obj_object) < 
 	      (3*str_app[STRENGTH_APPLY_INDEX(ch)].wield_w)/2) {
-	    send_to_char("But, you can use it two handed\n\r", ch);
+	    send_to_char("But, you can use it two handed.\n\r", ch);
 	    if (ch->equipment[WEAR_SHIELD]) {
-	      send_to_char("If you removed your shield\n\r", ch);
+	      send_to_char("If you removed your shield.\n\r", ch);
 	    } else if (ch->equipment[HOLD] || ch->equipment[WEAR_LIGHT]) {
-	      send_to_char("If you removed what was in your hands\n\r", ch);
+	      send_to_char("If you removed what was in your hands.\n\r", ch);
 	    } else {
 	      perform_wear(ch,obj_object,keyword);
 	      obj_from_char(obj_object);
@@ -899,6 +906,27 @@ void wear(struct char_data *ch, struct obj_data *obj_object, int keyword)
       } else if (ch->equipment[WEAR_LIGHT] && ch->equipment[WIELD]) {
 	  send_to_char("Sorry, both hands are full!\n\r", ch);
       } else {
+
+	if (ITEM_TYPE(obj_object)==ITEM_WEAPON) {
+
+	  if (ch->equipment[WEAR_SHIELD]) {
+	    send_to_char("You can't wear a shield and hold a weapon!\n\r", ch);
+	    return;
+	  }
+
+	  if (GET_OBJ_WEIGHT(obj_object) > 
+	    str_app[STRENGTH_APPLY_INDEX(ch)].wield_w/2) {
+	    send_to_char("That weapon is too heavy for you to hold\n\r", ch);
+	    return;
+	  }
+	} else if (ch->equipment[WIELD]) {
+	  if (GET_OBJ_WEIGHT(obj_object) > 
+		   str_app[STRENGTH_APPLY_INDEX(ch)].wield_w) {
+	    send_to_char("That item is too heavy for you to hold\n\r", ch);
+	    return;
+	  }
+	}
+
 	send_to_char("OK.\n\r", ch);
 	perform_wear(ch,obj_object,keyword);
 	obj_from_char(obj_object);

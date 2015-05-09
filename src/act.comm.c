@@ -9,31 +9,48 @@
 
 #include "protos.h"
 
+#define BIRD_NOISE_NUM 4	/* how many noises we have, in constants.c */
+#define RAT_NOISE_NUM  3
 /* extern variables */
 
 extern struct room_data *world;
 extern struct descriptor_data *descriptor_list;
-
+extern const char *rat_noises[];
+extern const char *half_orc_words[];
+extern const char *half_orc_noises[];
+extern const char *ogre_speak[];
 
 void do_say(struct char_data *ch, char *argument, int cmd)
 {
-  int i;
-  char buf[MAX_INPUT_LENGTH+40];
+  char buf[MAX_INPUT_LENGTH+40], buf2[MAX_INPUT_LENGTH+40];
   
   if (apply_soundproof(ch))
     return;
   
-  for (i = 0; *(argument + i) == ' '; i++);
+  /*  for (i = 0; *(argument + i) == ' '; i++); */
+  for (; *argument == ' '; argument++);
   
-  if (!*(argument + i))
+  if (!*(argument))
     send_to_char("Yes, but WHAT do you want to say?\n\r", ch);
-  else	{
-    sprintf(buf,"$n says '%s'", argument + i);
-    act(buf,FALSE,ch,0,0,TO_ROOM);
+  else {
     if (IS_NPC(ch)||(IS_SET(ch->specials.act, PLR_ECHO))) {
-      sprintf(buf,"You say '%s'\n\r", argument + i);
+      sprintf(buf,"You say '%s'\n\r", argument);
       send_to_char(buf, ch);
     }
+
+    if(GET_RACE(ch) == RACE_OGRE) {
+      ogre_garble(argument, buf2, ch);
+      sprintf(buf, "$n says '%s'", buf2);
+    } else if( GET_RACE(ch) == RACE_DRAAGDIM ) {
+      rat_garble(argument, buf2, ch);
+      sprintf(buf, "$n says '%s'", buf2);
+    } else if(GET_RACE(ch) == RACE_HALFORC) {
+      half_orc_garble(argument, buf2, ch);
+      sprintf(buf, "$n says '%s'", buf2);
+    } else {
+      sprintf(buf,"$n says '%s'", argument);
+    }
+    act(buf,FALSE,ch,0,0,TO_ROOM);
   }
 }
 
@@ -42,7 +59,7 @@ void do_say(struct char_data *ch, char *argument, int cmd)
 
 void do_shout(struct char_data *ch, char *argument, int cmd)
 {
-  char buf1[MAX_INPUT_LENGTH+40];
+  char buf1[MAX_INPUT_LENGTH+40], buf2[MAX_INPUT_LENGTH+40];
   struct descriptor_data *i;
   extern int Silence;
   
@@ -78,9 +95,21 @@ void do_shout(struct char_data *ch, char *argument, int cmd)
       sprintf(buf1,"You shout '%s'\n\r", argument);
       send_to_char(buf1, ch);
     }
-    sprintf(buf1, "$n shouts '%s'", argument);
 
-    act("$n lifts up $s head and shouts loudly", FALSE, ch, 0, 0, TO_ROOM);
+    if(GET_RACE(ch) == RACE_DRAAGDIM) {
+      rat_garble(argument, buf2, ch);
+      sprintf(buf1, "$n shouts '%s'", buf2);
+    } else if(GET_RACE(ch) == RACE_HALFORC) {
+      half_orc_garble(argument, buf2, ch);
+      sprintf(buf1, "$n shouts '%s'", buf2);
+    } else if(GET_RACE(ch) == RACE_OGRE) {
+      ogre_garble(argument, buf2, ch);
+      sprintf(buf1, "$n shouts '%s'", buf2);
+    } else {
+      sprintf(buf1, "$n shouts '%s'", argument);
+    }
+
+    act("$n lifts up $s head and shouts loudly", TRUE, ch, 0, 0, TO_ROOM);
     
     GET_MOVE(ch) -= 2;
     
@@ -125,10 +154,10 @@ void do_tell(struct char_data *ch, char *argument, int cmd)
 {
   struct char_data *vict;
   char name[100], message[MAX_INPUT_LENGTH+20],
-  buf[MAX_INPUT_LENGTH+60];
+  buf[MAX_INPUT_LENGTH+60], buf2[MAX_INPUT_LENGTH+60];
 
-	if (apply_soundproof(ch))
-	  return;
+  if (apply_soundproof(ch))
+    return;
   
   half_chop(argument,name,message);
 
@@ -145,26 +174,36 @@ void do_tell(struct char_data *ch, char *argument, int cmd)
     act("$E is asleep, shhh.",FALSE,ch,0,vict,TO_CHAR);
     return;
   } else if (IS_NPC(vict) && !(vict->desc)) {
-    send_to_char("No-one by that name here..\n\r", ch);
+    send_to_char("No player here by that name...\n\r", ch);
     return;
   } else if (!vict->desc) {
-    send_to_char("They can't hear you, link dead.\n\r", ch);
+    send_to_char("They can't hear you, they are link dead.\n\r", ch);
     return;
   }
-
-  if (check_soundproof(vict))
-	  return;
-
-  sprintf(buf,"%s tells you '%s'\n\r",
-	  (IS_NPC(ch) ? ch->player.short_descr : GET_NAME(ch)), message);
-  send_to_char(buf, vict);
-
-  if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) { 
-     sprintf(buf,"You tell %s '%s'\n\r",
-	  (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), message);
-     send_to_char(buf, ch);
-  }
   
+  if (check_soundproof(vict))
+    return;
+  
+  if (IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) { 
+    sprintf(buf,"You tell %s '%s'\n\r",
+	 (IS_NPC(vict) ? vict->player.short_descr : GET_NAME(vict)), message);
+    send_to_char(buf, ch);
+  }
+
+  if(GET_RACE(ch) == RACE_DRAAGDIM) {
+    rat_garble(message, buf2, ch);
+    sprintf(buf,"$n tells you '%s'", buf2);
+  } else if(GET_RACE(ch) == RACE_HALFORC) {
+    half_orc_garble(message, buf2, ch);
+    sprintf(buf,"$n tells you '%s'", buf2);
+  } else if(GET_RACE(ch) == RACE_OGRE) {
+    ogre_garble(message, buf2, ch);
+    sprintf(buf,"$n tells you '%s'", buf2);
+  } else {
+    sprintf(buf,"$n tells you '%s'", message);
+  }
+  act(buf, TRUE, ch, 0, vict, TO_VICT);
+  /* send_to_char(buf, vict); */
 }
 
 
@@ -189,18 +228,18 @@ void do_whisper(struct char_data *ch, char *argument, int cmd)
     send_to_char
       ("You can't seem to get your mouth close enough to your ear...\n\r",ch);
   }  else    {
-	if (check_soundproof(vict))
-	  return;
-
-      sprintf(buf,"$n whispers to you, '%s'",message);
-      act(buf, FALSE, ch, 0, vict, TO_VICT);
-      if (IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
-        sprintf(buf,"You whisper to %s, '%s'\n\r",
+    if (check_soundproof(vict))
+      return;
+    
+    sprintf(buf,"$n whispers to you, '%s'",message);
+    act(buf, FALSE, ch, 0, vict, TO_VICT);
+    if (IS_NPC(ch) || (IS_SET(ch->specials.act, PLR_ECHO))) {
+      sprintf(buf,"You whisper to %s, '%s'\n\r",
 	      (IS_NPC(vict) ? vict->player.name : GET_NAME(vict)), message);
-        send_to_char(buf, ch);
-      }
-      act("$n whispers something to $N.", FALSE, ch, 0, vict, TO_NOTVICT);
+      send_to_char(buf, ch);
     }
+    act("$n whispers something to $N.", FALSE, ch, 0, vict, TO_NOTVICT);
+  }
 }
 
 
@@ -293,60 +332,66 @@ void do_write(struct char_data *ch, char *argument, int cmd)
 
 char *RandomWord()
 {
-  static char *string[50] = {
+  static char *string[55] = {
     "argle",
     "bargle",
     "glop",
     "glyph",
-    "hussamah",  /* 5 */
+    "hussamah",			/* 5 */
     "rodina",
     "mustafah",
     "angina",
     "the",
-    "fribble",  /* 10 */
+    "fribble",			/* 10 */
     "fnort",
     "frobozz",
     "zarp",
     "ripple",
-    "yrk",    /* 15 */
+    "yrk",			/* 15 */
     "yid",
     "yerf",
     "oork",
     "grapple",
-    "red",   /* 20 */
+    "red",			/* 20 */
     "blue",
     "you",
     "me",
     "ftagn",
-    "hastur",   /* 25 */
+    "hastur",			/* 25 */
     "brob",
     "gnort",
     "lram",
     "truck",
-    "kill",    /* 30 */
+    "kill",			/* 30 */
     "cthulhu",
     "huzzah",
     "acetacytacylic",
     "hydrooxypropyl",
-    "summah",     /* 35 */
+    "summah",			/* 35 */
     "hummah",
     "cookies",
     "stan",
     "will",
-    "wadapatang",   /* 40 */
+    "wadapatang",		/* 40 */
     "pterodactyl",
     "frob",
     "yuma",
     "gumma",
-    "lo-pan",   /* 45 */
+    "lo-pan",			/* 45 */
     "sushi",
     "yaya",
     "yoyodine",
     "ren",
-    "stimpy"   /* 50 */
+    "stimpy",			/* 50 */
+    "blogark",
+    "vacetophenetidin",
+    "barbellate",
+    "achoo",
+    "hydrocephalus"		/* 55 */
+      
   };
 
-  return(string[number(0,49)]);
+  return(string[number(0,54)]);
 
 }
 
@@ -420,4 +465,124 @@ void do_sign(struct char_data *ch, char *argument, int cmd)
       send_to_char(buf, ch);
     }
   }
+}
+
+void bird_garble(char *buf, char *buf2, struct char_data *ch)
+{
+#if 0
+  char *p;
+
+  buf2[0] = '\0';
+  
+  p = strtok(buf, " ");
+  
+  while(p) {
+    if(number(1,18) > GET_INT(ch)) {
+      strcat(buf2, bird_noises[number(0,BIRD_NOISE_NUM)]);
+      strcat(buf2, " ");
+    }
+    strcat(buf2, p);
+    p = strtok(0, " ");
+    if(p)
+      strcat(buf2, " ");
+  }
+#endif
+}
+
+void rat_garble(char *buf, char *buf2, struct char_data *ch)
+{
+  char *p;
+
+  buf2[0] = '\0';
+
+  p = strtok(buf, " ");
+
+  while(p) {
+    if(number(1,18) > GET_INT(ch)) {
+      strcat(buf2, rat_noises[number(0,RAT_NOISE_NUM)]);
+      strcat(buf2, " ");
+    }
+    strcat(buf2, p);
+    p = strtok(0, " ");
+    if(p)
+      strcat(buf2, " ");
+  }
+}
+
+void ogre_garble(char *buf, char *buf2, struct char_data *ch)
+{
+  char *p;
+
+  /* This always happens to ogres.  Always.  Roleplaying for the */
+  /* imaginative impaired.  Cross our fingers, should be fun :)  */
+  buf2[0] = '\0';
+
+  p = strtok(buf, " ");
+
+  switch(number(0,9)) {
+  case 0:
+    strcat(buf2, "Oy, ");
+    break;
+  case 1:
+    strcat(buf2, "Oy slim, ");
+    break;
+  case 2:
+    strcat(buf2, "Flippen' eck! ");
+    break;
+  case 3:
+    strcat(buf2, "OY! ");
+    break;
+  default:
+    break;
+  }
+  
+  while(p) {
+    if(IsArticle(p)) {
+      if(number(1,20) > GET_INT(ch)) {
+	strcat(buf2, p);
+	strcat(buf2, " ");
+	strcat(buf2,ogre_speak[number(0,36)]); /* see constants.c */
+      } else {
+	strcat(buf2, p);
+      }
+    } else {
+      strcat(buf2, p);
+    }
+    p = strtok(0, " ");
+    if(p)
+      strcat(buf2, " ");
+  }
+}
+
+void half_orc_garble(char *buf, char *buf2, struct char_data *ch)
+{
+  char *p;
+
+  buf2[0] = '\0';
+
+  p = strtok(buf, " ");		
+
+  if(GET_INT(ch) < number(1,18)) {
+    strcat(buf2, half_orc_words[number(0,14)]);
+    strcat(buf2, ", ");
+  }
+  
+  while(p) {
+    if (number(1,18) > GET_INT(ch) && !number(0,1)) {
+      strcat(buf2, half_orc_noises[number(0,5)]);
+      strcat(buf2, " ");
+    }
+    strcat(buf2, p);
+    p = strtok(0, " ");
+    if(p)
+      strcat(buf2, " ");
+  }
+  /*   if(!blah) {
+    if(GET_INT(ch) < number(1,18)) {
+      strcat(buf2, " ");
+      strcat(buf2, half_orc_words[number(0,14)]);
+      strcat(buf2, ".");
+    }
+  }
+ */
 }

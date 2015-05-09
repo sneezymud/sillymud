@@ -70,6 +70,9 @@ struct zone_data
    *  0: Don't reset, and don't update age.    *
    *  1: Reset if no PC's are located in zone. *
    *  2: Just reset.                           *
+   *  4: and onwards indicate different types  *
+   *     of terrain and planar stuff. easier   *
+   *     to stick here, than alter the form.   *
    */
 };
 
@@ -129,3 +132,10 @@ struct help_index_element
 #define ZONE_ASTRAL 4
 #define ZONE_DESERT 8
 #define ZONE_ARCTIC 16
+#define ZONE_HADES  32
+#define ZONE_OLYMPUS 64
+#define ZONE_ABYSS   128
+#define ZONE_PMP     256	/* Prime Material Plane */
+#define ZONE_LIMBO   512
+
+

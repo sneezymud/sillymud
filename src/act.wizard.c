@@ -23,6 +23,8 @@ extern struct room_data *room_db[];
 extern struct char_data *character_list;
 extern struct descriptor_data *descriptor_list;
 extern struct title_type titles[MAX_CLASS][ABS_MAX_LVL];
+extern struct time_info_data time_info;
+extern struct weather_data weather_info;
 extern struct index_data *mob_index;
 extern struct index_data *obj_index;
 extern int top_of_mobt;
@@ -707,7 +709,8 @@ void do_rsave(struct char_data *ch, char *argument, int cmd)
 
    for (i = 0; *(argument + i) == ' '; i++);
    if (!*(argument + i)) {
-      send_to_char("Save? Fine!  Save we must, But what?\n\r", ch);
+      send_to_char("Save? Fine!  Save we must, But what?  The whales?\n\r",
+		   ch);
       return;
     }
     sscanf(argument,"%d %d", &start, &end);
@@ -807,12 +810,12 @@ void do_trans(struct char_data *ch, char *argument, int cmd)
 		if (!(victim = get_char_vis_world(ch,buf, NULL)))
 			send_to_char("No-one by that name around.\n\r",ch);
 		else {
-			act("$n disappears in a cloud of mushrooms.", FALSE, victim, 0, 0, TO_ROOM);
+			act("$n is ripped out of reality.", FALSE, victim, 0, 0, TO_ROOM);
 			target = ch->in_room;
 			char_from_room(victim);
 			char_to_room(victim,target);
-			act("$n arrives from a puff of smoke.", FALSE, victim, 0, 0, TO_ROOM);
-			act("$n has transferred you!",FALSE,ch,0,victim,TO_VICT);
+			act("Reality shifts, and $n appears.", FALSE, victim, 0, 0, TO_ROOM);
+			act("Reality transforms itself as $n's hand grabs you.",FALSE,ch,0,victim,TO_VICT);
 			do_look(victim,"",15);
 			send_to_char("Ok.\n\r",ch);
 		}
@@ -964,7 +967,7 @@ void do_goto(struct char_data *ch, char *argument, int cmd)
     return;
   }
   
-  if (IS_SET(real_roomp(location)->room_flags, PRIVATE)) {
+  if (IS_SET(real_roomp(location)->room_flags, PRIVATE) && GetMaxLevel(ch) < 59) {
     for (i = 0, pers = real_roomp(location)->people; pers; pers =
 	 pers->next_in_room, i++);
     if (i > 1)
@@ -1249,18 +1252,19 @@ void do_stat(struct char_data *ch, char *argument, int cmd)
       sprintf(buf," Height [%d]cm, Wgt [%d]pounds \n\r", GET_HEIGHT(k), GET_WEIGHT(k));
       send_to_char(buf,ch);
       
-      sprintf(buf,"Str:[%d/%d] Int:[%d] Ws:[%d] Dex:[%d] Con:[%d] Ch:[%d]\n\r",
+      sprintf(buf,"Str:[%d/%d] Int:[%d] Ws:[%d] Dex:[%d] Con:[%d] Ch:[%d], Ego: [%d]\n\r",
 	      GET_STR(k), GET_ADD(k),
 	      GET_INT(k),
 	      GET_WIS(k),
 	      GET_DEX(k),
 	      GET_CON(k),
-	      GET_CHR(k));
+	      GET_CHR(k),
+	      GET_EGO(k));
       send_to_char(buf,ch);
       
-      sprintf(buf,"Mana:[%d/%d+%d] Hit:[%d/%d+%d] Move:[%d/%d+%d]\n\r",
+      sprintf(buf,"Mana:[%d/%d+%d] Hit:[%d/%d] Move:[%d/%d+%d]\n\r",
 	      GET_MANA(k),mana_limit(k),mana_gain(k),
-	      GET_HIT(k),hit_limit(k),hit_gain(k),
+	      GET_HIT(k),hit_limit(k),
 	      GET_MOVE(k),move_limit(k),move_gain(k) );
       send_to_char(buf,ch);
       
@@ -1369,27 +1373,45 @@ void do_stat(struct char_data *ch, char *argument, int cmd)
       /* Showing the bitvector */
       sprintbit((unsigned)k->specials.affected_by,affected_bits,buf);
       send_to_char("Affected by: ", ch);
-      strcat(buf,"\n\r");
       send_to_char(buf, ch);
-      
+      sprintbit((unsigned)k->specials.affected_by2,affected_bits2,buf);
+      strcat(buf, "\n\r");
+      send_to_char(buf, ch);
+
       /* Routine to show what spells a char is affected by */
       if (k->affected) {
 	send_to_char("\n\rAffecting Spells:\n\r--------------\n\r", ch);
 	for(aff = k->affected; aff; aff = aff->next) {
-	  sprintf(buf, "Spell : '%s'\n\r",spells[aff->type-1]);
-	  send_to_char(buf, ch);
-	  sprintf(buf,"     Modifies %s by %d points\n\r",
-		  apply_types[aff->location], aff->modifier);
-	  send_to_char(buf, ch);
-	  sprintf(buf,"     Expires in %3d hours, Bits set ",
-		  aff->duration);
-	  send_to_char(buf, ch);
-	  if (aff->location != APPLY_BV2)
-	    sprintbit((unsigned)aff->bitvector,affected_bits,buf);
-	  else 
-	    sprintbit((unsigned)aff->bitvector,affected_bits2,buf);
-	  strcat(buf,"\n\r");
-	  send_to_char(buf, ch);
+
+	  /* This is somewhat of a hack in order to  */
+          if(aff->location == APPLY_IMMUNE && !(aff->modifier) &&
+             aff->bitvector) {
+            sprintf(buf, "Spell : '%s'\n\r",spells[aff->type-1]);
+            sprintf(buf,"     Modifies %s by %d points\n\r",
+                    apply_types[aff->location],aff->bitvector);
+            send_to_char(buf,ch);
+            sprintf(buf,"     Expires in %3d hours, Resistance Bits set ",
+                    aff->duration);
+            send_to_char(buf, ch);
+            sprintbit((unsigned)aff->bitvector,immunity_names,buf);
+            strcat(buf,"\n\r");
+            send_to_char(buf, ch);
+          } else {
+	    sprintf(buf, "Spell : '%s'\n\r",spells[aff->type-1]);
+	    send_to_char(buf, ch);
+	    sprintf(buf,"     Modifies %s by %d points\n\r",
+		    apply_types[aff->location], aff->modifier);
+	    send_to_char(buf, ch);
+	    sprintf(buf,"     Expires in %3d hours, Bits set ",
+		    aff->duration);
+	    send_to_char(buf, ch);
+	    if (aff->location != APPLY_BV2)
+	      sprintbit((unsigned)aff->bitvector,affected_bits,buf);
+	    else 
+	      sprintbit((unsigned)aff->bitvector,affected_bits2,buf);
+	    strcat(buf,"\n\r");
+	    send_to_char(buf, ch);
+	  }
 	}
       }
       return;
@@ -1434,9 +1456,10 @@ void do_stat(struct char_data *ch, char *argument, int cmd)
       strcat(buf,"\n\r");
       send_to_char(buf,ch);
       
-      sprintf(buf,"Weight: %d, Value: %d, Cost/day: %d, Timer: %d\n\r",
+      sprintf(buf,"Weight: %d, Value: %d, Cost/day: %d, Timer: %d, Ego: %d\n\r",
 	      j->obj_flags.weight,j->obj_flags.cost,
-	      j->obj_flags.cost_per_day,  j->obj_flags.timer);
+	      j->obj_flags.cost_per_day,  j->obj_flags.timer, 
+	      GET_OBJ_EGO(j));
       send_to_char(buf, ch);
       
       strcpy(buf,"In room: ");
@@ -1606,10 +1629,10 @@ void do_set(struct char_data *ch, char *argument, int cmd)
     extern char PeacefulWorks;
     extern char EasySummon;
 
-
+#ifndef TEST_SERVER
     if ((GetMaxLevel(ch) < SILLYLORD) || (IS_NPC(ch)))
        return;
-
+#endif
     argument = one_argument(argument, field);
     argument = one_argument(argument, name);
     argument = one_argument(argument, parmstr);
@@ -1621,7 +1644,14 @@ void do_set(struct char_data *ch, char *argument, int cmd)
 
     if (!strcmp(field,"align")) {
       sscanf(parmstr,"%d",&parm);
-      GET_ALIGNMENT(mob) = parm;      
+      GET_ALIGNMENT(mob) = parm; 
+    } else if (!strcmp(field, "time")) {
+      sscanf(parmstr, "%d", &parm);
+      time_info.hours = parm;
+      send_to_char("You have changed the time.\n\r",ch);
+    } else if (!strcmp(field, "onelife")) {
+      SET_BIT(mob->specials.affected_by2, AFF2_ONE_LIFER);
+      send_to_char("You now have but one life to live\n", ch);
     } else if (!strcmp(field,"class")) {
       sscanf(parmstr,"%d",&parm);
       /*
@@ -1641,7 +1671,10 @@ void do_set(struct char_data *ch, char *argument, int cmd)
 	   send_to_char(GET_NAME(ch), mob);
 	   send_to_char(" just tried to change your level.\n\r",mob);
 	   return;
-         }
+         } else if(GetMaxLevel(mob) < LOW_IMMORTAL &&
+		   GetMaxLevel(ch) <  IMPLEMENTOR && parm2 > 50) {
+	   send_to_char("Thou shalt not create new immortals.\n\r", ch);
+	 }
        } else {
 	 if (parm2 < MAX_CLASS)
 	   GET_LEVEL(mob, parm2) = parm;
@@ -1953,15 +1986,21 @@ void do_return(struct char_data *ch, char *argument, int cmd)
 
   void do_snoop(struct char_data *ch, char *argument, int cmd);
   
+  if(GetMaxLevel(ch) < LOW_IMMORTAL)
+    if(ch->specials.fighting) {
+      send_to_char("You are far too busy fighting to return now!\n\r",ch);
+      return;
+    }
+  
   if(!ch->desc)
     return;
   
   if(!ch->desc->original)   { 
     send_to_char("Arglebargle, glop-glyf!?!\n\r", ch);
     return;
-  }	else	{
-
-    send_to_char("You return to your original body.\n\r",ch);
+  } else {
+    
+    send_to_char("You pause for a moment and remold your flesh into it's original shape.\n\r",ch);
 
     if (ch->desc->snoop.snoop_by) {  /* force the snooper to stop */
       do_snoop(ch->desc->snoop.snoop_by, 
@@ -1978,6 +2017,7 @@ void do_return(struct char_data *ch, char *argument, int cmd)
       char_to_room(per,mob->in_room);
 
       SwitchStuff(mob, per);
+
     }
     
     ch->desc->character = ch->desc->original;
@@ -1986,9 +2026,11 @@ void do_return(struct char_data *ch, char *argument, int cmd)
     ch->desc->character->desc = ch->desc; 
     ch->desc = 0;
     
+
     if (IS_SET(ch->specials.act, ACT_POLYSELF) && cmd) {
       extract_char(mob);
-    }		
+      WAIT_STATE(ch, PULSE_VIOLENCE);
+    }
   }
 }
 
@@ -2113,7 +2155,7 @@ void do_load(struct char_data *ch, char *argument, int cmd)
       case 30016:
       case 30017:
       case 30018:
-	send_to_char("When monkeys fly out of Ripper\'s butt.\n\r", ch);
+	send_to_char("When DM\'s fly out of Ripper\'s butt.\n\r", ch);
 	return;
       case 24: case 25: case 26: case 27: case 28:
         send_to_char("Sorry, private items.\n\r", ch);
@@ -2127,7 +2169,7 @@ void do_load(struct char_data *ch, char *argument, int cmd)
     
     obj = read_object(number, REAL);
     obj_to_char(obj, ch);
-    act("$n makes a strange magical gesture.", TRUE, ch, 0, 0, TO_ROOM);
+    act("$n gyrates $s hips wildly.", TRUE, ch, 0, 0, TO_ROOM);
     act("$n has created $p!", FALSE, ch, obj, 0, TO_ROOM);
     act("You now have $p.", FALSE, ch, obj, 0, TO_CHAR);
   } else if (is_abbrev(type, "room")) {
@@ -2319,23 +2361,30 @@ void do_purge(struct char_data *ch, char *argument, int cmd)
 void roll_abilities(struct char_data *ch)
 {
   int i, j, k, temp;
+  float avg;
   ubyte table[MAX_STAT];
   ubyte rools[4];
   
   for(i=0; i<MAX_STAT; table[i++]=0)  ;
   
-  for(i=0; i<MAX_STAT; i++) {
+  do {
+    for(i=0; i<MAX_STAT; i++) {
+      
+      for(j=0; j<4; j++)
+	rools[j] = number(1,6);
     
-    for(j=0; j<4; j++)
-      rools[j] = number(1,6);
-    
-    temp = (unsigned int)rools[0]+(unsigned int)rools[1]+(unsigned int)rools[2]+(unsigned int)rools[3] -
-      MIN((int)rools[0], MIN((int)rools[1], MIN((int)rools[2],(int)rools[3])));
-    
-    for(k=0; k<MAX_STAT; k++)
-      if (table[k] < temp)
-	SWITCH(temp, table[k]);
-  }
+      temp = (unsigned int)rools[0]+(unsigned int)rools[1]+(unsigned int)rools[2]+(unsigned int)rools[3] -
+	MIN((int)rools[0], MIN((int)rools[1], MIN((int)rools[2],(int)rools[3])));
+      
+      for(k=0; k<MAX_STAT; k++)
+	if (table[k] < temp)
+	  SWITCH(temp, table[k]);
+    }
+    for(j=0,avg=0;j<MAX_STAT;j++)
+      avg += table[j];
+    avg /= j;
+
+  } while(avg<12.0);
 
   for (i=0;i<MAX_STAT;i++) {
     switch(ch->desc->stat[i]) {
@@ -2405,21 +2454,86 @@ void roll_abilities(struct char_data *ch)
     ch->points.max_hit /= HowManyClasses(ch);
   }
  
-
-
-  if (GET_RACE(ch) == RACE_ELVEN) {
+  if(GET_RACE(ch) == RACE_HUMANTWO) {
+    ImprovePreferedStat(ch, 1, FALSE);
+  } else if (GET_RACE(ch) == RACE_HALFELF && number(0,1)) {
+    ImprovePreferedStat(ch, 1, FALSE);
+  } else if (GET_RACE(ch) == RACE_ELVEN) {
     ch->abilities.dex++;
     ch->abilities.con--;
   } else if (GET_RACE(ch) == RACE_DWARF) {
     ch->abilities.con++;
-    ch->abilities.dex--;
+    ch->abilities.chr--;
   } else if (GET_RACE(ch) == RACE_GNOME) {
     ch->abilities.wis++;
     ch->abilities.dex--;
   } else if (GET_RACE(ch) == RACE_HALFLING) {
     ch->abilities.dex++;
+    ch->abilities.str--;
+  } else if (GET_RACE(ch) == RACE_HALFORC) {
+    ch->abilities.str++;
+    ch->abilities.con++;
+    ch->abilities.chr--;
+    ch->abilities.chr--;
+  } else if (GET_RACE(ch) == RACE_MFLAYER) {
+    ch->abilities.str--;
+    ch->abilities.intel++;
+    ch->abilities.intel++;
+    ch->abilities.chr--;
+    ch->abilities.chr--;
+  } else if (GET_RACE(ch) == RACE_DROW) {
+    ch->abilities.chr--;
+    ch->abilities.chr--;
+    ch->abilities.dex++;
+    ch->abilities.con--;
+  } else if (GET_RACE(ch) == RACE_SKEXIE) {
+    ch->abilities.str--;
+    ch->abilities.dex++;
+    ch->abilities.con--;
+  } else if (GET_RACE(ch) == RACE_DRAAGDIM) {
+    ch->abilities.str--;
+    ch->abilities.con--;
+    ch->abilities.intel++;
+    ch->abilities.dex++;
+  } else if (GET_RACE(ch) == RACE_VAMPIRE) {
+    ch->abilities.intel++;
+  } else if (GET_RACE(ch) == RACE_OGRE) {
+    ch->abilities.str++;
+    ch->abilities.str++;
+    ch->abilities.intel--;
+    ch->abilities.chr--;
+    ch->abilities.chr--;
+    ch->abilities.con++;
     ch->abilities.wis--;
+    ch->abilities.dex--;
+  } else if (GET_RACE(ch) == RACE_FAERIE) {
+    ch->abilities.str--;
+    ch->abilities.con--;
+    ch->abilities.intel++;
+    ch->abilities.dex++;
+  } else if (GET_RACE(ch) == RACE_VEGMAN) {
+    ch->abilities.dex--;
   }
+
+
+  if (HasClass(ch, CLASS_WARRIOR)) {
+    if (ch->abilities.str >= 18) {
+      ch->abilities.str = 18;
+      if(ch->abilities.str_add == 0)
+	ch->abilities.str_add = number(0,100);
+    }
+  } else {
+    if(ch->abilities.str > 18) 
+      ch->abilities.str = 18;
+  }
+  
+  /* ensure racial mods are in line. */
+  ch->abilities.dex = MAX(3,MIN(18,ch->abilities.dex));
+  ch->abilities.con = MAX(3,MIN(18,ch->abilities.con));
+  ch->abilities.intel = MAX(3,MIN(18,ch->abilities.intel));
+  ch->abilities.wis = MAX(3,MIN(18,ch->abilities.wis));
+  ch->abilities.chr = MAX(3,MIN(18,ch->abilities.chr));
+
   ch->tmpabilities = ch->abilities;
 }
 
@@ -2431,8 +2545,6 @@ void do_start(struct char_data *ch)
   struct obj_data *obj;
   
   extern struct dex_skill_type dex_app_skill[];
-  void advance_level(struct char_data *ch, int i);
-  
   
   send_to_char("Welcome to SillyMud.  Enjoy the game...\n\r",ch);
   ch->specials.start_room = NOWHERE;
@@ -2472,6 +2584,8 @@ void do_start(struct char_data *ch)
     ch->skills[SKILL_READ_MAGIC].learned = 95;
   }
   
+  if (OnlyClass(ch, CLASS_THIEF))
+    ch->skills[SKILL_CONS_PEOPLE].learned = 95;
   
   if (IS_SET(ch->player.class, CLASS_THIEF)) {
     if (GET_RACE(ch) == RACE_HUMAN) {
@@ -2509,7 +2623,7 @@ void do_start(struct char_data *ch)
   
   GET_HIT(ch) = GET_MAX_HIT(ch);
   GET_MANA(ch) = GET_MAX_MANA(ch);
-  ch->points.max_move += GET_CON(ch) + number(1,20) - 9;
+  /*   ch->points.max_move += GET_CON(ch) + number(1,20) - 9; */
   GET_MOVE(ch) = GET_MAX_MOVE(ch);
   
   GET_COND(ch,THIRST) = 24;
@@ -2520,6 +2634,14 @@ void do_start(struct char_data *ch)
   ch->player.time.played = 0;
   ch->player.time.logon = time(0);
   
+  /* 33% chance for infravision */
+  if(GET_RACE(ch) == RACE_HALFLING || GET_RACE(ch) == RACE_HALFELF ||
+     GET_RACE(ch) == RACE_HALFORC)
+    if(!number(0,2))
+      SET_BIT(ch->specials.affected_by, AFF_INFRAVISION);
+
+      
+
 }
 
 
@@ -2617,7 +2739,7 @@ void do_advance(struct char_data *ch, char *argument, int cmd)
 			return;
 		}
 		if ((newlevel = atoi(level)) < GET_LEVEL(victim, lin_class)) {
-		  send_to_char("Can't dimish a players status (yet).\n\r", ch);
+		  send_to_char("Can't diminish a player's status (yet).\n\r", ch);
 		  return;
 		}
 		adv = newlevel - GET_LEVEL(victim,lin_class);
@@ -2642,8 +2764,8 @@ void do_advance(struct char_data *ch, char *argument, int cmd)
 
 	send_to_char("You feel generous.\n\r", ch);
   act("$n makes some strange gestures.\n\rA strange feeling comes upon you,"
-			"\n\rLike a giant hand, light comes down from\n\rabove, grabbing your "
-			"body, that begins\n\rto pulse with coloured lights from inside.\n\rYo"
+      "\n\rLike a giant hand, light comes down from\n\rabove, grabbing your "
+      "body, that begins\n\rto pulse with coloured lights from inside.\n\rYo"
       "ur head seems to be filled with daemons\n\rfrom another plane as your"
       " body dissolves\n\rinto the elements of time and space itself.\n\rSudde"
       "nly a silent explosion of light snaps\n\ryou back to reality. You fee"
@@ -3043,6 +3165,51 @@ void do_show(struct char_data *ch, char *argument, int cmd)
 	srzs.blank = 0;
 	}
 	  }
+
+  } else if (is_abbrev(buf, "top")) {
+    
+    int objn,top_ten[10],i,insert,tmp,bot;
+    struct index_data *oi,*oi2;
+    char buf[80];
+
+    which_i=obj_index;
+    topi=top_of_objt;
+    bot=0;
+    
+    for(i=0;i<10;i++)
+      top_ten[i]=0;
+
+    append_to_string_block(&sb,"VNUM  rnum count names\n\r");
+
+    for(objn=0; objn<= topi; objn++) {
+      oi=which_i + objn;
+      if(oi->number > bot) {
+        for(i=0;i<10;i++) {
+          oi2=which_i + top_ten[i];
+          if(oi->number > oi2->number) {
+            insert=objn;
+            while(i<10) {
+              tmp=top_ten[i];
+              top_ten[i]=insert;
+	      insert=tmp;
+              if(insert==0)
+                break;
+              i++;
+            }
+            bot=top_ten[9];
+            if(bot < 0)
+              bot=0;
+            break;
+          }
+        }
+      }
+    }
+    for(i=0;i<10;i++) {
+      oi = which_i + top_ten[i];
+      sprintf(buf,"%5d %4d %3d  %s\n\r",
+              oi->virtual, objn,oi->number, oi->name);
+      append_to_string_block(&sb, buf);
+    }
   } else {
     append_to_string_block(&sb,"Usage:\n\r"
 		 "  show zones\n\r"

@@ -1,9 +1,21 @@
-                      The SillyMud Herald  4/19/93
+                      The SillyMud Herald  6/21/93
                         [Doldrums.cis.ufl.edu]
 
+Silly is constantly being worked on code-wise, changes are posted here
+or/and on the board.  It is in an attempt to generate a challenging and
+intelligent mud. Some of the changes do not work out as planned, and
+those are corrected as soon as possible.
+
 [GENERAL NEWS]
-+ Mobiles are a little bit smarter.
-+ Some mobiles get very cold and lonely in the winter and like to visit
+
++ VT100 Display Bar.  Type HELP DISPLAY to find out how to use it.
++ Resize allows you to resize your VT100 bar.
++ Lower levels lose less exp when they die, 
++ Dying frequently w/o gaining much experience could cost you a level
++ Monsters and poly forms have randoms stats based on their level.
+
++ Monsters are a little bit smarter.
++ Some monsters get very cold and lonely in the winter and like to visit
   town.
 + If you're lower-mid level, you may want to follow Biff sometime, he
   can lead to some high adventure.

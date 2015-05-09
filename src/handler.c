@@ -136,14 +136,20 @@ void destroy_string_block(struct string_block *sb)
 
 void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
 {
-  int i, temp,temp2;
+  int i;
   char buff[200];
 
   if (loc == APPLY_IMMUNE) {
     if (add) {
-      SET_BIT(ch->immune, mod);
+            if(bitv && !mod)
+        SET_BIT(ch->immune, bitv);
+      else
+        SET_BIT(ch->immune, mod);
     } else {
-      REMOVE_BIT(ch->immune, mod);
+      if(bitv && !mod)
+        REMOVE_BIT(ch->immune, bitv);
+      else
+        REMOVE_BIT(ch->immune, mod);
     }
   } else if (loc == APPLY_SUSC) {
     if (add) {
@@ -186,24 +192,28 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
   switch(loc)
     {
     case APPLY_NONE:
+    case APPLY_INTRINSIC:
       break;
       
     case APPLY_STR:
-      GET_STR(ch) += mod;
+      ChangeStrength(ch, mod);
       break;
       
-    case APPLY_DEX:
+    case APPLY_DEX: 
+#ifdef 0
       temp = GET_DEX(ch);
-      GET_DEX(ch) += mod;
-      temp2=GET_DEX(ch);
+            temp2=GET_DEX(ch);
       if(temp2 < ch->abilities.dex)
 	GET_DEX(ch)=ch->abilities.dex;
       if(temp > 18) temp=18;
       if(GET_DEX(ch) > 18) GET_DEX(ch)=18;
       GET_AC(ch) -= dex_app[temp].defensive;
       GET_AC(ch) += dex_app[GET_DEX(ch)].defensive;
+#endif
+      GET_DEX(ch) += mod;
       break;
       
+
     case APPLY_INT:
       GET_INT(ch) += mod;
       break;
@@ -220,7 +230,8 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
       GET_SEX(ch) = (!(ch->player.sex-1))+1;
       break;
       
-    case APPLY_CLASS:
+    case APPLY_CHR:
+      GET_CHR(ch) += mod;
       break;
       
     case APPLY_LEVEL:
@@ -243,6 +254,7 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
       break;
       
     case APPLY_HIT:
+      /* ch->points.max_hit += mod; */
       ch->points.max_hit += mod;
       break;
       
@@ -366,22 +378,13 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
       else if (mod < 0) 
 	ch->mult_att *= 2.0;
       break;
+
     case APPLY_ATTACKS:
-#if 0
-      gain = (float)mod / 10.0;
-
-      if (affected_by_spell(ch, SPELL_HASTE))
-	gain = gain * 2.0;
-      if (affected_by_spell(ch, SPELL_SLOW))
-	gain = gain / 2.0;
-
-      ch->mult_att += gain;
-#endif
       break;
 
     case APPLY_FIND_TRAPS:
       if (!ch->skills) return;
-      ch->skills[SKILL_FIND_TRAP].learned += mod;
+      ch->skills[SKILL_LOCATE_TRAP].learned += mod;
       break;
 
     case APPLY_RIDE:
@@ -391,6 +394,22 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
 
     case APPLY_RACE_SLAYER:
     case APPLY_ALIGN_SLAYER:
+      break;
+
+    case APPLY_MANA_REGEN:
+      ch->points.mana_gain += mod;
+      break;
+
+    case APPLY_HIT_REGEN:
+      ch->points.hit_gain += mod;
+      break;
+
+    case APPLY_MOVE_REGEN:
+      ch->points.move_gain += mod;
+      break;
+
+    case APPLY_MOVE_BONUS:
+      ch->specials.move_cost += mod;
       break;
 
     default:
@@ -406,6 +425,8 @@ void affect_modify(struct char_data *ch,byte loc, long mod, long bitv,bool add)
 
 /* This updates a character by subtracting everything he is affected by */
 /* restoring original abilities, and then affecting all again           */
+/* Fly was seperated for beasts with intrinsic fly and to let people    */
+/* walk even though they could fly at will.                             */
 void affect_total(struct char_data *ch)
 {
   struct affected_type *af;
@@ -421,8 +442,9 @@ void affect_total(struct char_data *ch)
   }
   
   for(af = ch->affected; af; af=af->next)
-    affect_modify(ch, af->location, (int) af->modifier, af->bitvector, 
-		  FALSE);
+    if(af->type != SPELL_FLY)
+      affect_modify(ch, af->location, (int) af->modifier, af->bitvector, 
+		    FALSE);
 
   ch->tmpabilities = ch->abilities; 
   
@@ -436,12 +458,13 @@ void affect_total(struct char_data *ch)
   
   
   for(af = ch->affected; af; af=af->next)
-    affect_modify(ch, af->location, (int)af->modifier, 
-		  af->bitvector, TRUE);
+    if(af->type != SPELL_FLY)
+      affect_modify(ch, af->location, (int)af->modifier, 
+		    af->bitvector, TRUE);
   
   /* Make certain values are between 0..25, not < 0 and not > 25! */
   
-  i = (IS_NPC(ch) ? 25 :18);
+  i = ((!IS_PC(ch)) ? 25 :18);	/* fuck polies */
  
   GET_DEX(ch) = MAX(3,MIN(GET_DEX(ch), i));
   GET_INT(ch) = MAX(3,MIN(GET_INT(ch), i));
@@ -449,14 +472,17 @@ void affect_total(struct char_data *ch)
   GET_CON(ch) = MAX(3,MIN(GET_CON(ch), i));
   GET_STR(ch) = MAX(3,GET_STR(ch));
   
-  if (IS_NPC(ch)) {
+  if (!IS_PC(ch)) {
     GET_STR(ch) = MIN(GET_STR(ch), i);
-  } else {
+  } else if(GET_RACE(ch) != RACE_OGRE) {
     if (GET_STR(ch) > 18) {
-      i = GET_ADD(ch) + ((GET_STR(ch)-18)*10);
-      GET_ADD(ch) = MIN(i, 100);
+      GET_ADD(ch) = 100;
       GET_STR(ch) = 18;
     }
+  } else {			
+    /* warning: I am counting on ChangeStrength() */
+    /* to be working for this to be safe :) */
+    GET_STR(ch) = MIN(22,GET_STR(ch));
   }
 }
 
@@ -541,7 +567,7 @@ bool affected_by_spell( struct char_data *ch, short skill )
   struct affected_type *hjp;
   
   for (hjp = ch->affected; hjp; hjp = hjp->next)
-    if ( hjp->type == skill )
+    if ( hjp->type == skill && hjp->location != APPLY_INTRINSIC)
       return( TRUE );
   
   return( FALSE );
@@ -662,8 +688,8 @@ void char_to_room(struct char_data *ch, int room)
       /* this is a teleport countdown room */
       rp->tele_time = pulse + rp->tele_cnt; /* now round up */
       if (rp->tele_time % 10) 
-         rp->tele_time += 10 - (rp->tele_time % 10);
-
+	rp->tele_time += 10 - (rp->tele_time % 10);
+      
       if (rp->tele_time > 2400) {
 	rp->tele_time = rp->tele_cnt;  /* start of next day */
       }
@@ -675,6 +701,9 @@ void char_to_room(struct char_data *ch, int room)
 	*/      
       reset_zone(rp->zone);
     }
+    
+    SunProblemCheck(ch);
+    
   }
 }
 
@@ -1113,8 +1142,10 @@ void obj_to_room(struct obj_data *object, int room)
   object->in_room = room;
   object->carried_by = 0;
   object->equipped_by = 0; /* should be unnecessary */
-  if(!IS_SET(real_roomp(room)->room_flags, DEATH))
+
+  if(IS_SET(real_roomp(room)->room_flags, SAVE_ROOM))
     save_room(room);
+
 }
 
 void obj_to_room2(struct obj_data *object, int room)
@@ -1168,8 +1199,9 @@ void obj_from_room(struct obj_data *object)
       }
     }
 
-  if(!IS_SET(real_roomp(object->in_room)->room_flags, DEATH))
+  if(IS_SET(real_roomp(object->in_room)->room_flags, SAVE_ROOM))
     save_room(object->in_room);  
+
   object->in_room = NOWHERE;
   object->next_content = 0;
 }
@@ -1192,7 +1224,7 @@ void obj_to_obj(struct obj_data *obj, struct obj_data *obj_to)
   for(tmp_obj = obj->in_obj; tmp_obj;
       GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj), tmp_obj = tmp_obj->in_obj);
   if(obj_to->in_room != NOWHERE)
-      if(!IS_SET(real_roomp(obj_to->in_room)->room_flags, DEATH))
+      if(IS_SET(real_roomp(obj_to->in_room)->room_flags, SAVE_ROOM))
          save_room(obj_to->in_room);  
 }
 
@@ -1255,7 +1287,7 @@ void obj_from_obj(struct obj_data *obj)
     assert(0);
   }
   if(obj_from->in_room != NOWHERE)
-      if(!IS_SET(real_roomp(obj_from->in_room)->room_flags, DEATH))
+      if(IS_SET(real_roomp(obj_from->in_room)->room_flags, SAVE_ROOM))
          save_room(obj_from->in_room);  
 }
 
@@ -1276,6 +1308,11 @@ void extract_obj(struct obj_data *obj)
 {
   struct obj_data *temp1, *temp2;
   extern long obj_count;
+
+#if 0
+  if(IS_SET(obj->obj_flags.extra_flags, ITEM_FIGURINE) && obj->link)
+     extract_char(obj->link);
+#endif
   
   if(obj->in_room != NOWHERE)
     obj_from_room(obj);
@@ -1383,6 +1420,9 @@ void extract_char_smarter(struct char_data *ch, int save_room)
   void do_return(struct char_data *ch, char *argument, int cmd);
   
   void die_follower(struct char_data *ch);
+
+  if(IS_SET(ch->specials.act, ACT_FIGURINE) && ch->link)
+     extract_obj(ch->link);
   
   if(!IS_NPC(ch) && !ch->desc)	{
     for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)
@@ -1523,12 +1563,19 @@ void extract_char_smarter(struct char_data *ch, int save_room)
       exit(0);
     }
   }
+
+  if (ch->specials.gname)
+    free(ch->specials.gname);
   
   GET_AC(ch) = 100;
   
   if (ch->desc)	{
     if (ch->desc->original)
       do_return(ch, "", 0);
+    if (!strcmp(GET_NAME(ch), "Odin's heroic minion")) {
+      free(GET_NAME(ch));
+      GET_NAME(ch) = strdup("111111");
+    }
     save_char(ch, save_room);
   }
   
@@ -1749,37 +1796,37 @@ struct obj_data *create_money( int amount )
   clear_object(obj);
   
   if(amount==1){
-      obj->name = strdup("coin gold");
-      obj->short_description = strdup("a gold coin");
-      obj->description = strdup("One miserable gold coin.");
-      
-      new_descr->keyword = strdup("coin gold");
-      new_descr->description = strdup("One miserable gold coin.");
-    }  else {
-      obj->name = strdup("coins gold");
-      obj->short_description = strdup("gold coins");
-      obj->description = strdup("A pile of gold coins.");
-      
-      new_descr->keyword = strdup("coins gold");
-      if(amount<10) {
-	sprintf(buf,"There is %d coins.",amount);
-	new_descr->description = strdup(buf);
-      } 
-      else if (amount<100) {
-	sprintf(buf,"There is about %d coins",10*(amount/10));
-	new_descr->description = strdup(buf);
-      }
-      else if (amount<1000) {
-	sprintf(buf,"It looks like something round %d coins",100*(amount/100));
-	new_descr->description = strdup(buf);
-      }
-      else if (amount<100000) {
-	sprintf(buf,"You guess there is %d coins",1000*((amount/1000)+ number(0,(amount/1000))));
-	new_descr->description = strdup(buf);
-      }
-      else 
-	new_descr->description = strdup("There is A LOT of coins");			
+    obj->name = strdup("coin gold");
+    obj->short_description = strdup("a gold coin");
+    obj->description = strdup("One miserable gold coin.");
+    
+    new_descr->keyword = strdup("coin gold");
+    new_descr->description = strdup("One miserable gold coin.");
+  }  else {
+    obj->name = strdup("coins gold");
+    obj->short_description = strdup("gold coins");
+    obj->description = strdup("A pile of gold coins.");
+    
+    new_descr->keyword = strdup("coins gold");
+    if(amount<10) {
+      sprintf(buf,"There are %d coins.",amount);
+      new_descr->description = strdup(buf);
+    } 
+    else if (amount<100) {
+      sprintf(buf,"There is about %d coins.",10*(amount/10));
+      new_descr->description = strdup(buf);
     }
+    else if (amount<1000) {
+      sprintf(buf,"It looks like something round %d coins.",100*(amount/100));
+      new_descr->description = strdup(buf);
+    }
+    else if (amount<100000) {
+      sprintf(buf,"You guess there is %d coins.",1000*((amount/1000)+ number(0,(amount/1000))));
+      new_descr->description = strdup(buf);
+    }
+    else 
+      new_descr->description = strdup("There are A LOT of coins.");			
+  }
   
   new_descr->next = 0;
   obj->ex_description = new_descr;

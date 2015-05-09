@@ -3,32 +3,25 @@
 #include <ctype.h>
 #include <malloc.h>
 #include <time.h>
-#include "wizlist.h"
-#include "structs.h"
-#include "utils.h"
-#include "db.h"
-#include "comm.h"
-#include "handler.h"
-#include "limits.h"
-#include "race.h"
-#include "opinion.h"
-#include "hash.h"
+#include "protos.h"
+
 
 struct my_char_data {
   struct char_file_u grunt;
   short AXE;
 }**dummy;
 
+
 void muck(int orig_ammt, char name[80]);
 void specific_axe(int orig_ammt, char name[80]);
 void inactive_god_axe (int orig_ammt,time_t CURRENT_TIME);
+int change_struct( int orig_ammt);
 void inactive_axe(int orig_ammt, time_t CURRENT_TIME);
 void zero_bank();
 char *time_print(long et);
 int load_playerfile(char *argv[]);
 int orig_ammt=0, after_ammt=0;
 int our_pos = 0;
-
 
 int get_int(int min, int max, int zero_ok)
 {
@@ -92,6 +85,7 @@ main(int argc, char *argv[])
     printf("\n4 -\t Muck with a player in depth.");
     printf("\n5 -\t Find those who have a certain item number.");
     printf("\n6 -\t Zero all bank accounts.");
+    /*     printf("\n7 -\t Attempt to convert to 400 skill spaces."); */
     printf("\n\nChanges are updated upon entering 0");
     printf("\nWell? > ");
     gets(tempbuf);
@@ -121,6 +115,9 @@ main(int argc, char *argv[])
     case 6:
       zero_bank();
       break;
+    case 7:
+      change_struct(orig_ammt);
+      break;
     default:
       after_ammt=spit_out_remains(argv,orig_ammt);
       choice=0;
@@ -129,6 +126,35 @@ main(int argc, char *argv[])
       break;
     }
   }while(choice);
+}
+
+int change_struct( int orig_ammt)
+{
+ /*
+  int i,j;
+  FILE *fl;
+
+
+  for(i=0;i<200;i++) {
+    grunt_insert.skills[i].learned=0;
+    grunt_insert.skills[i].flags=0;
+  }
+    
+
+  if(!(fl = fopen("LARGE", "w"))) {
+    printf("\nCan not open %s, bye!\n","LARGE");
+    exit(0);
+  }
+
+  for(i=0;i<orig_ammt;i++) {
+    fwrite(&(dummy[i]->grunt1), sizeof(struct char_file_u_1), 1, fl);
+    fwrite(&grunt_insert,sizeof(struct char_file_u_insert), 1, fl);
+    fwrite(&(dummy[i]->grunt2), sizeof(struct char_file_u_2), 1, fl);
+  }
+  fclose(fl);
+  printf("\nAll done!\n");
+  exit(1);
+ */
 }
 
 void menu2() {
@@ -209,7 +235,7 @@ void muck(int orig_ammt, char name[80]) {
 	
       
 
-void specific_axe(int orig_ammt, char name[80]) {
+void specific_axe(int orig_ammt, char *name) {
   register i;
   int j=FALSE;
 
@@ -245,6 +271,9 @@ void inactive_god_axe(int orig_ammt, time_t CURRENT_TIME) {
 	for(j=0;j<6;j++) dummy[i]->grunt.level[j]=max;
 	printf(" %d.\n",max);
         amt++;
+      } else if( max == 51) {
+	printf("%s will be deleted.\n", dummy[i]->grunt.name);
+        dummy[i]->AXE=TRUE;
       }
     }
   }
@@ -298,18 +327,19 @@ int load_playerfile(char *argv[]) {
     printf("\nCan not open %s, bye!\n",argv[1]);
     exit(0);
   }
-  dummy=(struct my_char_data **)malloc(4000 * sizeof(dummy));
+  dummy=(struct my_char_data **)malloc(5500 * sizeof(dummy));
   access_rent_files();
   if(dummy==NULL) {
     printf("ack\n");
   }
   for (;!feof(fl);)    {
     dummy[ammt]=(struct my_char_data *)malloc(sizeof(struct my_char_data));
-    fread(&(dummy[ammt]->grunt), sizeof(struct char_file_u), 1, fl);
-    /*     printf("\n[%s] <%d>",dummy[ammt]->grunt.name,ammt); */
-    if (!feof(fl)) {
-      ammt++;
-    }
+    fread(&(dummy[ammt]->grunt),  sizeof(struct char_file_u), 1, fl); 
+    /*     printf("\n[%s] <%d>",dummy[ammt]->grunt.name,ammt);  */
+    if (!feof(fl)) 
+      if(strcmp(dummy[ammt]->grunt.name,"111111")) {
+	ammt++;
+      }
   }
   printf("\n%d players read.\n",ammt);
   return ammt;

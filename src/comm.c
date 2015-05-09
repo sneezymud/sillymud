@@ -23,11 +23,20 @@
 #define DFLT_PORT 4000        /* default port */
 #define MAX_NAME_LENGTH 15
 #define MAX_HOSTNAME   256
+#if 1
 #define OPT_USEC 250000       /* time delay corresponding to 4 passes/sec */
+#else
+#if TITAN
+#define OPT_USEC 125000       /* lets see if this changes the lag any */
+#else
+#define OPT_USEC 250000       /* time delay corresponding to 4 passes/sec */
+#endif
+#endif
 
 #define STATE(d) ((d)->connected)
 
 extern int errno;
+extern char *sector_types[];
 
 /* extern struct char_data *character_list; */
 #if HASH
@@ -40,7 +49,7 @@ extern int top_of_world;            /* In db.c */
 extern struct time_info_data time_info;  /* In db.c */
 extern char help[];
 extern char login[];
-
+extern char *room_bits[];
 
 struct descriptor_data *descriptor_list, *next_to_process;
 
@@ -436,95 +445,99 @@ int game_loop(int s)
 	    write_to_descriptor(point->descriptor,
 				"[Return to continue/Q to quit]");
 	  else { 
- 
+	    struct char_data *ch;
+	    ch = point->character;
+
             if(point->character->term == VT100) {
-               struct char_data *ch;
-               int update = 0;
+	      int update = 0;
  
-               ch = point->character;
- 
-               if(GET_MOVE(ch) != ch->last.move) {
-                  SET_BIT(update, INFO_MOVE);
-                  ch->last.move = GET_MOVE(ch);
-		}
-               if(GET_MAX_MOVE(ch) != ch->last.mmove) {
-                  SET_BIT(update, INFO_MOVE);
-                  ch->last.mmove = GET_MAX_MOVE(ch);
-		}
-               if(GET_HIT(ch) != ch->last.hit) {
-                  SET_BIT(update, INFO_HP);
-                  ch->last.hit = GET_HIT(ch);
-		}
-               if(GET_MAX_HIT(ch) != ch->last.mhit) {
-                  SET_BIT(update, INFO_HP);
-                  ch->last.mhit = GET_MAX_HIT(ch);
-		}
-               if(GET_MANA(ch) != ch->last.mana) {
-                  SET_BIT(update, INFO_MANA);
-                  ch->last.mana = GET_MANA(ch);
-		}
-               if(GET_MAX_MANA(ch) != ch->last.mmana) {
-                  SET_BIT(update, INFO_MANA);
-                  ch->last.mmana = GET_MAX_MANA(ch);
-		}
-               if(GET_GOLD(ch) != ch->last.gold) {
-                  SET_BIT(update, INFO_GOLD);
-                  ch->last.gold = GET_GOLD(ch);
-		}
-               if(GET_EXP(ch) != ch->last.exp) {
-                  SET_BIT(update, INFO_EXP);
-                  ch->last.exp = GET_EXP(ch);
-		}
- 
-               if(update)
-                  UpdateScreen(ch, update);
-	     }
- 
+	      if(GET_MOVE(ch) != ch->last.move) {
+		SET_BIT(update, INFO_MOVE);
+		ch->last.move = GET_MOVE(ch);
+	      }
+	      if(GET_MAX_MOVE(ch) != ch->last.mmove) {
+		SET_BIT(update, INFO_MOVE);
+		ch->last.mmove = GET_MAX_MOVE(ch);
+	      }
+	      if(GET_HIT(ch) != ch->last.hit) {
+		SET_BIT(update, INFO_HP);
+		ch->last.hit = GET_HIT(ch);
+	      }
+	      if(GET_MAX_HIT(ch) != ch->last.mhit) {
+		SET_BIT(update, INFO_HP);
+		ch->last.mhit = GET_MAX_HIT(ch);
+	      }
+	      if(GET_MANA(ch) != ch->last.mana) {
+		SET_BIT(update, INFO_MANA);
+		ch->last.mana = GET_MANA(ch);
+	      }
+	      if(GET_MAX_MANA(ch) != ch->last.mmana) {
+		SET_BIT(update, INFO_MANA);
+		ch->last.mmana = GET_MAX_MANA(ch);
+	      }
+	      if(GET_GOLD(ch) != ch->last.gold) {
+		SET_BIT(update, INFO_GOLD);
+		ch->last.gold = GET_GOLD(ch);
+	      }
+	      if(GET_EXP(ch) != ch->last.exp) {
+		SET_BIT(update, INFO_EXP);
+		ch->last.exp = GET_EXP(ch);
+	      }
+	      
+	      if(update)
+		UpdateScreen(ch, update);
+	    }
 
-	    if (IS_IMMORTAL(point->character)) {
-	      rm = real_roomp(point->character->in_room);
-	      if (!rm) {
-		char_to_room(point->character, 0);
+	    if (point->character->term != VT100) {
+	      if (IS_IMMORTAL(point->character)) {
 		rm = real_roomp(point->character->in_room);
-	      }
-	      sprintf(promptbuf,"H:%d R:%d> ",
-		      point->character->points.hit,
-		      rm->number);
-	      write_to_descriptor(point->descriptor, promptbuf);
-	    } else if (HasClass(point->character, CLASS_MAGIC_USER) || 
-		       HasClass(point->character, CLASS_CLERIC) ||
-		       HasClass(point->character, CLASS_DRUID))  {
-	      if (point->character->term != VT100) {
-		sprintf(promptbuf,"H:%d M:%d V:%d> ",
-			point->character->points.hit,
-			point->character->points.mana,
-			point->character->points.move);
-	      } else {
-		sprintf(promptbuf, "> ");
-	      }
-		write_to_descriptor(point->descriptor, promptbuf);
+		if (!rm) {
+		  char_to_room(point->character, 0);
+		  rm = real_roomp(point->character->in_room);
+		}
 
-	    } else if (HasClass(point->character,CLASS_THIEF) || 
-		       HasClass(point->character,CLASS_WARRIOR) ||
-		       HasClass(point->character, CLASS_MONK)) {
-	      if (point->character->term != VT100) {
-		sprintf(promptbuf,"H:%d V:%d> ",
-			point->character->points.hit,
-			point->character->points.move);
-	      } else {
+		if(IS_SET(ch->specials.prompt, PROMPT_R)) {
+		  sprintf(promptbuf,"<Rm: %d ", rm->number);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		}
+                if(IS_SET(ch->specials.prompt, PROMPT_S)) {
+		  sprinttype(rm->sector_type,sector_types,promptbuf);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		  write_to_descriptor(point->descriptor, " ");
+		}
+                if(IS_SET(ch->specials.prompt, PROMPT_F)) {
+		  sprintbit((unsigned long)rm->room_flags,room_bits,promptbuf);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		}
 		sprintf(promptbuf, "> ");
+		write_to_descriptor(point->descriptor, promptbuf);
+	      } else {
+		if(IS_SET(ch->specials.prompt, PROMPT_H)) {
+		  sprintf(promptbuf,"H:%d ",
+			  point->character->points.hit);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		}
+		if(IS_SET(ch->specials.prompt, PROMPT_M)) {
+		  sprintf(promptbuf,"M:%d ",
+			  point->character->points.mana);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		}
+		if(IS_SET(ch->specials.prompt, PROMPT_V)) {
+		  sprintf(promptbuf,"V:%d ",
+			  point->character->points.move);
+		  write_to_descriptor(point->descriptor, promptbuf);
+		}
+		sprintf(promptbuf, "> ");
+		write_to_descriptor(point->descriptor, promptbuf);
 	      }
-	      write_to_descriptor(point->descriptor, promptbuf);
 	    } else {
-	      sprintf(promptbuf,"*H:%d V:%d> ",
-		      point->character->points.hit,
-		      point->character->points.move);
+	      sprintf(promptbuf, "> ");
 	      write_to_descriptor(point->descriptor, promptbuf);
 	    }
 	  }
 	point->prompt_mode = 0;
-	
-      }  
+      }
+    
     
     /* handle heartbeat stuff */
     /* Note: pulse now changes every 1/4 sec  */
@@ -594,8 +607,9 @@ int get_from_q(struct txt_q *queue, char *dest)
 	}
 
 	tmp = queue->head;
-	if (dest && queue->head->text)
-	  strcpy(dest, queue->head->text);
+	if (dest && queue->head->text) {
+	    strcpy(dest, queue->head->text);
+	}
 	queue->head = queue->head->next;
 
 	free(tmp->text);
@@ -754,7 +768,7 @@ int new_connection(int s)
   char buf[100];
   
   i = sizeof(isa);
-#if 0
+#ifdef 0
   getsockname(s, &isa, &i);
 #endif
   
@@ -763,18 +777,22 @@ int new_connection(int s)
     return(-1);
   }
   nonblock(t);
-  
+#if 0  
 #ifdef sun
+
+  
     
   i = sizeof(peer);
   if (!getpeername(t, &peer, &i))	{
-    *(peer.sa_data + 49) = '\0';
-    sprintf(buf, "New connection from addr %s.", peer.sa_data);
-    log(buf);
+    if (i > 0) {
+      *(peer.sa_data + 49) = '\0';
+      sprintf(buf, "New connection from addr %s.", peer.sa_data);
+      log(buf);
+    }
   }
 
 #endif
-  
+#endif
   return(t);
 }
 
@@ -867,6 +885,8 @@ int new_descriptor(int s)
     }
 #else
     strcpy(newd->host, (char *)inet_ntoa(&sock.sin_addr));
+    sprintf(buf, "New connection from addr %s: %d: %d", newd->host, desc, maxdesc);
+    log_sev(buf,3);
 #endif
   }
 
@@ -1301,7 +1321,7 @@ void send_to_outdoor(char *messg)
   if (messg)
     for (i = descriptor_list; i; i = i->next)
       if (!i->connected)
-	if (OUTSIDE(i->character))
+	if (OUTSIDE(i->character) )
 	  write_to_q(messg, &i->output);
 }
 

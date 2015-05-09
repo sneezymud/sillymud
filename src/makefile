@@ -1,17 +1,21 @@
 ##
-CC=cc
+CC=gcc
 ##
 LD=$(CC)
 ##
 ##  these are compile time constructs, that affect the running of the game.
-CPPFLAGS = -DIMPL_SECURITY -DKLUDGE_MEM -DNEW_RENT
+CPPFLAGS = -DIMPL_SECURITY -DNEW_RENT -DLEVEL_LOSS -DNEWEXP \
+ -DGROUP_NAMES
 ##  these are architecture dependent flags
 TITANFLAGS = -g -43 -vector_c -safe=ptrs -DTITAN
-SUNFLAGS = -g -O
+SUNFLAGS = -g
 ##
-CFLAGS = $(TITANFLAGS) $(CPPFLAGS)
+CFLAGS = $(SUNFLAGS) $(CPPFLAGS)
 ##
 ##
+##  For lower exp loss at lower levels -DNEWEXP
+##
+##  For level loss for really low exp -DLEVEL_LOSS
 ##
 ##  To make some optimizations, you need to add things to the line above.
 ##  to use hash tables for rooms  (More cpu, less storage), add
@@ -34,6 +38,7 @@ CFLAGS = $(TITANFLAGS) $(CPPFLAGS)
 ## To lock out oak.grove.iup.edu from boot time.
 ## -DLOCKGROVE
 ##
+##  To save the world (objects and mobs) -DSAVE_WORLD
 ##
 ##  To modify some commands to make item duplication near impossible:
 ##  -DNODUPLICATES
@@ -59,7 +64,7 @@ OBJS = comm.o act.comm.o act.info.o act.move.o act.obj1.o act.obj2.o \
 	reception.o constants.o spec_procs.o signals.o board.o magic.o \
 	magic2.o skills.o Opinion.o Trap.o magicutils.o multiclass.o hash.o \
 	Sound.o Heap.o spec_procs2.o magic3.o security.o spec_procs3.o \
-        create.o bsd.o parser.o
+        create.o bsd.o parser.o intrinsics.o
 
 SRCS = comm.c act.comm.c act.info.c act.move.c act.obj1.c act.obj2.c \
 	act.off.c act.other.c act.social.c act.wizard.c handler.c \
@@ -68,7 +73,7 @@ SRCS = comm.c act.comm.c act.info.c act.move.c act.obj1.c act.obj2.c \
 	reception.c constants.c spec_procs.c signals.c board.c magic.c \
 	magic2.c skills.c Opinion.c Trap.c magicutils.c multiclass.c hash.c \
 	Sound.c Heap.c spec_procs2.c magic3.c security.c spec_procs3.c \
-        create.c bsd.c parser.c
+        create.c bsd.c parser.c intrinsics.c
 
 all : dmserver
 
@@ -76,8 +81,8 @@ dmserver : ${OBJS}
 ## if you want to add debugging stuff, uncomment the following, and comment
 ##  out the line after that
 ##	$(LD) -o $@ -g ${OBJS} /local/lib/gnu/gcc-gnulib /usr/lib/debug/malloc.o
-##	$(LD) -o $@ -g ${OBJS} /local/lib/gnu/gcc-gnulib
-	$(LD) -o $@ -43 ${OBJS}
+	$(LD) -o $@ -g ${OBJS} 
+##	$(LD) -o $@  ${OBJS}
 ##
 depend :
 	makedepend ${SRCS}
@@ -132,3 +137,5 @@ security.o:
 create.o: protos.h
 bsd.o:
 parser.o: protos.h
+
+intrinsics.o: protos.h
